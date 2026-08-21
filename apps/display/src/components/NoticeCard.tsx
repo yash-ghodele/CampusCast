@@ -1,3 +1,13 @@
+/**
+ * @file apps/display/src/components/NoticeCard.tsx
+ * @description Notice Card Presentation Component for Hallway Display Kiosk.
+ * 
+ * NEED FOR THIS COMPONENT:
+ * Renders individual notice announcements with hallway-grade visual contrast.
+ * High-priority urgent notices demand instant visual attention via red left-border accent,
+ * warning badges, and subtle pulse glow animations.
+ */
+
 'use client';
 
 import React from 'react';
@@ -5,9 +15,19 @@ import { Notice } from '@campuscast/shared';
 import { AlertTriangle, Clock } from 'lucide-react';
 
 interface NoticeCardProps {
-  notice: Notice;
+  notice: Notice; // Data model containing priority, content, media, timestamps
 }
 
+/**
+ * NoticeCard Component
+ * 
+ * WORKING MECHANISM:
+ * 1. Checks `notice.priority === 'urgent'`.
+ * 2. If urgent: Applies thick red left border (`#E5484D`), warning badge, and CSS `urgent-glow` animation.
+ * 3. If normal: Applies standard blue left border (`#3B82F6`).
+ * 4. Formats creation timestamp into clean 12-hour AM/PM string.
+ * 5. If `mediaUrl` is present: Renders image inside contained aspect ratio bounds.
+ */
 export const NoticeCard: React.FC<NoticeCardProps> = ({ notice }) => {
   const isUrgent = notice.priority === 'urgent';
 
@@ -24,7 +44,7 @@ export const NoticeCard: React.FC<NoticeCardProps> = ({ notice }) => {
           : 'border-l-[8px] border-l-[#3B82F6] border-[#222F47]'
       }`}
     >
-      {/* Header Badge */}
+      {/* Header Badge & Timestamp */}
       <div className="flex items-center justify-between mb-4">
         {isUrgent ? (
           <div className="inline-flex items-center gap-2 bg-[#E5484D]/20 text-[#E5484D] px-3.5 py-1.5 rounded-md border border-[#E5484D]/40 font-bold text-lg tracking-wide uppercase">
@@ -45,12 +65,12 @@ export const NoticeCard: React.FC<NoticeCardProps> = ({ notice }) => {
         )}
       </div>
 
-      {/* Main Notice Body */}
+      {/* Main Notice Typography Body (Minimum 28px font size for hallway distance) */}
       <div className="text-2xl md:text-3xl font-semibold text-[#F5F7FA] leading-relaxed whitespace-pre-line tracking-wide">
         {notice.content}
       </div>
 
-      {/* Optional Media Container */}
+      {/* Inline Media Attachment Container */}
       {notice.mediaUrl && (
         <div className="mt-5 rounded-lg overflow-hidden border border-[#222F47] max-h-[400px] bg-[#0B1220] flex items-center justify-center">
           <img

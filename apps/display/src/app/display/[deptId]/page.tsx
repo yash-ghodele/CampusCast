@@ -1,3 +1,13 @@
+/**
+ * @file apps/display/src/app/display/[deptId]/page.tsx
+ * @description Department Fullscreen Live Notice Display Client (`/display/[deptId]`).
+ * 
+ * NEED FOR THIS PAGE:
+ * Serves as the primary public display surface running fullscreen in hallway LCD kiosks.
+ * Subscribes to live active notices in real time via Firestore `onSnapshot`, renders 100%
+ * student-centric announcements, sends telemetry heartbeats, and auto-scrolls card overflows.
+ */
+
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -7,7 +17,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { NoticeCard } from '@/components/NoticeCard';
 import { subscribeToDepartmentNotices, ListenerStatus } from '@/lib/firebase';
-import { Radio, MessageSquarePlus } from 'lucide-react';
+import { MessageSquarePlus } from 'lucide-react';
 
 // Student-centric demonstration notices for instant hallway display preview
 const MOCK_NOTICES: Record<string, Notice[]> = {
@@ -110,6 +120,16 @@ const MOCK_NOTICES: Record<string, Notice[]> = {
   ]
 };
 
+/**
+ * DepartmentDisplayPage Component
+ * 
+ * WORKING MECHANISM:
+ * 1. Attaches `subscribeToDepartmentNotices` listener for target department code.
+ * 2. On Firestore update: Filters and sorts active notice cards (Urgent first).
+ * 3. Starts telemetry loop: Emits screen heartbeat to `/screenHeartbeat` every 60 seconds.
+ * 4. Starts auto-scroll loop: If notice cards exceed viewport height, auto-scrolls smooth every 8s.
+ * 5. Handles connection drop: Shows yellow reconnect indicator without destroying last rendered notices.
+ */
 export default function DepartmentDisplayPage() {
   const params = useParams();
   const rawDeptCode = (params?.deptId as string) || 'ECE';
@@ -119,7 +139,7 @@ export default function DepartmentDisplayPage() {
   const [status, setStatus] = useState<ListenerStatus>('connected');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Subscribe to live Firestore notice feed
+  // Hook 1: Subscribe to live Firestore active notices
   useEffect(() => {
     let isSubscribed = true;
 
@@ -128,7 +148,7 @@ export default function DepartmentDisplayPage() {
       (liveNotices) => {
         if (isSubscribed) {
           if (liveNotices.length === 0 && MOCK_NOTICES[deptCode]) {
-            // Fallback to sample notices if Firestore is empty during demo
+            // Preview fallback for initial demo preview
             setNotices(MOCK_NOTICES[deptCode]);
           } else {
             setNotices(liveNotices);
@@ -142,7 +162,6 @@ export default function DepartmentDisplayPage() {
       }
     );
 
-    // Initial mock fallback if listener hasn't fired yet
     if (MOCK_NOTICES[deptCode]) {
       setNotices(MOCK_NOTICES[deptCode]);
     }
@@ -153,7 +172,7 @@ export default function DepartmentDisplayPage() {
     };
   }, [deptCode]);
 
-  // Screen Heartbeat telemetry loop (every 60s)
+  // Hook 2: Screen Heartbeat Telemetry Loop (Every 60s)
   useEffect(() => {
     const screenId = `${deptCode}-MAIN-DISPLAY`;
 
@@ -174,7 +193,7 @@ export default function DepartmentDisplayPage() {
     return () => clearInterval(interval);
   }, [deptCode]);
 
-  // Auto-scroll loop for multi-card overflow
+  // Hook 3: Auto-scroll loop for multi-notice overflow pagination
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -197,12 +216,13 @@ export default function DepartmentDisplayPage() {
       {/* Header (90px) */}
       <Header deptCode={deptCode} />
 
-      {/* Main Notice Feed Area */}
+      {/* Main Notice Feed Viewport */}
       <main
         ref={scrollRef}
         className="flex-1 p-8 overflow-y-auto custom-scrollbar space-y-6 max-w-7xl mx-auto w-full"
       >
         {notices.length === 0 ? (
+          /* Empty / Idle State */
           <div className="h-full w-full flex flex-col items-center justify-center text-center space-y-4 py-20">
             <div className="p-6 bg-[#141C2E] rounded-full border border-[#222F47]">
               <MessageSquarePlus className="w-16 h-16 text-[#3B82F6] animate-pulse" />
@@ -215,6 +235,7 @@ export default function DepartmentDisplayPage() {
             </p>
           </div>
         ) : (
+          /* Render Active Notice Cards */
           notices.map((notice) => (
             <NoticeCard key={notice.id} notice={notice} />
           ))

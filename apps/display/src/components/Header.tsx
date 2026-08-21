@@ -1,12 +1,22 @@
+/**
+ * @file apps/display/src/components/Header.tsx
+ * @description Hallway Display Header Component (90px height fixed bar).
+ * 
+ * NEED FOR THIS COMPONENT:
+ * Provides a clear department identity anchor and a prominent live clock for hallway viewers.
+ * Students passing by in corridors rely on the header clock and department badge for orientation.
+ */
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 
 interface HeaderProps {
-  deptCode: string;
-  deptFullName?: string;
+  deptCode: string; // Short code e.g. "ECE"
+  deptFullName?: string; // Optional full department title
 }
 
+// Department full title mapping lookup table
 const DEPT_NAMES: Record<string, string> = {
   ECE: 'Electronics & Communication Engineering',
   CSE: 'Computer Science & Engineering',
@@ -15,6 +25,13 @@ const DEPT_NAMES: Record<string, string> = {
   EEE: 'Electrical & Electronics Engineering',
 };
 
+/**
+ * Header Component
+ * 
+ * WORKING MECHANISM:
+ * Uses a 1-second `setInterval` timer hook to update digital time string (HH:mm:ss IST)
+ * and formatted date string. Renders department badge with high-contrast styling.
+ */
 export const Header: React.FC<HeaderProps> = ({ deptCode, deptFullName }) => {
   const [timeStr, setTimeStr] = useState<string>('');
   const [dateStr, setDateStr] = useState<string>('');
@@ -35,6 +52,7 @@ export const Header: React.FC<HeaderProps> = ({ deptCode, deptFullName }) => {
 
   return (
     <header className="h-[90px] w-full px-8 flex items-center justify-between bg-[#0B1220]/90 backdrop-blur border-b border-[#222F47] select-none">
+      {/* Left: Department Identity & Title */}
       <div className="flex flex-col">
         <div className="flex items-center gap-3">
           <span className="bg-[#3B82F6]/15 text-[#3B82F6] text-xl font-bold px-3 py-1 rounded border border-[#3B82F6]/30 uppercase tracking-wide">
@@ -49,6 +67,7 @@ export const Header: React.FC<HeaderProps> = ({ deptCode, deptFullName }) => {
         </p>
       </div>
 
+      {/* Right: Live Digital Clock & Date */}
       <div className="flex flex-col items-end">
         <div className="text-3xl font-mono font-bold text-[#F5F7FA] tracking-wider">
           {timeStr || '12:00:00 IST'}

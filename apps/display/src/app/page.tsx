@@ -1,9 +1,19 @@
+/**
+ * @file apps/display/src/app/page.tsx
+ * @description Signage Directory Landing Page (`/`).
+ * 
+ * NEED FOR THIS PAGE:
+ * Serves as the launcher directory for physical kiosk displays across campus corridors.
+ * Screen operators select a department screen (e.g. ECE, CSE, MECH) to open its full-screen live notice board.
+ */
+
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
 import { Monitor, ArrowRight, Shield, Radio } from 'lucide-react';
 
+// Department choices list with code badges and icons
 const DEPARTMENTS = [
   { code: 'ECE', name: 'Electronics & Communication Engineering', icon: '⚡' },
   { code: 'CSE', name: 'Computer Science & Engineering', icon: '💻' },
@@ -12,15 +22,24 @@ const DEPARTMENTS = [
   { code: 'EEE', name: 'Electrical & Electronics Engineering', icon: '🔌' },
 ];
 
+/**
+ * DisplayIndexPage Component
+ * 
+ * WORKING MECHANISM:
+ * Renders department cards linking to `/display/[deptId]`.
+ * Designed with dark theme aesthetic matching the hallway kiosk visual system.
+ */
 export default function DisplayIndexPage() {
   return (
     <div className="min-h-screen bg-[#0B1220] flex flex-col items-center justify-center p-8 select-none">
       <div className="max-w-4xl w-full text-center space-y-8">
+        {/* Network Badge */}
         <div className="inline-flex items-center gap-3 bg-[#3B82F6]/15 text-[#3B82F6] px-4 py-2 rounded-full border border-[#3B82F6]/30 text-sm font-semibold tracking-wide">
           <Radio className="w-4 h-4 animate-pulse" />
           <span>CAMPUSCAST SIGNAGE DISPLAY NETWORK</span>
         </div>
 
+        {/* Header Title */}
         <div className="space-y-3">
           <h1 className="text-5xl font-black tracking-tight text-[#F5F7FA]">
             Select Department Display
@@ -30,6 +49,7 @@ export default function DisplayIndexPage() {
           </p>
         </div>
 
+        {/* Department Grid Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 text-left pt-4">
           {DEPARTMENTS.map((dept) => (
             <Link
@@ -57,6 +77,7 @@ export default function DisplayIndexPage() {
           ))}
         </div>
 
+        {/* Footer Security Attribution */}
         <div className="pt-8 text-sm text-[#8B96A8] flex items-center justify-center gap-2">
           <Shield className="w-4 h-4 text-emerald-400" />
           <span>Powered by WhatsApp Business API & Firebase Firestore</span>
