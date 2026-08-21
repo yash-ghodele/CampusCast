@@ -1,3 +1,13 @@
+/**
+ * @file apps/admin/src/app/page.tsx
+ * @description CampusCast Admin Portal Management Dashboard (`/`).
+ * 
+ * NEED FOR THIS PAGE:
+ * Administrators require a central web dashboard to manage the authorized faculty roster,
+ * monitor display screen hardware telemetry, review published notice histories, and inspect
+ * security audit logs (such as blocked unauthorized publish attempts).
+ */
+
 'use client';
 
 import React, { useState } from 'react';
@@ -11,13 +21,11 @@ import {
   Search,
   CheckCircle,
   XCircle,
-  Copy,
   AlertTriangle,
-  RefreshCw,
   ExternalLink
 } from 'lucide-react';
 
-// Demo initial state for Admin management UI
+// Demo initial state for Admin management UI preview
 const MOCK_USERS: User[] = [
   { id: 'usr-1', name: 'Dr. Sarah Sharma', phone: '+919876543210', role: 'hod', departments: ['ECE'], status: 'active' },
   { id: 'usr-2', name: 'Prof. Rajesh Kumar', phone: '+919876543211', role: 'faculty', departments: ['ECE', 'CSE'], status: 'active' },
@@ -64,6 +72,16 @@ const MOCK_AUDIT: AuditLog[] = [
   { id: 'aud-2', type: 'unauthorized_attempt', actorPhone: '+919999988888', detail: { reason: 'Number not in active roster', text: 'Free pizza in canteen' }, timestamp: Date.now() - 1000 * 60 * 45 },
 ];
 
+/**
+ * AdminDashboardPage Component
+ * 
+ * WORKING MECHANISM:
+ * Implements 4 tabbed management views:
+ * 1. Roster Tab: Adds/suspends faculty E.164 phone numbers and manages department scopes.
+ * 2. Displays Tab: Shows registered hardware screens and real-time telemetry `lastSeenAt` dots.
+ * 3. Notices Tab: Allows searching notice text and force-expiring active announcements.
+ * 4. Security Audit Tab: Renders immutable trail of publishes and blocked unauthorized attempts.
+ */
 export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<'roster' | 'screens' | 'notices' | 'audit'>('roster');
   const [users, setUsers] = useState<User[]>(MOCK_USERS);
@@ -72,13 +90,14 @@ export default function AdminDashboardPage() {
   const [auditLogs] = useState<AuditLog[]>(MOCK_AUDIT);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Add User Form State
+  // Form State: Add Authorized Faculty Modal
   const [showAddModal, setShowAddModal] = useState(false);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [newRole, setNewRole] = useState<'super_admin' | 'hod' | 'faculty'>('faculty');
   const [newDepts, setNewDepts] = useState('ECE');
 
+  // Action Handler: Onboard New Faculty Member
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName || !newPhone) return;
@@ -101,6 +120,7 @@ export default function AdminDashboardPage() {
     setShowAddModal(false);
   };
 
+  // Action Handler: Toggle Faculty Active/Suspended Status
   const toggleUserStatus = (userId: string) => {
     setUsers(
       users.map((u) =>
@@ -109,6 +129,7 @@ export default function AdminDashboardPage() {
     );
   };
 
+  // Action Handler: Force-expire an Active Notice
   const expireNotice = (noticeId: string) => {
     setNotices(
       notices.map((n) => (n.id === noticeId ? { ...n, status: 'expired' } : n))
@@ -117,7 +138,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#0F172A]">
-      {/* Top Admin Header */}
+      {/* Top Admin Header Bar */}
       <header className="bg-[#1E293B] border-b border-[#334155] px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="bg-blue-600 text-white p-2 rounded-lg font-black text-xl">
@@ -140,6 +161,7 @@ export default function AdminDashboardPage() {
 
       {/* Navigation Tabs Bar */}
       <div className="bg-[#1E293B]/50 border-b border-[#334155] px-8 flex gap-2">
+        {/* Tab 1: Faculty Roster */}
         <button
           onClick={() => setActiveTab('roster')}
           className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
@@ -155,6 +177,7 @@ export default function AdminDashboardPage() {
           </span>
         </button>
 
+        {/* Tab 2: Displays & Screens */}
         <button
           onClick={() => setActiveTab('screens')}
           className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
@@ -170,6 +193,7 @@ export default function AdminDashboardPage() {
           </span>
         </button>
 
+        {/* Tab 3: Notice History */}
         <button
           onClick={() => setActiveTab('notices')}
           className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
@@ -185,6 +209,7 @@ export default function AdminDashboardPage() {
           </span>
         </button>
 
+        {/* Tab 4: Security & Audit */}
         <button
           onClick={() => setActiveTab('audit')}
           className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold border-b-2 transition-colors ${
@@ -201,9 +226,9 @@ export default function AdminDashboardPage() {
         </button>
       </div>
 
-      {/* Main Tab Content */}
+      {/* Main Tab Content Viewport */}
       <main className="flex-1 p-8 max-w-7xl w-full mx-auto space-y-6">
-        {/* Roster Tab */}
+        {/* VIEW 1: Faculty Roster Management */}
         {activeTab === 'roster' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -222,6 +247,7 @@ export default function AdminDashboardPage() {
               </button>
             </div>
 
+            {/* Roster Data Table */}
             <div className="bg-[#1E293B] border border-[#334155] rounded-xl overflow-hidden shadow-xl">
               <table className="w-full text-left text-sm text-slate-300">
                 <thead className="bg-slate-800/80 text-slate-400 font-semibold border-b border-[#334155]">
@@ -284,7 +310,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Screens Tab */}
+        {/* VIEW 2: Screen Hardware Registry & Telemetry Status */}
         {activeTab === 'screens' && (
           <div className="space-y-6">
             <div>
@@ -337,7 +363,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Notices Tab */}
+        {/* VIEW 3: Searchable Notice History & Controls */}
         {activeTab === 'notices' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -397,7 +423,7 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Audit Tab */}
+        {/* VIEW 4: Security & Audit Event Log */}
         {activeTab === 'audit' && (
           <div className="space-y-6">
             <div>
@@ -447,7 +473,7 @@ export default function AdminDashboardPage() {
         )}
       </main>
 
-      {/* Add User Modal */}
+      {/* Modal Dialog: Add Authorized Faculty Member */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-[#1E293B] border border-[#334155] rounded-xl max-w-md w-full p-6 space-y-5 shadow-2xl">
