@@ -1,42 +1,92 @@
 # CampusCast — Project Memory
 
-Persistent context for anyone (human or AI agent) picking this project up. Read this before touching the codebase. Update it when a decision changes — this file should always reflect current reality, not history for its own sake (see §5 for where history lives instead).
+Persistent context for human developers and AI agents working on CampusCast. Read this before touching the codebase. Update it whenever progress is made or a decision changes so the AI retains complete context without re-analyzing the workspace.
 
-## 1. What this project is
-CampusCast turns WhatsApp into the publishing interface for a real-time, department-scoped digital notice board network. Faculty send a WhatsApp message → it's authenticated, parsed, and pushed to Firestore → department LCD screens update live via Firestore listeners. Full detail: `PRD.md`, `ARCHITECTURE.md`, `DESIGN.md`.
+---
 
-## 2. Key decisions locked in (don't relitigate without a reason)
-- **Identity = phone number.** No separate login/password system for faculty. Their WhatsApp number *is* their credential. This is the whole point of the product (zero learning curve) — do not add an auth flow that requires faculty to do anything beyond messaging.
-- **Ingestion = Firebase Cloud Functions, not a standalone server.** Chosen over Express-on-Railway for cost (bursty, low-volume traffic) and to keep everything in one Firebase project/IAM boundary. If this ever changes, update `ARCHITECTURE.md` §2.2 and this file together.
-- **Firestore writes are backend-only.** Display and Admin clients only ever *read*. All writes go through Cloud Functions using the Admin SDK. Never relax Firestore security rules to allow client writes, even "temporarily" for testing — this is the core security boundary of the whole system.
-- **Unauthorized senders get silently dropped, not told they're unauthorized.** Deliberate — an error reply would let someone probe which numbers are/aren't registered.
-- **Dark theme for displays.** Chosen for hallway-lighting glare and always-on-screen eye strain, not just aesthetics.
-- **Department is determined by message content (`DEPT:` prefix / first line), not by which phone number sent it.** One WhatsApp Business number serves the whole campus.
+## 1. What This Project Is
+CampusCast turns WhatsApp into the publishing interface for a real-time, department-scoped digital notice board network. 
+- Faculty send a WhatsApp message → Meta Cloud API triggers `whatsappWebhook` Cloud Function.
+- Function validates HMAC signature (`X-Hub-Signature-256`), authorizes sender phone against `users`, parses tags (`#urgent`, `#schedule`, `DEPT:`), and writes notice to Firestore (`notices`).
+- Department LCD screens (`apps/display`) subscribe to Firestore live listeners (`onSnapshot`) and display notices instantaneously.
+- Admins manage faculty roster, screen telemetry, and audit logs via `apps/admin`.
 
-## 3. What's explicitly out of scope for now
-See `PRD.md` §4 (Non-Goals). Most relevant to keep top-of-mind during implementation: no two-way chat, no native mobile app, single-institution only (no `campusId` partitioning yet).
+---
 
-## 4. Open questions still blocking full commitment
-See `PRD.md` §9. The biggest one operationally: whether pilot can run on Meta's sandbox WhatsApp number or needs full Business verification first — this affects how early real testing with real faculty can start.
+## 2. Implementation Progress & Current Status (August 2026)
 
-## 5. Where things live
-- Requirements → `PRD.md`
-- System design → `ARCHITECTURE.md`
-- Visual/UX design → `DESIGN.md`
-- Build sequencing → `PHASE_PLAN.md`
-- Conventions/dev rules → `RULES.md`
-- Decision history / changelog → append-only log below (newest last)
+### Scaffolding & Shared Core (`packages/shared`)
+- [x] Monorepo workspace initialized (`packages/shared`, `functions`, `apps/display`, `apps/admin`).
+- [x] TypeScript interfaces defined for `User`, `Department`, `Screen`, `Notice`, `AuditLog`, `ParsedNoticeMessage` ([`types.ts`](file:///d:/Projects/CampusCast/packages/shared/src/types.ts)).
+- [x] WhatsApp message parser implemented for `#urgent`, `#schedule`, and `DEPT:` prefixes ([`parsing.ts`](file:///d:/Projects/CampusCast/packages/shared/src/parsing.ts)).
+- [x] Unit test suite covering parser edge cases ([`parsing.test.ts`](file:///d:/Projects/CampusCast/packages/shared/src/parsing.test.ts)).
 
-## 6. Decision log
+### Database & Storage Security Rules
+- [x] `firestore.rules` deployed: **Strict zero client-side writes** (`allow write: if false;`). All writes go strictly through Firebase Admin SDK in Cloud Functions.
+- [x] `storage.rules` deployed: Public read for notice media attachments, zero client-side uploads.
+
+### Backend Cloud Functions (`functions`)
+- [x] `whatsappWebhook`: HTTPS function for Meta GET verification and POST ingestion.
+  - HMAC SHA-256 signature verification.
+  - Phone authorization lookup.
+  - Silent drop + `audit_log` record for unauthorized senders (no WhatsApp reply sent).
+  - Notice doc creation in Firestore + audit logging.
+  - WhatsApp confirmation reply dispatch.
+- [x] `scheduledNoticeManager`: Cron ticker function running every 1 minute promoting `scheduled` -> `active` and demoting `active` -> `expired`.
+- [x] `screenHeartbeat`: Telemetry API endpoint updating `screens/{screenId}.lastSeenAt`.
+
+### Frontends (`apps/display` & `apps/admin`)
+- [x] `apps/display`: Next.js 14 hallway display app (`/display/[deptId]`).
+  - 1080p hallway layout, Inter font, custom dark theme (`#0B1220` background).
+  - Urgent notice red border cards (`#E5484D`) with pulse glow animation.
+  - Offline resilience: Keeps last-rendered state, shows `🟡 Reconnecting...` footer dot on connection drop.
+  - Auto-scroll / card pagination every 8 seconds for multi-notice overflow.
+- [x] `apps/admin`: Next.js 14 management dashboard (`/`).
+  - Roster Tab: Add authorized faculty numbers, set department scope, toggle active/suspended status.
+  - Screens Tab: Display screen registry and real-time heartbeat status.
+  - Notice Control Tab: Search history and force-expire notices.
+  - Security Audit Tab: Immutable record of publications and blocked unauthorized attempts.
+
+---
+
+## 3. Key Decisions Locked In (Non-Negotiable)
+1. **Identity = Phone Number**: No password/login system for faculty. Their WhatsApp number is their verified credential.
+2. **Backend-Only Writes**: Display & Admin clients ONLY read. All writes go through Cloud Functions using the Admin SDK.
+3. **Silent Drop for Unauthorized Senders**: Unauthorized senders are logged to `audit_log` and dropped without replying, preventing phone probing.
+4. **Dark Theme Displays**: Designed for hallway glare reduction, eye strain, and OLED power efficiency (`#0B1220` background, `#141C2E` cards).
+5. **Offline Resilience**: Display clients never go blank or render full-screen errors on connection loss; they retain last-known-good state.
+
+---
+
+## 4. Repository Directory Structure
+```
+CampusCast/
+├── Docs/
+│   ├── ABSTRACT.md
+│   ├── ARCHITECTURE.md
+│   ├── DESIGN.md
+│   ├── MEMORY.md
+│   ├── PHASE_PLAN.md
+│   ├── PRD.md
+│   └── RULES.md
+├── packages/
+│   └── shared/               # Shared TypeScript types, parser & unit tests
+├── functions/                # Firebase Cloud Functions (webhook, scheduler, heartbeat)
+├── apps/
+│   ├── display/              # Next.js 14 display web client
+│   └── admin/                # Next.js 14 admin management portal
+├── firestore.rules           # Firestore security rules (deny client writes)
+├── storage.rules             # Storage security rules
+├── firebase.json             # Firebase emulator & deployment config
+└── package.json              # Monorepo root package.json
+```
+
+---
+
+## 5. Decision Log
 | Date | Decision | Why |
 |---|---|---|
 | 2026-08-21 | Replaced standalone Express/Railway backend with Firebase Cloud Functions | Cost + infra simplicity for low, bursty traffic |
 | 2026-08-21 | Added Admin web app as a defined surface | Roster/screen management can't live in a DB console past pilot |
-| 2026-08-21 | Added role hierarchy: Super Admin / HOD / Faculty | Original Admin/Faculty split had no conflict-resolution path for multi-faculty departments |
-
-## 7. Glossary
-- **Notice** — a single published announcement, stored in `notices/{noticeId}`.
-- **Department** — a scope for routing and screen assignment, not a phone-number-level distinction.
-- **Screen** — a physical display client instance, registered to exactly one department.
-- **Urgent** — priority tag (`#urgent`) triggering red styling and optional chime; does not bypass authorization.
-- **Scheduled notice** — a notice with a future `scheduledAt`, promoted to active by the scheduler function, not by the display client.
+| 2026-08-21 | Added role hierarchy: Super Admin / HOD / Faculty | Original Admin/Faculty split had no conflict-resolution path |
+| 2026-08-21 | Bootstrapped workspace, shared types, functions, display, admin apps | Complete end-to-end foundation setup |

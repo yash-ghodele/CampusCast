@@ -1,4 +1,4 @@
-# CampusCast — Architecture
+# CampusCast — Architecture Document
 
 ## 1. High-Level Flow
 
@@ -9,62 +9,111 @@ Faculty WhatsApp
 Meta WhatsApp Cloud API  ──────────────────────────────► (delivery receipts / confirmation replies)
       │  webhook (signed POST)
       ▼
-Ingestion Function  (Cloud Function / lightweight Express service)
+Ingestion Function (Firebase Cloud Function v2)
       │
       ├─ Verify webhook signature (X-Hub-Signature-256)
-      ├─ Resolve sender → Users collection (auth check)
-      ├─ Parse message → { department, priority, scheduledAt?, mediaRefs? }
-      ├─ Store media (if any) → Cloud Storage
-      └─ Write notice document → Firestore
+      ├─ Resolve sender → Users collection (auth check; silent drop if unauthorized)
+      ├─ Parse message → { departmentCode, priority, scheduledAt?, content }
+      ├─ Store media (if present) → Firebase Cloud Storage
+      └─ Write notice document → Firestore (via Admin SDK)
       ▼
 Firestore (source of truth)
-      │  onSnapshot listeners (real-time, no polling)
+      │  onSnapshot listeners (real-time, zero polling)
       ▼
-Display Web Clients (one per screen, department-scoped)
+Display Web Clients (Next.js 14, department-scoped)
       ▼
-LCD / Smart TV (fullscreen browser, kiosk mode)
+LCD / Smart TV (Fullscreen Kiosk Mode)
 ```
 
-## 2. Components
+---
 
-### 2.1 WhatsApp Layer (unchanged from original concept)
+## 2. Directory & Monorepo Structure
+
+```
+d:\Projects\CampusCast\
+├── Docs/                           # Documentation (PRD, Architecture, Design, etc.)
+│   ├── ABSTRACT.md
+│   ├── ARCHITECTURE.md
+│   ├── DESIGN.md
+│   ├── MEMORY.md
+│   ├── PHASE_PLAN.md
+│   ├── PRD.md
+│   └── RULES.md
+├── packages/
+│   └── shared/                     # Shared TypeScript interfaces & validators
+│       └── src/
+│           ├── types.ts            # User, Notice, Department, Screen, AuditLog
+│           ├── parsing.ts          # WhatsApp message parser (#urgent, #schedule, DEPT:)
+│           ├── parsing.test.ts     # Parser unit tests
+│           └── index.ts
+├── functions/                      # Firebase Cloud Functions (v2 Node.js / TypeScript)
+│   ├── src/
+│   │   ├── index.ts                # Function exports
+│   │   ├── webhook.ts              # WhatsApp Webhook (X-Hub-Signature-256, ingestion)
+│   │   ├── scheduler.ts            # Cron scheduler (promote scheduled -> active -> expired)
+│   │   └── heartbeat.ts            # Display client heartbeat API endpoint
+│   ├── package.json
+│   └── tsconfig.json
+├── apps/
+│   ├── display/                    # Next.js 14 Display Web Client (Fullscreen Kiosk)
+│   │   ├── src/
+│   │   │   ├── app/
+│   │   │   │   ├── page.tsx        # Department display selector directory
+│   │   │   │   └── display/[deptId]/page.tsx # Department live notice feed
+│   │   │   ├── components/         # Header, Footer, NoticeCard
+│   │   │   └── lib/firebase.ts     # Firestore snapshot listener with reconnect handling
+│   │   ├── package.json
+│   │   └── tailwind.config.js      # Dark theme palette (#0B1220 background)
+│   └── admin/                      # Next.js 14 Admin Web Portal
+│       ├── src/
+│       │   └── app/page.tsx        # Roster, Screens, Notices, Security Audit tabs
+│       └── package.json
+├── firebase.json                   # Firebase configuration (Functions, Firestore, Storage, Hosting)
+├── firestore.rules                 # Strict security rules (Deny ALL client-side writes)
+├── storage.rules                  # Storage rules for media assets
+└── package.json                    # Workspace root scripts & npm workspaces setup
+```
+
+---
+
+## 3. Core Components
+
+### 3.1 WhatsApp Layer
 - Meta WhatsApp Business Cloud API.
-- One CampusCast Business number for the whole institution (department is determined by routing logic, not by phone number, so one number scales to all departments).
+- Single CampusCast Business phone number serving all departments institution-wide.
 
-### 2.2 Ingestion Service
-**Recommendation: Firebase Cloud Functions (v2, Node.js) instead of a standalone Express server on Railway/Render.**
-Rationale: the webhook is bursty and low-volume (a few dozen messages/day across a campus) — a persistent server is paying for idle time. Cloud Functions also removes a hop (no separate deploy target, same project as Firestore/Storage, same IAM boundary). Express/Node remains a valid fallback if the team wants a single codebase they can run locally without emulators, or if they later add a WebSocket/long-poll requirement functions don't fit well.
+### 3.2 Ingestion Cloud Function (`functions/src/webhook.ts`)
+- **Signature verification**: Validates `X-Hub-Signature-256` header against Meta app secret.
+- **Authorization check**: Sender's E.164 phone number looked up in `users` collection.
+  - If absent or suspended: Logged to `audit_log` with `type: 'unauthorized_attempt'` and dropped silently (no reply sent).
+- **Parsing**: Resolves `#urgent` priority, `#schedule` dates, and `DEPT:` prefix or single assigned home department.
+- **Write**: Creates notice document in `notices/{noticeId}` via Firebase Admin SDK.
+- **Reply**: Sends WhatsApp confirmation or error reply via Meta Graph API.
 
-Responsibilities:
-- **Signature verification** — reject anything not signed by Meta's app secret.
-- **Auth check** — sender's WhatsApp number (E.164) looked up in `users`; if absent/suspended, log and drop silently.
-- **Parsing** — first line / `DEPT:` prefix → department; `#urgent` → priority; `#schedule` block → scheduledAt; rest of body → content.
-- **Media handling** — download from Meta's media endpoint (URLs expire fast), re-upload to Cloud Storage, store the permanent Storage path on the notice doc.
-- **Write** — create the notice document in `notices/{noticeId}`; if `scheduledAt` is set and in the future, write with `status: "scheduled"` instead of `"active"`.
-- **Reply** — send a WhatsApp confirmation/error message back via the Cloud API (fire-and-forget, doesn't block the write).
+### 3.3 Scheduler Cloud Function (`functions/src/scheduler.ts`)
+Runs every 1 minute via Cloud Scheduler:
+- Promotes `status: "scheduled"` notices to `"active"` once `scheduledAt <= now`.
+- Demotes `status: "active"` notices to `"expired"` once `expiresAt <= now`.
 
-### 2.3 Scheduler
-A scheduled Cloud Function (e.g. every 1 minute) promotes `status: "scheduled"` notices to `status: "active"` once `scheduledAt` has passed, and demotes `status: "active"` notices to `status: "expired"` once `expiresAt` has passed. Keeping this as a separate tick rather than client-side logic ensures expiry is enforced even if no display is currently connected.
-
-### 2.4 Data Layer — Firestore
+### 3.4 Data Layer — Firestore Collections
 
 ```
 users/{userId}
   name: string
-  phone: string          # E.164, unique
+  phone: string          # E.164 format (+91...), unique
   role: "super_admin" | "hod" | "faculty"
-  departments: string[]  # department ids this user can publish to
+  departments: string[]  # Department codes this user can publish to
   status: "active" | "suspended"
 
 departments/{deptId}
   name: string
-  code: string            # e.g. "ECE"
-  screens: string[]       # screen ids registered to this department
+  code: string            # e.g. "ECE", "CSE"
+  screens: string[]       # Registered screen IDs
 
 screens/{screenId}
   departmentId: string
-  label: string            # e.g. "ECE Lab Corridor Display"
-  lastSeenAt: timestamp    # heartbeat from display client
+  label: string            # e.g. "ECE Main Hallway Screen"
+  lastSeenAt: number       # Heartbeat timestamp in ms
 
 notices/{noticeId}
   departmentId: string
@@ -73,59 +122,38 @@ notices/{noticeId}
   mediaType: "image" | "pdf" | null
   priority: "normal" | "urgent"
   status: "scheduled" | "active" | "expired" | "deleted"
-  createdBy: userId
-  createdAt: timestamp
-  scheduledAt: timestamp | null
-  expiresAt: timestamp | null
+  createdBy: string        # Sender phone or user ID
+  createdAt: number        # Server epoch ms — see note below
+  scheduledAt: number | null
+  expiresAt: number | null
 
 audit_log/{eventId}
   type: "publish" | "unauthorized_attempt" | "edit" | "delete"
   actorPhone: string
   detail: map
-  timestamp: timestamp
+  timestamp: number         # Server epoch ms — see note below
 ```
 
-Notes:
-- `notices` is never hard-deleted — `status: "deleted"` + `audit_log` entry preserves history (FR15/FR16 in the PRD).
-- Firestore security rules deny **all** client-side writes to `notices`, `users`, `departments` — only the Cloud Functions service account (using the Admin SDK, which bypasses rules) can write. Display clients and any future admin UI only ever read.
+**Timestamp rule [HARD]:** every `number`-typed timestamp above is set **inside a Cloud Function** using `Date.now()` (or `admin.firestore.Timestamp.now().toMillis()`) at write time — never accepted from a client, from Meta's payload, or from any value a WhatsApp message could influence. `scheduledAt` is the one exception: it's *parsed* from the faculty member's `#schedule` message, but it's still validated and normalized server-side (rejecting past-dated or malformed values with an error reply) before being stored. This matters because `scheduledNoticeManager` compares `scheduledAt <= now` and `expiresAt <= now` against its own server clock — if any of these fields were ever set by a source outside the Functions runtime, clock drift or a spoofed value could cause a notice to promote/expire at the wrong time.
 
-### 2.5 Display Client
-- Next.js static-ish page per department (`/display/[deptId]`), deployed on Vercel.
-- Subscribes to `notices` where `departmentId == deptId AND status == "active"`, ordered by priority then createdAt.
-- Renders fullscreen, auto-rotates if more notices than fit on one screen.
-- Heartbeat: writes `lastSeenAt` to its `screens` doc every 60s via a thin authenticated endpoint (not direct Firestore write) — lets Admins see which screens are offline.
-- Reconnect handling: on listener error, keep last rendered state, show a small corner indicator, retry with backoff.
+---
 
-### 2.6 Admin Surface (new — not in the original concept)
-A minimal authenticated web app (Firebase Auth) for Super Admins/HODs to:
-- Add/suspend faculty numbers and assign departments.
-- Register new screens and get their display URL.
-- View audit log and unauthorized-attempt log.
-- Manually edit/pull a notice (for the rare case a phone-based correction isn't practical).
-This wasn't specified in the original document but is required to satisfy FR8/FR16 — without it, every roster change requires a database console, which won't scale past the first pilot department.
-
-## 3. Technology Stack
+## 4. Technology Stack
 
 | Layer | Choice | Notes |
 |---|---|---|
-| Messaging | WhatsApp Business Cloud API (Meta) | unchanged |
-| Ingestion | Firebase Cloud Functions (Node.js/TypeScript) | replaces standalone Express server |
-| Database | Firestore | unchanged |
-| Media storage | Firebase Cloud Storage | unchanged, made explicit |
-| Display frontend | Next.js + TypeScript + Tailwind | unchanged |
-| Admin frontend | Next.js + TypeScript + Tailwind, Firebase Auth | new |
-| Hosting (frontends) | Vercel | unchanged |
-| Hosting (functions) | Firebase (Blaze plan) | replaces Railway/Render |
-| Scheduling | Firebase Scheduled Functions (Cloud Scheduler) | new, formalizes "auto expiry"/"scheduled notice" features |
+| Messaging | WhatsApp Business Cloud API (Meta) | Institutional channel |
+| Ingestion | Firebase Cloud Functions (v2 Node.js / TypeScript) | Event-driven serverless |
+| Database | Firestore | Real-time source of truth |
+| Media Storage | Firebase Cloud Storage | Uploaded via Cloud Functions |
+| Display Client | Next.js 14 + React 18 + Tailwind CSS | Hallway display app |
+| Admin Portal | Next.js 14 + React 18 + Tailwind CSS | Roster & telemetry dashboard |
+| Security | Firestore Rules (`allow write: if false;`) | Zero client-side writes |
 
-## 4. Security
-- Webhook signature verification is mandatory, not optional — reject unsigned/mis-signed payloads with 403 before any parsing.
-- Firestore rules: `allow read: if true` only on `notices` (active only, via a query the rules can validate) and `screens` (for heartbeat); everything else denied to client SDKs.
-- Rate limiting: a sender who exceeds N messages/minute is throttled (protects against a compromised or misused faculty number spamming a display).
-- Media content: images/PDFs are size-capped and MIME-type validated server-side before storage; no executable content is ever rendered.
-- Secrets (Meta app secret, service account keys) live in Firebase/GCP secret manager, never in client bundles.
+---
 
-## 5. Scalability
-- Firestore + Cloud Functions scale horizontally by default; the bottleneck at campus scale is Meta's API rate limits, not this stack.
-- Multi-department, multi-screen is native to the data model (department is a first-class collection; screens reference it) — no architectural change needed to onboard a new department, only new documents.
-- Multi-campus (future) would need a `campusId` partition added to every collection; deferred per PRD non-goals.
+## 5. Security & Scalability
+- **Webhook Signature Validation**: Mandatory `X-Hub-Signature-256` HMAC check on every request.
+- **Strict Firestore Rules**: All writes strictly disallowed from client SDKs (`allow write: if false`).
+- **Silent Drop**: Prevents phone number probing by remaining silent to unauthorized senders.
+- **Horizontal Scale**: Serverless functions and Firestore real-time listeners scale automatically with institution demand.
