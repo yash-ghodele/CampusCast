@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Strict default: deny all read and write
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Notices: Display clients & admin can read active notices. NO client writes allowed.
+    match /notices/{noticeId} {
+      allow read: if resource.data.status == "active" || request.auth != null;
+      allow write: if false;
+    }
+
+    // Departments: Public/Display read access, no client writes
+    match /departments/{deptId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Screens: Public/Display read access, no client writes
+    match /screens/{screenId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Users: Admin-only read access via Firebase Auth, no client writes
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Audit log: Admin-only read access via Firebase Auth, no client writes
+    match /audit_log/{logId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+  }
+}

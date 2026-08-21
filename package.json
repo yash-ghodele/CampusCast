@@ -1,0 +1,21 @@
+{
+  "name": "campuscast-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "functions",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev:display",
+    "dev:display": "npm run dev --workspace=apps/display",
+    "dev:admin": "npm run dev --workspace=apps/admin",
+    "dev:functions": "npm run build:watch --workspace=functions",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

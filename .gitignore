@@ -1,0 +1,27 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# build outputs
+dist
+lib
+.next
+out
+build
+
+# firebase
+.firebase
+*-debug.log
+firebase-debug.*.log
+
+# environment
+.env
+.env.local
+.env.development.local
+.env.production.local
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.vscode
+.idea
