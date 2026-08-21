@@ -38,9 +38,11 @@ CampusCast turns WhatsApp into the publishing interface for a real-time, departm
 ### Frontends (`apps/display` & `apps/admin`)
 - [x] `apps/display`: Next.js 14 hallway display app (`/display/[deptId]`).
   - 1080p hallway layout, Inter font, custom dark theme (`#0B1220` background).
+  - 100% student-focused announcements across ECE, CSE, MECH displays.
   - Urgent notice red border cards (`#E5484D`) with pulse glow animation.
   - Offline resilience: Keeps last-rendered state, shows `🟡 Reconnecting...` footer dot on connection drop.
   - Auto-scroll / card pagination every 8 seconds for multi-notice overflow.
+  - **Live Browser Verification**: Manually verified in browser subagent test at `http://localhost:3000`.
 - [x] `apps/admin`: Next.js 14 management dashboard (`/`).
   - Roster Tab: Add authorized faculty numbers, set department scope, toggle active/suspended status.
   - Screens Tab: Display screen registry and real-time heartbeat status.
@@ -54,7 +56,8 @@ CampusCast turns WhatsApp into the publishing interface for a real-time, departm
 2. **Backend-Only Writes**: Display & Admin clients ONLY read. All writes go through Cloud Functions using the Admin SDK.
 3. **Silent Drop for Unauthorized Senders**: Unauthorized senders are logged to `audit_log` and dropped without replying, preventing phone probing.
 4. **Dark Theme Displays**: Designed for hallway glare reduction, eye strain, and OLED power efficiency (`#0B1220` background, `#141C2E` cards).
-5. **Offline Resilience**: Display clients never go blank or render full-screen errors on connection loss; they retain last-known-good state.
+5. **Student-Focused Display Content**: Display cards are strictly student-facing announcements (practical exam shifts, project deadlines, placement drives, hackathons). Internal administrative faculty meeting notices belong in admin/email tools, not student hallway screens.
+6. **Offline Resilience**: Display clients never go blank or render full-screen errors on connection loss; they retain last-known-good state.
 
 ---
 
@@ -64,10 +67,14 @@ CampusCast/
 ├── Docs/
 │   ├── ABSTRACT.md
 │   ├── ARCHITECTURE.md
+│   ├── CampusCast_Review_1_prep.pptx
+│   ├── Chat.md
 │   ├── DESIGN.md
+│   ├── literature_survey_tabular.md
 │   ├── MEMORY.md
 │   ├── PHASE_PLAN.md
 │   ├── PRD.md
+│   ├── references.md
 │   └── RULES.md
 ├── packages/
 │   └── shared/               # Shared TypeScript types, parser & unit tests
@@ -90,3 +97,5 @@ CampusCast/
 | 2026-08-21 | Added Admin web app as a defined surface | Roster/screen management can't live in a DB console past pilot |
 | 2026-08-21 | Added role hierarchy: Super Admin / HOD / Faculty | Original Admin/Faculty split had no conflict-resolution path |
 | 2026-08-21 | Bootstrapped workspace, shared types, functions, display, admin apps | Complete end-to-end foundation setup |
+| 2026-08-22 | Updated demo notices to 100% student-focused announcements | Hallway screens must display student-facing notices (exams, deadlines, placements), not internal faculty meeting notes |
+| 2026-08-22 | Executed live browser verification on localhost:3000 | Verified ECE, CSE, MECH displays, live digital clock, and offline status indicators |

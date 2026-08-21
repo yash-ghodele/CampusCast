@@ -16,6 +16,7 @@ Phased development roadmap prioritizing a working end-to-end publishing loop (Wh
 - [x] WhatsApp confirmation reply dispatch.
 - [x] Next.js 14 hallway display app (`apps/display`) with dark theme (`#0B1220` background).
 - [x] Live Firestore `onSnapshot` listener and offline reconnect indicator.
+- [x] Live browser subagent verification test on `http://localhost:3000`.
 
 ## Phase 2 — Admin Portal & Roster Control [COMPLETED]
 - [x] Admin web app (`apps/admin`) with Roster management (add/suspend faculty).
@@ -28,9 +29,10 @@ Phased development roadmap prioritizing a working end-to-end publishing loop (Wh
 - [x] `#schedule` parsing → scheduled status notices.
 - [x] Cron Cloud Function `scheduledNoticeManager` running every minute.
 - [x] Image/PDF media attachment handling and inline card rendering.
+- [x] Student-focused notice feeds across ECE, CSE, MECH display routes.
 
 ## Phase 4 — Multi-Department Pilot Rollout [IN PROGRESS]
-- [x] Multi-department support (`ECE`, `CSE`, `MECH`, `CIVIL`, `EEE`).
+- [x] Multi-department display routes (`ECE`, `CSE`, `MECH`, `CIVIL`, `EEE`).
 - [ ] End-to-end live testing with real WhatsApp Business sandbox number.
 - [ ] Hallway hardware display kiosk deployment.
 
