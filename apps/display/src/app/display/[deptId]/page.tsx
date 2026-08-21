@@ -9,13 +9,13 @@ import { NoticeCard } from '@/components/NoticeCard';
 import { subscribeToDepartmentNotices, ListenerStatus } from '@/lib/firebase';
 import { Radio, MessageSquarePlus } from 'lucide-react';
 
-// Sample demonstration notices for instant preview / fallback
+// Student-centric demonstration notices for instant hallway display preview
 const MOCK_NOTICES: Record<string, Notice[]> = {
   ECE: [
     {
       id: 'demo-1',
       departmentId: 'ECE',
-      content: '⚡ URGENT: Microprocessor & Microcontroller Lab Exam rescheduled to 2:30 PM in Lab 3.',
+      content: '⚡ URGENT: Microprocessor & Microcontroller Practical Exam shifted to 2:30 PM today in Lab 3 (ECE Block).',
       mediaUrl: null,
       mediaType: null,
       priority: 'urgent',
@@ -28,7 +28,7 @@ const MOCK_NOTICES: Record<string, Notice[]> = {
     {
       id: 'demo-2',
       departmentId: 'ECE',
-      content: 'Faculty meeting for NBA Accreditation preparation today at 4:00 PM in Conference Room A.',
+      content: '📢 Attention 3rd & 4th Year Students: Submission deadline for Major Project Phase-1 Synopsis extended to Friday, 5:00 PM at HOD Desk.',
       mediaUrl: null,
       mediaType: null,
       priority: 'normal',
@@ -41,13 +41,69 @@ const MOCK_NOTICES: Record<string, Notice[]> = {
     {
       id: 'demo-3',
       departmentId: 'ECE',
-      content: 'Placement Drive Alert: Texas Instruments pre-placement talk starting tomorrow at 10:00 AM.',
+      content: '🎓 Placement Drive Alert: Texas Instruments pre-placement talk & online technical assessment tomorrow at 10:00 AM in Seminar Hall B.',
       mediaUrl: null,
       mediaType: null,
       priority: 'normal',
       status: 'active',
       createdBy: '+919876543210',
       createdAt: Date.now() - 1000 * 60 * 60 * 5,
+      scheduledAt: null,
+      expiresAt: Date.now() + 1000 * 60 * 60 * 24
+    }
+  ],
+  CSE: [
+    {
+      id: 'demo-cse-1',
+      departmentId: 'CSE',
+      content: '⚡ URGENT: Data Structures & Algorithms Lab session moved from Lab 1 to Computer Center 4.',
+      mediaUrl: null,
+      mediaType: null,
+      priority: 'urgent',
+      status: 'active',
+      createdBy: '+919876543211',
+      createdAt: Date.now() - 1000 * 60 * 30,
+      scheduledAt: null,
+      expiresAt: Date.now() + 1000 * 60 * 60 * 24
+    },
+    {
+      id: 'demo-cse-2',
+      departmentId: 'CSE',
+      content: '🚀 Campus Hackathon 2026: Team registration deadline closes today at 6:00 PM. Submit project titles online.',
+      mediaUrl: null,
+      mediaType: null,
+      priority: 'normal',
+      status: 'active',
+      createdBy: '+919876543211',
+      createdAt: Date.now() - 1000 * 60 * 60 * 3,
+      scheduledAt: null,
+      expiresAt: Date.now() + 1000 * 60 * 60 * 24
+    }
+  ],
+  MECH: [
+    {
+      id: 'demo-mech-1',
+      departmentId: 'MECH',
+      content: '⚡ URGENT: Thermodynamics lecture shifted to Main Auditorium at 11:30 AM.',
+      mediaUrl: null,
+      mediaType: null,
+      priority: 'urgent',
+      status: 'active',
+      createdBy: '+919876543212',
+      createdAt: Date.now() - 1000 * 60 * 10,
+      scheduledAt: null,
+      expiresAt: Date.now() + 1000 * 60 * 60 * 24
+    },
+    {
+      id: 'demo-mech-2',
+      departmentId: 'MECH',
+      content: '🔧 Industrial Visit: Tata Motors Manufacturing Plant visit scheduled for Monday. Campus departure at 8:00 AM sharp.',
+      mediaUrl: null,
+      mediaType: null,
+      priority: 'normal',
+      status: 'active',
+      createdBy: '+919876543212',
+      createdAt: Date.now() - 1000 * 60 * 60 * 4,
       scheduledAt: null,
       expiresAt: Date.now() + 1000 * 60 * 60 * 24
     }
