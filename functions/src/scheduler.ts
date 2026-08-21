@@ -1,6 +1,17 @@
+/**
+ * @file functions/src/scheduler.ts
+ * @description Scheduled Cloud Function for automated notice lifecycle management.
+ * 
+ * NEED FOR THIS FILE:
+ * Notice scheduling (`#schedule`) and automatic expiry are core product requirements.
+ * Managing transitions centrally backend-side ensures display screens never drift
+ * or disagree on notice states, maintaining serverless authority over notice lifecycles.
+ */
+
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import * as admin from 'firebase-admin';
 
+// Initialize Firebase Admin SDK if not already initialized
 if (!admin.apps.length) {
   admin.initializeApp();
 }
@@ -8,14 +19,19 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 /**
- * Scheduled Cloud Function running every minute to manage notice status lifecycles:
- * 1. Promotes "scheduled" notices -> "active" once scheduledAt is reached.
- * 2. Demotes "active" notices -> "expired" once expiresAt is reached.
+ * Scheduled Cloud Function: `scheduledNoticeManager`
+ * Triggers every 1 minute via GCP Cloud Scheduler.
+ * 
+ * WORKING MECHANISM:
+ * 1. Promotes notices from `status: 'scheduled'` -> `'active'` when `scheduledAt <= currentTimestamp`.
+ * 2. Demotes notices from `status: 'active'` -> `'expired'` when `expiresAt <= currentTimestamp`.
+ * Uses Firestore write batches to execute status updates atomically.
  */
 export const scheduledNoticeManager = onSchedule('every 1 minutes', async () => {
   const now = Date.now();
 
-  // 1. Promote scheduled notices
+  // STEP 1: Promote Scheduled Notices to Active Status
+  // Finds notices stored with status='scheduled' whose targeted scheduledAt timestamp has passed
   const scheduledQuery = await db.collection('notices')
     .where('status', '==', 'scheduled')
     .where('scheduledAt', '<=', now)
@@ -30,7 +46,8 @@ export const scheduledNoticeManager = onSchedule('every 1 minutes', async () => 
     console.log(`Promoted ${scheduledQuery.size} scheduled notices to active status.`);
   }
 
-  // 2. Expire past notices
+  // STEP 2: Demote Expired Notices from Active Status
+  // Finds active notices whose expiration timestamp (expiresAt) has passed
   const expiredQuery = await db.collection('notices')
     .where('status', '==', 'active')
     .where('expiresAt', '<=', now)
