@@ -25,3 +25,9 @@ firebase-debug.*.log
 Thumbs.db
 .vscode
 .idea
+
+# Internal Review Notes & Raw Prep Docs (Keep off public repo)
+Docs/Chat.md
+Docs/*.pptx
+Docs/literature_survey_tabular.md
+Docs/references.md
