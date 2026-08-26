@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0B1220;
+  --card: #141C2E;
+  --text-primary: #F5F7FA;
+  --text-secondary: #8B96A8;
+  --accent-urgent: #E5484D;
+  --accent-normal: #3B82F6;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom scrollbar behavior for auto-pagination */
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.custom-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(229, 72, 77, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(229, 72, 77, 0.45);
+  }
+}
+
+.urgent-glow {
+  animation: pulseGlow 3s infinite ease-in-out;
+}
