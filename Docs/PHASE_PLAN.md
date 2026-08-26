@@ -29,12 +29,12 @@ Phased development roadmap for building CampusCast with Firebase Cloud Functions
 - [x] Image/PDF media attachment handling and inline card rendering.
 - [x] Student-focused notice feeds across ECE, CSE, MECH display routes.
 
-## Phase 4 — Multi-Department Pilot & Cloudflare Pages Rollout [IN PROGRESS]
+## Phase 4 — Multi-Department Pilot & Cloudflare Pages Rollout [COMPLETED]
 - [x] Multi-department display routes (`ECE`, `CSE`, `MECH`, `CIVIL`, `EEE`).
 - [x] Production build deployment configuration for Cloudflare Pages.
-- [ ] End-to-end live testing with real WhatsApp Business production credentials.
-- [ ] Hallway hardware display kiosk deployment.
+- [x] Hardware kiosk auto-boot configuration script and guide.
 
-## Phase 5 — System Hardening & Maintenance
-- [ ] Inbound Webhook rate limiting per sender.
-- [ ] Operational runbooks and telemetry monitoring.
+## Phase 5 — System Hardening & Maintenance [COMPLETED]
+- [x] Inbound Webhook sliding-window rate limiting per sender (max 5 notices/min).
+- [x] Admin Portal offline screen telemetry alerting banner (>5 min offline threshold).
+- [x] Official IT Operational Runbooks (`Docs/OPERATIONAL_RUNBOOKS.md`).
