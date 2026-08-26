@@ -4,7 +4,7 @@ node_modules
 
 # build outputs
 dist
-lib
+/functions/lib
 .next
 out
 build
