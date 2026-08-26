@@ -1,18 +1,21 @@
 {
-  "name": "campuscast-monorepo",
+  "name": "campuscast",
   "version": "1.0.0",
   "private": true,
   "workspaces": [
     "packages/*",
     "functions",
-    "apps/*"
+    "display",
+    "admin"
   ],
   "scripts": {
     "dev": "npm run dev:display",
-    "dev:display": "npm run dev --workspace=apps/display",
-    "dev:admin": "npm run dev --workspace=apps/admin",
-    "dev:functions": "npm run build:watch --workspace=functions",
+    "dev:display": "npm run dev --workspace=campuscast-display",
+    "dev:admin": "npm run dev --workspace=campuscast-admin",
+    "dev:functions": "npm run build:watch --workspace=campuscast-functions",
     "build": "npm run build --workspaces --if-present",
+    "build:display": "npm run build --workspace=campuscast-display",
+    "build:admin": "npm run build --workspace=campuscast-admin",
     "test": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
