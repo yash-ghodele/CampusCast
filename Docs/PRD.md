@@ -3,6 +3,8 @@
 ## 1. Product Vision & Scope
 CampusCast turns WhatsApp into the primary publishing interface for institutional announcements broadcasted across department LCD screens.
 
+- **Zero External Hardware Model**: Display screens run directly inside any Smart TV's built-in web browser (Android TV, webOS, Tizen OS, Fire TV) connected to campus Wi-Fi. **No Raspberry Pi, Mini-PC, or HDMI dongles required.**
+
 ## 2. User Personas
 - **Faculty Publishers**: Send WhatsApp messages, images, or PDFs to publish announcements with zero dashboard learning curve.
 - **Campus Students**: View hallway display screens with high-contrast, hallway-legible notices.
@@ -15,7 +17,7 @@ CampusCast turns WhatsApp into the primary publishing interface for institutiona
 - **FR4: Priority Flagging**: Parse `#urgent` tags to render red alert styling (`#E5484D`) with pulse glow animations.
 - **FR5: Automated Scheduling**: Parse `#schedule DD-MM-YYYY HH:mm` tags to queue announcements for automatic future publishing.
 - **FR6: Silent Drop Policy**: Record unauthorized publish attempts in the audit log and drop silently without sending a WhatsApp reply to prevent phone number probing.
-- **FR7: Real-Time Notice Streaming**: Push active notices to hallway display screens instantaneously via real-time WebSocket listeners.
+- **FR7: Real-Time Notice Streaming**: Push active notices to Smart TV hallway display screens instantaneously via real-time WebSocket listeners.
 - **FR8: Administrative Control**: Web management portal to onboard faculty, monitor screen telemetry, force-expire notices, and view immutable audit logs.
 
 ## 4. Non-Functional Requirements (NFR)
