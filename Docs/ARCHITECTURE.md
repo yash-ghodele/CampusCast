@@ -10,7 +10,7 @@ sequenceDiagram
     participant Webhook as Cloud Function (whatsappWebhook)
     participant DB as Cloud Firestore (NoSQL)
     participant Cron as GCP Cloud Scheduler + Function (scheduledNoticeManager)
-    participant Display as Display Kiosk (Next.js on Cloudflare Pages)
+    participant Display as Smart TV Browser (Next.js on Cloudflare Pages)
     participant Admin as Admin Portal (Next.js on Cloudflare Pages)
 
     Faculty->>Meta: Send WhatsApp message (e.g. "#urgent ECE: Lab shifted to 2 PM")
@@ -43,7 +43,7 @@ sequenceDiagram
     Admin->>DB: Read Roster, Screen telemetry, Notice history, & Audit logs
 ```
 
-## 2. Infrastructure Layer Mapping
+## 2. Infrastructure Layer Mapping (Zero External Hardware)
 
 | Layer | Technology | Operational Function |
 |---|---|---|
@@ -52,6 +52,7 @@ sequenceDiagram
 | **Billing Plan** | Firebase Blaze Plan (Pay-as-you-go) | Unlocks outbound HTTPS calls to Meta Graph API (`graph.facebook.com`). |
 | **Database** | Cloud Firestore (NoSQL) | Notice document storage with native `onSnapshot` streaming listeners. |
 | **Frontend Hosting** | Cloudflare Pages | Hosts Next.js 14 display kiosk & admin apps with unlimited free bandwidth. |
+| **Display Client** | Smart TV Built-in Web Browser | Direct browser access (`http://<ip>/display/[deptId]`). **No Pi or Mini-PC required.** |
 
 ## 3. NoSQL Firestore Schema Specifications
 
@@ -82,7 +83,7 @@ interface Department {
 interface Screen {
   id: string;
   departmentId: string; // Foreign key linking screen to department scope
-  label: string;         // Human-readable location e.g. "ECE Corridor Main Display"
+  label: string;         // Human-readable location e.g. "ECE Corridor Smart TV"
   lastSeenAt: number | null; // UNIX timestamp in ms
 }
 ```
