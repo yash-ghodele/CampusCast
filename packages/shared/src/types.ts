@@ -45,7 +45,6 @@ export interface Department {
   name: string; // e.g. "Electronics & Communication Engineering"
   code: string; // Short code e.g. "ECE", "CSE", "MECH"
   screens: string[]; // Registered screen IDs assigned to this department
-  phoneNumberId?: string; // Optional Meta WhatsApp Phone Number ID bound directly to this department
 }
 
 /**
