@@ -222,7 +222,24 @@ export const whatsappWebhook = onRequest({ cors: true }, async (req, res) => {
           const parsed = parseNoticeMessage(rawText);
 
           // STEP D: Department Scope & Ambiguity Resolution
+          // Routing Priority:
+          // 1. Explicit message prefix in body (e.g. "ECE: Lab shifted")
+          // 2. Target WhatsApp Phone Number ID receiving the message (bound to a specific department)
+          // 3. Sender's home department scope in user.departments
           let targetDeptCode = parsed.departmentCode;
+
+          if (!targetDeptCode && phoneNumberId) {
+            // Check if recipient WhatsApp phone number ID is bound directly to a department
+            const deptByPhoneQuery = await db.collection('departments')
+              .where('phoneNumberId', '==', phoneNumberId)
+              .limit(1)
+              .get();
+
+            if (!deptByPhoneQuery.empty) {
+              targetDeptCode = deptByPhoneQuery.docs[0].data().code;
+              console.log(`Matched target department '${targetDeptCode}' from receiving WhatsApp number ID: ${phoneNumberId}`);
+            }
+          }
 
           if (!targetDeptCode) {
             if (user.departments && user.departments.length === 1) {
