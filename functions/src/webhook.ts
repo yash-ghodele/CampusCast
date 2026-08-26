@@ -197,6 +197,26 @@ export const whatsappWebhook = onRequest({ cors: true }, async (req, res) => {
           const userDoc = userQuery.docs[0];
           const user = userDoc.data() as User;
 
+          // STEP B.2: Inbound Webhook Sliding-Window Rate Limiting
+          // Need: Prevents spamming or compromised faculty devices from flooding hallway screens.
+          // Working: Checks audit_log for recent publish entries from senderPhone in the past 60 seconds. Max 5/min.
+          const oneMinuteAgo = Date.now() - 60000;
+          const rateLimitQuery = await db.collection('audit_log')
+            .where('actorPhone', '==', senderPhone)
+            .where('timestamp', '>=', oneMinuteAgo)
+            .get();
+
+          if (rateLimitQuery.size >= 5) {
+            console.warn(`Rate limit exceeded for sender: ${senderPhone}`);
+            await db.collection('audit_log').add({
+              type: 'unauthorized_attempt',
+              actorPhone: senderPhone,
+              detail: { rawText, reason: 'Rate limit exceeded (max 5 notices per minute)' },
+              timestamp: Date.now()
+            } as Omit<AuditLog, 'id'>);
+            continue;
+          }
+
           // STEP C: Message Parsing
           // Uses shared parser engine to extract priority, scheduled dates, and department prefixes
           const parsed = parseNoticeMessage(rawText);
