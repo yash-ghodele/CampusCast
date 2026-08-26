@@ -1,32 +1,24 @@
 # CampusCast — Product Requirements Document (PRD)
 
-## 1. Executive Summary
-CampusCast turns WhatsApp into the publishing interface for a real-time, department-scoped digital notice board network.
+## 1. Product Vision & Scope
+CampusCast turns WhatsApp into the primary publishing interface for institutional announcements broadcasted across department LCD screens.
 
-Faculty publish announcements by sending a plain WhatsApp text, image, or PDF to an institutional number. CampusCast authenticates the sender, parses priority (#urgent) and department tags (ECE:), writes the notice to Cloud Firestore (NoSQL), and instantaneously pushes updates to department hallway LCD display screens via real-time onSnapshot listeners.
+## 2. User Personas
+- **Faculty Publishers**: Send WhatsApp messages, images, or PDFs to publish announcements with zero dashboard learning curve.
+- **Campus Students**: View hallway display screens with high-contrast, hallway-legible notices.
+- **Department HODs & Admins**: Onboard faculty E.164 phone numbers, monitor screen telemetry heartbeats, search notice history, and inspect security audit logs.
 
-- **Stack**: Firebase Cloud Functions v2 (Blaze Plan) + Cloud Firestore NoSQL + Cloudflare Pages Frontend Hosting.
-- **Primary Goal**: <5s publish-to-display latency with zero adoption friction for faculty.
+## 3. Functional Requirements (FR)
+- **FR1: WhatsApp Ingestion**: Ingest text messages, poster images (JPEG/PNG), and official circulars (PDF) sent by faculty via Meta WhatsApp Cloud API.
+- **FR2: Sender Authentication**: Authenticate senders strictly by their verified E.164 phone number registered in the active faculty roster.
+- **FR3: Department Routing**: Route notices to specific department screens using explicit code prefixes (e.g. `ECE:`) or assigned faculty home departments.
+- **FR4: Priority Flagging**: Parse `#urgent` tags to render red alert styling (`#E5484D`) with pulse glow animations.
+- **FR5: Automated Scheduling**: Parse `#schedule DD-MM-YYYY HH:mm` tags to queue announcements for automatic future publishing.
+- **FR6: Silent Drop Policy**: Record unauthorized publish attempts in the audit log and drop silently without sending a WhatsApp reply to prevent phone number probing.
+- **FR7: Real-Time Notice Streaming**: Push active notices to hallway display screens instantaneously via real-time WebSocket listeners.
+- **FR8: Administrative Control**: Web management portal to onboard faculty, monitor screen telemetry, force-expire notices, and view immutable audit logs.
 
----
-
-## 2. Key Architecture & Operational Choices
-1. **Firebase Blaze Plan**: Unlocks outbound HTTP requests from Cloud Functions to Meta's WhatsApp Graph API for confirmation replies.
-2. **NoSQL Firestore (onSnapshot)**: Real-time push listeners for display kiosks with zero polling overhead.
-3. **Cloudflare Pages**: Hosts Next.js 14 frontend display and admin applications with unlimited free bandwidth.
-4. **Firebase Security**: Enforces strict llow write: if false; security rules in irestore.rules.
-5. **Silent Drops**: Unauthorized senders are recorded in udit_log and dropped silently without replying to prevent phone probing.
-
----
-
-## 3. User Personas & Core Journeys
-- **Faculty Publishers**: Send WhatsApp message -> Receive automated confirmation reply -> Notice live on screen.
-- **Campus Students**: View high-contrast dark theme displays (#0B1220) with red alert cards for #urgent announcements.
-- **HODs & Admins**: Manage faculty roster, screen telemetry heartbeats, notice histories, and audit logs via Next.js Admin Portal.
-
----
-
-## 4. Non-Functional SLAs & Metrics
-- **Publish-to-Display Latency**: <5 seconds p95.
-- **Display Resilience**: If Wi-Fi drops, screens retain last-rendered state and display 🟡 Reconnecting... footer indicator. Screens **never go blank**.
-- **Security Baseline**: 100% backend-only writes via Firebase Admin SDK.
+## 4. Non-Functional Requirements (NFR)
+- **NFR1: Publish Latency**: $<5$ seconds p95 latency from WhatsApp message send to display kiosk rendering.
+- **NFR2: Display Resilience**: Retain last-rendered notices and show a `🟡 Reconnecting...` footer indicator on Wi-Fi drop. Screens **never go blank**.
+- **NFR3: Security Baseline**: Enforce 100% backend-only writes via serverless Admin SDK (`allow write: if false;`).

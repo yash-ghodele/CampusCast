@@ -1,159 +1,116 @@
-# CampusCast — Architecture Document
+# CampusCast — Technical Architecture & Schemas
 
-## 1. High-Level Flow
+## 1. System Sequence Diagram
 
-```
-Faculty WhatsApp
-      │  (text / image / pdf)
-      ▼
-Meta WhatsApp Cloud API  ──────────────────────────────► (delivery receipts / confirmation replies)
-      │  webhook (signed POST)
-      ▼
-Ingestion Function (Firebase Cloud Function v2)
-      │
-      ├─ Verify webhook signature (X-Hub-Signature-256)
-      ├─ Resolve sender → Users collection (auth check; silent drop if unauthorized)
-      ├─ Parse message → { departmentCode, priority, scheduledAt?, content }
-      ├─ Store media (if present) → Firebase Cloud Storage
-      └─ Write notice document → Firestore (via Admin SDK)
-      ▼
-Firestore (source of truth)
-      │  onSnapshot listeners (real-time, zero polling)
-      ▼
-Display Web Clients (Next.js 14, department-scoped)
-      ▼
-LCD / Smart TV (Fullscreen Kiosk Mode)
-```
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Faculty as Faculty Member (WhatsApp)
+    participant Meta as Meta WhatsApp Cloud API
+    participant Webhook as Cloud Function (whatsappWebhook)
+    participant DB as Cloud Firestore (NoSQL)
+    participant Cron as GCP Cloud Scheduler + Function (scheduledNoticeManager)
+    participant Display as Display Kiosk (Next.js on Cloudflare Pages)
+    participant Admin as Admin Portal (Next.js on Cloudflare Pages)
 
----
+    Faculty->>Meta: Send WhatsApp message (e.g. "#urgent ECE: Lab shifted to 2 PM")
+    Meta->>Webhook: Inbound Webhook POST (signed with X-Hub-Signature-256)
+    
+    rect rgb(20, 30, 50)
+        Note over Webhook: 1. HMAC SHA-256 Signature Verification<br/>2. Phone Auth Lookup in `users`<br/>3. Parse Tags (#urgent, #schedule, DEPT:)
+    end
 
-## 2. Directory & Monorepo Structure
+    alt Sender is Unauthorized
+        Webhook->>DB: Add doc to `audit_log` (type: unauthorized_attempt)
+        Note over Webhook: Silent Drop (No WhatsApp error reply sent)
+    else Sender is Authorized
+        Webhook->>DB: Add doc to `notices` (status: active/scheduled)
+        Webhook->>DB: Add doc to `audit_log` (type: publish)
+        Webhook-->>Meta: Outbound POST to Graph API ("✅ Posted to ECE")
+        Meta-->>Faculty: Deliver WhatsApp Reply
+    end
 
-```
-d:\Projects\CampusCast\
-├── Docs/                           # Documentation (PRD, Architecture, Design, etc.)
-│   ├── ABSTRACT.md
-│   ├── ARCHITECTURE.md
-│   ├── DESIGN.md
-│   ├── MEMORY.md
-│   ├── PHASE_PLAN.md
-│   ├── PRD.md
-│   └── RULES.md
-├── packages/
-│   └── shared/                     # Shared TypeScript interfaces & validators
-│       └── src/
-│           ├── types.ts            # User, Notice, Department, Screen, AuditLog
-│           ├── parsing.ts          # WhatsApp message parser (#urgent, #schedule, DEPT:)
-│           ├── parsing.test.ts     # Parser unit tests
-│           └── index.ts
-├── functions/                      # Firebase Cloud Functions (v2 Node.js / TypeScript)
-│   ├── src/
-│   │   ├── index.ts                # Function exports
-│   │   ├── webhook.ts              # WhatsApp Webhook (X-Hub-Signature-256, ingestion)
-│   │   ├── scheduler.ts            # Cron scheduler (promote scheduled -> active -> expired)
-│   │   └── heartbeat.ts            # Display client heartbeat API endpoint
-│   ├── package.json
-│   └── tsconfig.json
-├── apps/
-│   ├── display/                    # Next.js 14 Display Web Client (Fullscreen Kiosk)
-│   │   ├── src/
-│   │   │   ├── app/
-│   │   │   │   ├── page.tsx        # Department display selector directory
-│   │   │   │   └── display/[deptId]/page.tsx # Department live notice feed
-│   │   │   ├── components/         # Header, Footer, NoticeCard
-│   │   │   └── lib/firebase.ts     # Firestore snapshot listener with reconnect handling
-│   │   ├── package.json
-│   │   └── tailwind.config.js      # Dark theme palette (#0B1220 background)
-│   └── admin/                      # Next.js 14 Admin Web Portal
-│       ├── src/
-│       │   └── app/page.tsx        # Roster, Screens, Notices, Security Audit tabs
-│       └── package.json
-├── firebase.json                   # Firebase configuration (Functions, Firestore, Storage, Hosting)
-├── firestore.rules                 # Strict security rules (Deny ALL client-side writes)
-├── storage.rules                  # Storage rules for media assets
-└── package.json                    # Workspace root scripts & npm workspaces setup
+    loop Firestore Realtime Stream (onSnapshot)
+        DB-->>Display: Push active notice collection updates
+        Display->>Display: Render high-contrast card (#E5484D red glow for #urgent)
+    end
+
+    loop Every 1 Minute Cron Ticker
+        Cron->>DB: Promote scheduled notices (scheduledAt <= now) -> active
+        Cron->>DB: Expire old active notices (expiresAt <= now) -> expired
+    end
+
+    Admin->>DB: Read Roster, Screen telemetry, Notice history, & Audit logs
 ```
 
----
+## 2. Infrastructure Layer Mapping
 
-## 3. Core Components
-
-### 3.1 WhatsApp Layer
-- Meta WhatsApp Business Cloud API.
-- Single CampusCast Business phone number serving all departments institution-wide.
-
-### 3.2 Ingestion Cloud Function (`functions/src/webhook.ts`)
-- **Signature verification**: Validates `X-Hub-Signature-256` header against Meta app secret.
-- **Authorization check**: Sender's E.164 phone number looked up in `users` collection.
-  - If absent or suspended: Logged to `audit_log` with `type: 'unauthorized_attempt'` and dropped silently (no reply sent).
-- **Parsing**: Resolves `#urgent` priority, `#schedule` dates, and `DEPT:` prefix or single assigned home department.
-- **Write**: Creates notice document in `notices/{noticeId}` via Firebase Admin SDK.
-- **Reply**: Sends WhatsApp confirmation or error reply via Meta Graph API.
-
-### 3.3 Scheduler Cloud Function (`functions/src/scheduler.ts`)
-Runs every 1 minute via Cloud Scheduler:
-- Promotes `status: "scheduled"` notices to `"active"` once `scheduledAt <= now`.
-- Demotes `status: "active"` notices to `"expired"` once `expiresAt <= now`.
-
-### 3.4 Data Layer — Firestore Collections
-
-```
-users/{userId}
-  name: string
-  phone: string          # E.164 format (+91...), unique
-  role: "super_admin" | "hod" | "faculty"
-  departments: string[]  # Department codes this user can publish to
-  status: "active" | "suspended"
-
-departments/{deptId}
-  name: string
-  code: string            # e.g. "ECE", "CSE"
-  screens: string[]       # Registered screen IDs
-
-screens/{screenId}
-  departmentId: string
-  label: string            # e.g. "ECE Main Hallway Screen"
-  lastSeenAt: number       # Heartbeat timestamp in ms
-
-notices/{noticeId}
-  departmentId: string
-  content: string
-  mediaUrl: string | null
-  mediaType: "image" | "pdf" | null
-  priority: "normal" | "urgent"
-  status: "scheduled" | "active" | "expired" | "deleted"
-  createdBy: string        # Sender phone or user ID
-  createdAt: number        # Server epoch ms — see note below
-  scheduledAt: number | null
-  expiresAt: number | null
-
-audit_log/{eventId}
-  type: "publish" | "unauthorized_attempt" | "edit" | "delete"
-  actorPhone: string
-  detail: map
-  timestamp: number         # Server epoch ms — see note below
-```
-
-**Timestamp rule [HARD]:** every `number`-typed timestamp above is set **inside a Cloud Function** using `Date.now()` (or `admin.firestore.Timestamp.now().toMillis()`) at write time — never accepted from a client, from Meta's payload, or from any value a WhatsApp message could influence. `scheduledAt` is the one exception: it's *parsed* from the faculty member's `#schedule` message, but it's still validated and normalized server-side (rejecting past-dated or malformed values with an error reply) before being stored. This matters because `scheduledNoticeManager` compares `scheduledAt <= now` and `expiresAt <= now` against its own server clock — if any of these fields were ever set by a source outside the Functions runtime, clock drift or a spoofed value could cause a notice to promote/expire at the wrong time.
-
----
-
-## 4. Technology Stack
-
-| Layer | Choice | Notes |
+| Layer | Technology | Operational Function |
 |---|---|---|
-| Messaging | WhatsApp Business Cloud API (Meta) | Institutional channel |
-| Ingestion | Firebase Cloud Functions (v2 Node.js / TypeScript) | Event-driven serverless |
-| Database | Firestore | Real-time source of truth |
-| Media Storage | Firebase Cloud Storage | Uploaded via Cloud Functions |
-| Display Client | Next.js 14 + React 18 + Tailwind CSS | Hallway display app |
-| Admin Portal | Next.js 14 + React 18 + Tailwind CSS | Roster & telemetry dashboard |
-| Security | Firestore Rules (`allow write: if false;`) | Zero client-side writes |
+| **Messaging Ingestion** | Meta WhatsApp Business Cloud API | Webhook payload delivery; outbound confirmation replies. |
+| **Serverless Compute** | Firebase Cloud Functions (v2 Node.js) | HMAC SHA-256 validation, phone auth lookup, tag parsing, DB writes. |
+| **Billing Plan** | Firebase Blaze Plan (Pay-as-you-go) | Unlocks outbound HTTPS calls to Meta Graph API (`graph.facebook.com`). |
+| **Database** | Cloud Firestore (NoSQL) | Notice document storage with native `onSnapshot` streaming listeners. |
+| **Frontend Hosting** | Cloudflare Pages | Hosts Next.js 14 display kiosk & admin apps with unlimited free bandwidth. |
 
----
+## 3. NoSQL Firestore Schema Specifications
 
-## 5. Security & Scalability
-- **Webhook Signature Validation**: Mandatory `X-Hub-Signature-256` HMAC check on every request.
-- **Strict Firestore Rules**: All writes strictly disallowed from client SDKs (`allow write: if false`).
-- **Silent Drop**: Prevents phone number probing by remaining silent to unauthorized senders.
-- **Horizontal Scale**: Serverless functions and Firestore real-time listeners scale automatically with institution demand.
+### Collection: `users/{userId}`
+```typescript
+interface User {
+  id: string;
+  name: string;
+  phone: string;         // E.164 format e.g. "+919876543210" (Primary Identity)
+  role: 'super_admin' | 'hod' | 'faculty';
+  departments: string[]; // e.g. ["ECE", "CSE"]
+  status: 'active' | 'suspended';
+}
+```
+
+### Collection: `departments/{deptId}`
+```typescript
+interface Department {
+  id: string;
+  name: string;          // e.g. "Electronics & Communication Engineering"
+  code: string;          // e.g. "ECE"
+  screens: string[];     // Array of registered screen IDs
+}
+```
+
+### Collection: `screens/{screenId}`
+```typescript
+interface Screen {
+  id: string;
+  departmentId: string; // Foreign key linking screen to department scope
+  label: string;         // Human-readable location e.g. "ECE Corridor Main Display"
+  lastSeenAt: number | null; // UNIX timestamp in ms
+}
+```
+
+### Collection: `notices/{noticeId}`
+```typescript
+interface Notice {
+  id: string;
+  departmentId: string;  // Target department code e.g. "ECE"
+  content: string;       // Body text content
+  mediaUrl: string | null;
+  mediaType: 'image' | 'pdf' | null;
+  priority: 'normal' | 'urgent'; // 'urgent' triggers red alert styling
+  status: 'scheduled' | 'active' | 'expired' | 'deleted';
+  createdBy: string;     // Sender phone number
+  createdAt: number;     // UNIX timestamp in ms
+  scheduledAt: number | null;
+  expiresAt: number | null;
+}
+```
+
+### Collection: `audit_log/{logId}`
+```typescript
+interface AuditLog {
+  id: string;
+  type: 'publish' | 'unauthorized_attempt' | 'edit' | 'delete';
+  actorPhone: string;
+  detail: Record<string, any>;
+  timestamp: number;
+}
+```
