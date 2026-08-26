@@ -15,11 +15,21 @@ A single WhatsApp message sent by an authorized faculty member is authenticated 
 
 ---
 
-## 📘 Master Documentation
+## 📺 Zero-Hardware Smart TV Model
 
-All project documentation, specs, architecture flows, design tokens, security rules, and literature survey references have been consolidated into a single master document:
+No Raspberry Pi, Mini-PC, HDMI dongles, or external media player boxes are required! Any Smart TV (Android TV, LG webOS, Samsung Tizen OS, Amazon Fire TV) opens the display URL (`http://<server-ip>/display/[deptId]`) directly in its native web browser.
 
-👉 [**`Docs/PROJECT_MASTER_DOCS.md`**](file:///d:/Projects/CampusCast/Docs/PROJECT_MASTER_DOCS.md)
+---
+
+## 📘 Documentation Index
+
+- [**`Docs/OPERATIONAL_RUNBOOKS.md`**](file:///d:/Projects/CampusCast/Docs/OPERATIONAL_RUNBOOKS.md): Smart TV Direct Browser setup guide & IT runbooks.
+- [**`Docs/PRD.md`**](file:///d:/Projects/CampusCast/Docs/PRD.md): Product requirements & functional SLAs.
+- [**`Docs/ARCHITECTURE.md`**](file:///d:/Projects/CampusCast/Docs/ARCHITECTURE.md): Technical architecture & NoSQL document schemas.
+- [**`Docs/DESIGN.md`**](file:///d:/Projects/CampusCast/Docs/DESIGN.md): Display visual design system & hallway kiosk UX.
+- [**`Docs/STORAGE_RULES.md`**](file:///d:/Projects/CampusCast/Docs/STORAGE_RULES.md): Security rules baseline (`firestore.rules` deny-all client writes).
+- [**`Docs/PHASE_PLAN.md`**](file:///d:/Projects/CampusCast/Docs/PHASE_PLAN.md): 5-Phase implementation roadmap.
+- [**`Docs/MEMORY.md`**](file:///d:/Projects/CampusCast/Docs/MEMORY.md): Project memory & decision log.
 
 ---
 
@@ -34,117 +44,6 @@ All project documentation, specs, architecture flows, design tokens, security ru
 - 🔒 **Zero Client-Side Writes**: Enforced in [`firestore.rules`](file:///d:/Projects/CampusCast/firestore.rules) (`allow write: if false;`). All database updates run through backend Cloud Functions.
 - 🟡 **Offline Display Resilience**: If network connectivity drops, display kiosks retain the last rendered notices and present a subtle `🟡 Reconnecting...` footer indicator. Screens **never go blank**.
 - 📊 **Admin Portal**: Next.js 14 management portal for faculty roster onboarding, screen telemetry heartbeats, notice control, and audit logs.
-
----
-
-## 🏗️ Architecture Sequence Flow
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Faculty as Faculty Member (WhatsApp)
-    participant Meta as Meta WhatsApp Cloud API
-    participant Webhook as Cloud Function (whatsappWebhook)
-    participant DB as Cloud Firestore (NoSQL)
-    participant Cron as GCP Cloud Scheduler + Function (scheduledNoticeManager)
-    participant Display as Display Kiosk (Next.js on Cloudflare Pages)
-    participant Admin as Admin Portal (Next.js on Cloudflare Pages)
-
-    Faculty->>Meta: Send WhatsApp message (e.g. "#urgent ECE: Lab shifted to 2 PM")
-    Meta->>Webhook: Inbound Webhook POST (signed with X-Hub-Signature-256)
-    
-    rect rgb(20, 30, 50)
-        Note over Webhook: 1. HMAC SHA-256 Signature Verification<br/>2. Phone Auth Lookup in `users`<br/>3. Parse Tags (#urgent, #schedule, DEPT:)
-    end
-
-    alt Sender is Unauthorized
-        Webhook->>DB: Add doc to `audit_log` (type: unauthorized_attempt)
-        Note over Webhook: Silent Drop (No WhatsApp error reply sent)
-    else Sender is Authorized
-        Webhook->>DB: Add doc to `notices` (status: active/scheduled)
-        Webhook->>DB: Add doc to `audit_log` (type: publish)
-        Webhook-->>Meta: Outbound POST to Graph API ("✅ Posted to ECE")
-        Meta-->>Faculty: Deliver WhatsApp Reply
-    end
-
-    loop Firestore Realtime Stream (onSnapshot)
-        DB-->>Display: Push active notice collection updates
-        Display->>Display: Render high-contrast card (#E5484D red glow for #urgent)
-    end
-
-    loop Every 1 Minute Cron Ticker
-        Cron->>DB: Promote scheduled notices (scheduledAt <= now) -> active
-        Cron->>DB: Expire old active notices (expiresAt <= now) -> expired
-    end
-
-    Admin->>DB: Read Roster, Screen telemetry, Notice history, & Audit logs
-```
-
----
-
-## 📂 Repository Layout
-
-```
-CampusCast/
-├── Docs/
-│   ├── PROJECT_MASTER_DOCS.md      # Consolidated Master Documentation (71 KB)
-│   ├── PRD.md                      # Product Requirements Document
-│   ├── ARCHITECTURE.md             # System Architecture & NoSQL Schemas
-│   ├── DESIGN.md                   # Display Visual Design System & UX
-│   ├── PHASE_PLAN.md               # 5-Phase Implementation Plan
-│   ├── STORAGE_RULES.md            # Firestore Security Rules & Access Policies
-│   ├── MEMORY.md                   # Project Memory & Decision History
-│   └── v1_firebase_archive/        # Archive subfolder containing past specifications
-├── packages/
-│   └── shared/                     # Shared TypeScript domain models & parser
-├── functions/                      # Firebase Cloud Functions (v2 Node.js / TypeScript)
-├── apps/
-│   ├── display/                    # Next.js 14 Fullscreen Hallway Display Kiosk Client
-│   └── admin/                      # Next.js 14 Management Portal
-├── firestore.rules                 # Strict security rules (Deny ALL client writes)
-├── storage.rules                  # Storage rules for media attachments
-├── firebase.json                   # Firebase emulators & function bindings
-└── package.json                    # Monorepo root & workspace scripts
-```
-
----
-
-## 🛠️ Quick Start Guide
-
-### Prerequisites
-- **Node.js**: v18 or higher
-- **npm**: v9 or higher
-
-### 1. Clone & Install Dependencies
-```bash
-git clone https://github.com/yash-ghodele/CampusCast.git
-cd CampusCast
-npm install
-```
-
-### 2. Run Development Applications
-
-#### Launch Display Web Client (Port 3000)
-```bash
-npm run dev
-# OR
-npm run dev:display
-```
-Open `http://localhost:3000` to access the department display directory, or jump directly to a live display screen:
-- ECE Display: `http://localhost:3000/display/ece`
-- CSE Display: `http://localhost:3000/display/cse`
-- MECH Display: `http://localhost:3000/display/mech`
-
-#### Launch Admin Management Portal (Port 3001)
-```bash
-npm run dev:admin
-```
-Open `http://localhost:3001` to manage the faculty roster, monitor screen heartbeats, search notice history, and inspect security audit logs.
-
-#### Build All Workspace Packages
-```bash
-npm run build
-```
 
 ---
 
