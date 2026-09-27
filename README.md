@@ -56,6 +56,7 @@ The Admin Portal is architected using **8 dedicated standalone Next.js App Route
 
 ## 📘 Documentation Index
 
+- [**`Docs/DEPLOYMENT_GUIDE.md`**](file:///d:/Projects/CampusCast/Docs/DEPLOYMENT_GUIDE.md): Complete Production Deployment Guide for Vercel, Cloudflare Pages, Firebase, and Smart TV setup.
 - [**`Docs/USER_GUIDE.md`**](file:///d:/Projects/CampusCast/Docs/USER_GUIDE.md): Quick Start User Guide for non-technical faculty & commercial leadership handbook.
 - [**`Docs/DESIGN_v2.md`**](file:///d:/Projects/CampusCast/Docs/DESIGN_v2.md): Official Brand Kit v2, logo system, palette tokens, and signage UI specifications.
 - [**`Docs/SYSTEM_ARCHITECTURE_GUIDE.md`**](file:///d:/Projects/CampusCast/Docs/SYSTEM_ARCHITECTURE_GUIDE.md): Master system overview, sequence diagrams, & App Flows for Display Modes 1-5 and Admin Command Center.
