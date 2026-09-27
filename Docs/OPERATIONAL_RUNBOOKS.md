@@ -1,6 +1,6 @@
 # CampusCast — Operational Runbooks & Smart TV Setup Guide
 
-This document provides operational instructions for campus IT staff managing **CampusCast** digital notice displays.
+This document provides operational procedures for IT staff managing **CampusCast** digital display screens, administrative controls, and emergency security procedures.
 
 ---
 
@@ -15,39 +15,41 @@ CampusCast is designed to run directly on **any Smart TV or Smart Screen** with 
 3. **Navigate to Department Display URL**:
    - ECE Display: `http://<server-ip>:3000/display/ece`
    - CSE Display: `http://<server-ip>:3000/display/cse`
+   - AIML Display: `http://<server-ip>:3000/display/aiml`
    - MECH Display: `http://<server-ip>:3000/display/mech`
    - CIVIL Display: `http://<server-ip>:3000/display/civil`
    - EEE Display: `http://<server-ip>:3000/display/eee`
+   - General Campus Display: `http://<server-ip>:3000/display`
 4. **Enable Fullscreen Mode**: Tap the fullscreen button or press `F11` / remote fullscreen key.
-5. **Set as Browser Home Page**: Set the URL as the browser's default startup page so the display opens automatically when the TV is turned on.
+5. **Set as Browser Startup Page**: Configure the URL as the browser's default startup page so the display opens automatically when the TV powers on.
 
 ---
 
 ## 2. Display Screen Dark / Offline Troubleshooting Runbook
 
 ### Symptoms
-- Corridor Smart TV shows `🟡 Reconnecting...` indicator in the footer or displays a network disconnected message.
-- Admin Portal Displays tab highlights screen with `⚠️ Screen heartbeat missed for >5 minutes`.
+- Corridor Smart TV shows `🟡 Reconnecting...` indicator in the header/footer or displays a network disconnected message.
+- Admin Command Center Display Control tab highlights screen with `🔴 Offline (Heartbeat missed >2 minutes)`.
 
 ### Resolution Steps
-1. **Check Smart TV Wi-Fi Connection**: Open TV settings and verify campus Wi-Fi or Ethernet connectivity.
-2. **Refresh Browser**: Press reload/refresh on the Smart TV remote control.
+1. **Check Smart TV Network Connection**: Open TV settings and verify campus Wi-Fi or Ethernet connectivity.
+2. **Refresh Browser**: Press reload/refresh on the Smart TV remote control or browser interface.
 3. **Verify Server URL**: Confirm the host server or Cloudflare Pages URL is reachable from campus Wi-Fi.
 
 ---
 
-## 3. Emergency Phone Number Revocation Runbook
+## 3. Emergency Phone Number Revocation & Retraction Runbook
 
 ### Scenario
 A faculty member's phone is lost, stolen, or compromised, or unauthorized notices are being published.
 
-### Resolution Steps (Instant Lockout)
-1. Log into the **CampusCast Admin Portal** (`http://localhost:3001`).
+### Resolution Steps (Instant Lockout & Retraction)
+1. Log into the **CampusCast Admin Command Center** ([`admin/`](file:///d:/Projects/CampusCast/admin) running at `http://localhost:3001`).
 2. Navigate to the **Faculty Roster** tab.
 3. Locate the compromised WhatsApp phone number (e.g. `+919876543210`).
 4. Click **Suspend**.
-5. **Effect**: All subsequent inbound WhatsApp messages from this number are blocked at the webhook layer, recorded in `audit_log`, and **dropped silently** without broadcasting to Smart TV display screens.
-6. Navigate to **Notice History** tab and click **Force Expire** on any unauthorized active notices.
+   - *Effect*: All subsequent inbound WhatsApp messages from this number are blocked at the webhook layer, recorded in `audit_log`, and **dropped silently** without broadcasting to Smart TV displays.
+5. Navigate to the **Notices Kanban** tab and click **Retract / Force Expire** on any unauthorized active notices to withdraw them immediately from display screens.
 
 ---
 
