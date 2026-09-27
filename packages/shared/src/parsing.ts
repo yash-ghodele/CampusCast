@@ -9,7 +9,7 @@
  * Deterministic parsing guarantees high security, zero prompt injection risk, and low latency.
  */
 
-import { NoticePriority, ParsedNoticeMessage } from './types';
+import { NoticePriority, NoticeCategory, ParsedNoticeMessage } from './types';
 
 /**
  * Parses raw text received from a WhatsApp message payload into a structured `ParsedNoticeMessage`.
@@ -31,15 +31,30 @@ export function parseNoticeMessage(text: string): ParsedNoticeMessage {
   // Normalize whitespace and prepare working string buffer
   let content = text.trim();
   let priority: NoticePriority = 'normal';
+  let category: NoticeCategory | undefined = undefined;
   let scheduledAt: number | null = null;
   let departmentCode: string | null = null;
 
   // STEP 1: Urgent Tag Resolution (#urgent)
-  // Need: Lets faculty flag critical alerts (exam room shifts, lab cancellations) straight from WhatsApp.
-  // Working: Case-insensitive regex match. If found, sets priority to 'urgent' and removes tag from content.
   if (/#urgent/i.test(content)) {
     priority = 'urgent';
+    category = 'emergency';
     content = content.replace(/#urgent/gi, '').trim();
+  }
+
+  // STEP 1.5: Category Tag Resolution (#exam, #event, #placement, #achievement)
+  if (/#exam/i.test(content)) {
+    category = 'exam';
+    content = content.replace(/#exam/gi, '').trim();
+  } else if (/#event/i.test(content)) {
+    category = 'event';
+    content = content.replace(/#event/gi, '').trim();
+  } else if (/#placement/i.test(content)) {
+    category = 'placement';
+    content = content.replace(/#placement/gi, '').trim();
+  } else if (/#achievement/i.test(content)) {
+    category = 'achievement';
+    content = content.replace(/#achievement/gi, '').trim();
   }
 
   // STEP 2: Scheduled Notice Timestamp Resolution (#schedule Date Time)
@@ -93,7 +108,36 @@ export function parseNoticeMessage(text: string): ParsedNoticeMessage {
   return {
     departmentCode,
     priority,
+    category,
     scheduledAt,
     content
   };
 }
+
+/**
+ * Formats a UNIX timestamp (ms) into a standard 24-hour or 12-hour HH:MM:SS string.
+ * @example formatHeartbeatTimestamp(1727450355000) => "20:49:15"
+ */
+export function formatHeartbeatTimestamp(timestamp: number | null): string {
+  if (!timestamp) return '--:--:--';
+  const d = new Date(timestamp);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const ss = String(d.getSeconds()).padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+
+/**
+ * Formats elapsed seconds or millisecond delta into HH:MM:SS duration string.
+ * @example formatDurationHHMMSS(125) => "00:02:05"
+ */
+export function formatDurationHHMMSS(secondsOrMs: number): string {
+  if (secondsOrMs <= 0 || isNaN(secondsOrMs)) return '00:00:00';
+  // If input is large (> 100,000), treat as ms, otherwise seconds
+  const totalSeconds = secondsOrMs > 100000 ? Math.floor(secondsOrMs / 1000) : Math.floor(secondsOrMs);
+  const hh = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+  const mm = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+  const ss = String(totalSeconds % 60).padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+
