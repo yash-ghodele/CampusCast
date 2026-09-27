@@ -1,6 +1,11 @@
-# CampusCast — Security Policy & Access Rules
+# CampusCast — Security Policy & Access Control Rules
 
-## 1. Firebase Security Rules (`firestore.rules`)
+This document details the security model, access control policies, and security invariants enforced across CampusCast data collections in Cloud Firestore ([`firestore.rules`](file:///d:/Projects/CampusCast/firestore.rules)).
+
+---
+
+## 1. Firebase Security Rules Policy ([`firestore.rules`](file:///d:/Projects/CampusCast/firestore.rules))
+
 ```javascript
 rules_version = '2';
 service cloud.firestore {
@@ -26,7 +31,16 @@ service cloud.firestore {
 }
 ```
 
-## 2. Security Boundaries & Protection Policies
-- **Backend-Only Writes**: Display & Admin clients ONLY read. All writes execute through Firebase Admin SDK in Cloud Functions.
-- **HMAC SHA-256 Webhook Verification**: Inbound Meta requests verify `X-Hub-Signature-256` SHA-256 header against `WHATSAPP_APP_SECRET`.
-- **Silent Drop Policy**: Unauthorized senders are logged to `audit_log` and dropped silently without replying to prevent phone number probing.
+---
+
+## 2. Security Boundaries & Enforced Policies
+
+1. **Strict Backend-Only Write Invariant**:
+   - Web frontend clients ([`display/`](file:///d:/Projects/CampusCast/display) and [`admin/`](file:///d:/Projects/CampusCast/admin)) are strictly forbidden from writing or modifying any Firestore document (`allow write: if false;`).
+   - All mutations execute exclusively through the Firebase Admin SDK inside serverless Cloud Functions or secure server routes.
+2. **HMAC SHA-256 Webhook Verification**:
+   - Inbound HTTP POST requests from Meta's WhatsApp Cloud API verify the `X-Hub-Signature-256` HMAC header against `WHATSAPP_APP_SECRET`. Unsigned or tampered requests receive HTTP 403 Forbidden.
+3. **Silent Drop Policy for Unauthorized Senders**:
+   - Unregistered phone numbers attempting to post notices are logged to `audit_log` and dropped silently. No automated WhatsApp error reply is sent, preventing phone probing by unauthorized actors.
+4. **Emergency PIN Authorization**:
+   - Emergency broadcasts in the Admin Portal require entering a master security PIN (`1234`) before emitting high-priority alerts to physical display screens.
