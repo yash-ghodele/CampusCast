@@ -1,4 +1,4 @@
-# CampusCast — WhatsApp-Driven Real-Time Digital Notice Board Network
+# CampusCast — WhatsApp-Driven Campus Communication Operating System
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
@@ -7,43 +7,67 @@
 [![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://pages.cloudflare.com/)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-yash--ghodele%2FCampusCast-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yash-ghodele/CampusCast.git)
 
-> **The notice board that publishes itself the moment an authorized faculty member hits send.**
+> **YOUR CAMPUS. YOUR VOICE.**  
+> *The campus-wide communication operating system that updates physical hallway screens the moment an authorized faculty member hits send on WhatsApp.*
 
-CampusCast bridges the gap between everyday messaging tools and physical campus signage. Instead of forcing faculty to navigate complex web admin portals or mobile apps, CampusCast turns **WhatsApp** into an authenticated publishing interface. 
-
-A single WhatsApp message sent by an authorized faculty member is authenticated by phone identity, parsed, routed by department, and pushed instantaneously to hallway LCD display screens via real-time Cloud Firestore `onSnapshot` streaming.
+CampusCast bridges the gap between everyday messaging tools and physical campus signage. Instead of forcing faculty to navigate complex web admin portals, CampusCast turns **WhatsApp** into an authenticated publishing interface, supported by a modern **Campus Communication Command Center** and high-impact **Smart TV Display Modes**.
 
 ---
 
-## 📺 Zero-Hardware Smart TV Model
+## 📺 Zero-Hardware Smart TV Model & Display Modes
 
-No Raspberry Pi, Mini-PC, HDMI dongles, or external media player boxes are required! Any Smart TV (Android TV, LG webOS, Samsung Tizen OS, Amazon Fire TV) opens the display URL (`http://<server-ip>/display/[deptId]`) directly in its native web browser.
+No Raspberry Pi, Mini-PC, HDMI dongles, or external media player boxes are required! Any Smart TV (Android TV, LG webOS, Samsung Tizen OS, Amazon Fire TV) opens the display URL (`http://<server-ip>:3000/display?dept=ECE`) directly in its native web browser.
+
+### 5 Display Experience Modes:
+1. **Mode 1: Hero Notice View (Default View)**: 80% screen footprint hero card with title, description, category badges (`EXAM`, `PLACEMENT`, `EVENT`, `URGENT`, `ACHIEVEMENT`), date/time chips (`📅 05 Oct 2026`, `⏰ 10:00 AM`), and interactive WhatsApp QR code snippet (`Scan QR for details`). Auto-rotates every 10 seconds.
+2. **Mode 2: News Ticker Marquee**: Always-visible 44px bottom scrolling ticker bar for secondary announcements and quick event reminders.
+3. **Mode 3: Emergency Override View**: High-contrast full-screen red background (`#DC2626`) for `priority == 'urgent'`, displaying bold emergency headlines and issuer signatures.
+4. **Mode 4: Event Carousel View**: Auto-sliding poster images and PDF previews (`mediaUrl` / `mediaType`).
+5. **Mode 5: Split Screen View**: Event poster on the left (7 columns), live notice feed on the right (5 columns).
+
+---
+
+## 🎨 Department Branding Themes
+
+| Department | Theme Color | Primary Hex | Badge Preview |
+|---|---|---|---|
+| **ECE** | Vibrant Orange | `#F97316` | Orange Badge |
+| **CSE** | Royal Blue | `#2563EB` | Blue Badge |
+| **AIML** | Deep Purple | `#8B5CF6` | Purple Badge |
+| **MECH** | Crimson Red | `#EF4444` | Red Badge |
+| **CIVIL** | Emerald Green | `#22C55E` | Green Badge |
+| **EEE** | Caution Amber | `#F59E0B` | Amber Badge |
+
+---
+
+## 💻 Admin Communication Command Center ([`admin/`](file:///d:/Projects/CampusCast/admin))
+
+The Admin Portal is architected using **8 dedicated standalone Next.js App Router pages** (zero in-memory tab state resets on browser refresh):
+- **Dashboard ([`/`](file:///d:/Projects/CampusCast/admin/src/app/page.tsx))**: Metric Overview Cards, Live Screen Map Grid (`Online` / `Offline` with `HH:MM:SS` active uptime via Firestore heartbeats), Recent Activity Stream.
+- **Notice Management ([`/notices`](file:///d:/Projects/CampusCast/admin/src/app/notices/page.tsx))**: Visual notice lifecycle Kanban columns (`Scheduled`, `Active`, `Expired`) and 5-Step Notice Creation Wizard (Category -> Content -> Scope -> Schedule -> TV Card Preview).
+- **Display Control & Screen Wall ([`/displays`](file:///d:/Projects/CampusCast/admin/src/app/displays/page.tsx))**: Real-time Smart TV telemetry monitoring (`1080p`, `lastSeenAt`), live screen status, and PIN-protected Force Emergency Broadcasts (`1234`).
+- **Department Scope Registry ([`/departments`](file:///d:/Projects/CampusCast/admin/src/app/departments/page.tsx))**: Visual theme registry, active notice counters, and direct TV kiosk launcher links.
+- **Faculty Roster ([`/users`](file:///d:/Projects/CampusCast/admin/src/app/users/page.tsx))**: Faculty onboarding, WhatsApp phone authorization, role badges (`Super Admin` -> `HOD` -> `Faculty`), and status toggles.
+- **Analytics & Engagement ([`/analytics`](file:///d:/Projects/CampusCast/admin/src/app/analytics/page.tsx))**: Category breakdowns, department notice distribution, and top faculty contributor rankings.
+- **Security Audit Center ([`/audit`](file:///d:/Projects/CampusCast/admin/src/app/audit/page.tsx))**: Searchable compliance ledger of publishes, edits, deletions, unauthorized attempts, and emergency overrides.
+- **System Settings ([`/settings`](file:///d:/Projects/CampusCast/admin/src/app/settings/page.tsx))**: Auto-rotation durations, screen offline timeout thresholds, and master security PIN management.
 
 ---
 
 ## 📘 Documentation Index
 
-- [**`Docs/OPERATIONAL_RUNBOOKS.md`**](file:///d:/Projects/CampusCast/Docs/OPERATIONAL_RUNBOOKS.md): Smart TV Direct Browser setup guide & IT runbooks.
+- [**`Docs/USER_GUIDE.md`**](file:///d:/Projects/CampusCast/Docs/USER_GUIDE.md): Quick Start User Guide for non-technical faculty & commercial leadership handbook.
+- [**`Docs/DESIGN_v2.md`**](file:///d:/Projects/CampusCast/Docs/DESIGN_v2.md): Official Brand Kit v2, logo system, palette tokens, and signage UI specifications.
+- [**`Docs/SYSTEM_ARCHITECTURE_GUIDE.md`**](file:///d:/Projects/CampusCast/Docs/SYSTEM_ARCHITECTURE_GUIDE.md): Master system overview, sequence diagrams, & App Flows for Display Modes 1-5 and Admin Command Center.
+- [**`Docs/DESIGN.md`**](file:///d:/Projects/CampusCast/Docs/DESIGN.md): Brand Kit, Poppins typography specs, master color tokens, and department themes.
+- [**`Docs/OPERATIONAL_RUNBOOKS.md`**](file:///d:/Projects/CampusCast/Docs/OPERATIONAL_RUNBOOKS.md): Smart TV direct browser setup & IT runbooks.
 - [**`Docs/PRD.md`**](file:///d:/Projects/CampusCast/Docs/PRD.md): Product requirements & functional SLAs.
-- [**`Docs/ARCHITECTURE.md`**](file:///d:/Projects/CampusCast/Docs/ARCHITECTURE.md): Technical architecture & NoSQL document schemas.
-- [**`Docs/DESIGN.md`**](file:///d:/Projects/CampusCast/Docs/DESIGN.md): Display visual design system & hallway kiosk UX.
+- [**`Docs/ARCHITECTURE.md`**](file:///d:/Projects/CampusCast/Docs/ARCHITECTURE.md): Technical architecture & NoSQL Firestore document schemas.
 - [**`Docs/STORAGE_RULES.md`**](file:///d:/Projects/CampusCast/Docs/STORAGE_RULES.md): Security rules baseline (`firestore.rules` deny-all client writes).
-- [**`Docs/PHASE_PLAN.md`**](file:///d:/Projects/CampusCast/Docs/PHASE_PLAN.md): 5-Phase implementation roadmap.
+- [**`Docs/PHASE_PLAN.md`**](file:///d:/Projects/CampusCast/Docs/PHASE_PLAN.md): Implementation roadmap.
 - [**`Docs/MEMORY.md`**](file:///d:/Projects/CampusCast/Docs/MEMORY.md): Project memory & decision log.
-
----
-
-## 🚀 Key Features & Capabilities
-
-- 📱 **Zero-Learning-Curve Publishing**: Faculty publish text, images, or PDFs using their existing WhatsApp app without password logins or separate apps.
-- ⚡ **Real-Time Distribution**: Hallway LCD screens listen via Firestore [`onSnapshot`](file:///d:/Projects/CampusCast/apps/display/src/lib/firebase.ts#L48-L86) listeners, rendering notices live in $<5$ seconds.
-- 🚨 **Urgent Priority Tagging**: `#urgent` messages trigger high-contrast red alert borders (`#E5484D`), warning badges, and subtle pulse glow animations.
-- 🕒 **Automated Notice Scheduling**: `#schedule DD-MM-YYYY HH:mm` queues announcements to activate automatically at future dates.
-- 🏷️ **Department-Aware Routing**: Prefixes like `ECE:` or assigned faculty home departments route notices to specific hallway display screens (`ECE`, `CSE`, `MECH`, `CIVIL`, `EEE`).
-- 🛡️ **Strict Security & Silent Drop**: Webhook payloads are HMAC SHA-256 verified (`X-Hub-Signature-256`). Unauthorized phone numbers are silently dropped and logged to `audit_log` without replying to prevent number probing.
-- 🔒 **Zero Client-Side Writes**: Enforced in [`firestore.rules`](file:///d:/Projects/CampusCast/firestore.rules) (`allow write: if false;`). All database updates run through backend Cloud Functions.
-- 🟡 **Offline Display Resilience**: If network connectivity drops, display kiosks retain the last rendered notices and present a subtle `🟡 Reconnecting...` footer indicator. Screens **never go blank**.
-- 📊 **Admin Portal**: Next.js 14 management portal for faculty roster onboarding, screen telemetry heartbeats, notice control, and audit logs.
+- [**`Docs/ABSTRACT.md`**](file:///d:/Projects/CampusCast/Docs/ABSTRACT.md): Project abstract & problem statement.
+- [**`Docs/TECH_STACK_RATIONALE.md`**](file:///d:/Projects/CampusCast/Docs/TECH_STACK_RATIONALE.md): Technology selection justifications.
 
 ---
 
