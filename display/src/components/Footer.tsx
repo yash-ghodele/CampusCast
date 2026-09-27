@@ -1,69 +1,93 @@
 /**
  * @file apps/display/src/components/Footer.tsx
- * @description Hallway Display Footer Component (48px height fixed bar).
+ * @description Hallway Display Footer Component with Bottom Scrolling News Ticker.
  * 
  * NEED FOR THIS COMPONENT:
- * Displays system branding, active notice counter, and live connection telemetry.
- * When connectivity drops, it shifts the status dot to a yellow pulsing "Reconnecting..."
- * state without destroying or blanking the notice cards rendered on screen.
+ * Implements Mode 2 (News Ticker) at the bottom of the screen, ensuring that secondary 
+ * announcements and quick alerts remain continuously visible to passing students.
  */
 
 'use client';
 
 import React from 'react';
-import { ListenerStatus } from '../lib/firebase';
+import { ListenerStatus } from '@/lib/firebase';
+import { Megaphone, LayoutGrid, Image as ImageIcon } from 'lucide-react';
 
 interface FooterProps {
-  noticeCount: number; // Number of currently active notices rendered
-  status: ListenerStatus; // 'connected' | 'reconnecting' | 'error'
+  noticeCount: number;
+  status: ListenerStatus;
+  tickerMessages?: string[];
+  activeMode?: string;
+  onModeChange?: (mode: string) => void;
 }
 
-/**
- * Footer Component
- * 
- * WORKING MECHANISM:
- * Renders platform attribution on the left, active notice count pill on the right,
- * and dynamic connection telemetry status indicator:
- * - 'connected': Emerald green dot with subtle pulse.
- * - 'reconnecting': Amber yellow dot with ping animation (Resilience Mode).
- * - 'error': Red dot.
- */
-export const Footer: React.FC<FooterProps> = ({ noticeCount, status }) => {
-  return (
-    <footer className="h-[48px] w-full px-8 flex items-center justify-between bg-[#0B1220] border-t border-[#222F47] text-sm text-[#8B96A8] select-none">
-      {/* Left: Branding */}
-      <div className="flex items-center gap-2 font-medium">
-        <span className="text-[#3B82F6] font-bold">CampusCast</span>
-        <span>• Live Digital Signage System</span>
-      </div>
 
-      {/* Right: Telemetry Indicator & Active Notice Count */}
-      <div className="flex items-center gap-6 font-medium">
+export const Footer: React.FC<FooterProps> = ({
+  noticeCount,
+  status,
+  tickerMessages = [],
+  activeMode = 'hero',
+  onModeChange,
+}) => {
+  const combinedTickerText = tickerMessages.join('   •••   ');
+
+  return (
+    <footer className="w-full bg-white border-t border-[#E5E7EB] select-none z-30">
+      {/* Top Bar: Mode Switcher & Counter (40px) */}
+      <div className="h-[40px] px-8 flex items-center justify-between border-b border-[#F1F5F9] text-xs font-semibold">
+        {/* Left: Display Modes */}
         <div className="flex items-center gap-2">
-          {status === 'connected' && (
-            <>
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-emerald-400">Live</span>
-            </>
-          )}
-          {status === 'reconnecting' && (
-            <>
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
-              <span className="text-amber-400 font-semibold">Reconnecting…</span>
-            </>
-          )}
-          {status === 'error' && (
-            <>
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-              <span className="text-red-400 font-semibold">Offline</span>
-            </>
-          )}
+          <span className="text-[#64748B] font-medium mr-2">Display Mode:</span>
+          <button
+            onClick={() => onModeChange?.('hero')}
+            className={`px-3 py-1 rounded flex items-center gap-1.5 transition-colors ${
+              activeMode === 'hero'
+                ? 'bg-[#2563EB] text-white shadow-sm'
+                : 'bg-[#F3F4F6] text-[#64748B] hover:text-[#111111] hover:bg-[#E5E7EB]'
+            }`}
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span>Hero View (Mode 1)</span>
+          </button>
+
+          <button
+            onClick={() => onModeChange?.('split')}
+            className={`px-3 py-1 rounded flex items-center gap-1.5 transition-colors ${
+              activeMode === 'split'
+                ? 'bg-[#2563EB] text-white shadow-sm'
+                : 'bg-[#F3F4F6] text-[#64748B] hover:text-[#111111] hover:bg-[#E5E7EB]'
+            }`}
+          >
+            <ImageIcon className="w-3.5 h-3.5" />
+            <span>Split Screen (Mode 5)</span>
+          </button>
         </div>
 
-        <div className="text-[#F5F7FA] font-semibold bg-[#141C2E] px-3 py-1 rounded border border-[#222F47]">
-          {noticeCount} active {noticeCount === 1 ? 'notice' : 'notices'}
+        {/* Right: Notice Counter & System Attribution */}
+        <div className="flex items-center gap-4 text-[#64748B]">
+          <div className="bg-[#F3F4F6] px-3 py-0.5 rounded border border-[#E5E7EB] text-[#111111] font-bold">
+            {noticeCount} Active Announcements
+          </div>
+          <span>CampusCast Communication OS</span>
+        </div>
+      </div>
+
+      {/* Bottom Bar: Mode 2 News Ticker Marquee (44px) */}
+      <div className="h-[44px] bg-[#F8FAFC] flex items-center overflow-hidden border-t border-[#E5E7EB] relative">
+        <div className="bg-[#2563EB] text-white px-4 h-full flex items-center gap-2 font-bold text-xs z-10 shadow-md shrink-0">
+          <Megaphone className="w-4 h-4" />
+          <span className="uppercase tracking-wider">LIVE TICKER</span>
+        </div>
+
+        <div className="flex-1 overflow-hidden relative">
+          <div className="animate-marquee whitespace-nowrap py-2 text-sm font-semibold text-[#334155] flex items-center gap-8 px-4">
+            <span>{combinedTickerText}</span>
+            <span>{combinedTickerText}</span>
+          </div>
         </div>
       </div>
     </footer>
   );
 };
+
+
