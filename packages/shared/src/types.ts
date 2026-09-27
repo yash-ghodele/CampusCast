@@ -8,12 +8,21 @@
  * Centralizing types prevents API interface drift and guarantees type safety.
  */
 
-/**
- * User roles within the institution authorization hierarchy:
- * - 'super_admin': Manages institution departments, screens, and faculty roster.
- * - 'hod': Department head with publishing rights and department-level notice overrides.
- * - 'faculty': Authorized faculty member who can publish notices via WhatsApp.
- */
+/** Brand Kit v2 Color Tokens */
+export const BRAND_TOKENS = {
+  ink: '#111111',
+  blue: '#2563EB',
+  blueLight: '#60A5FA',
+  green: '#22C55E',
+  gray: '#F3F4F6',
+  white: '#FFFFFF',
+  alertRed: '#DC2626',
+} as const;
+
+/** Brand Signage Theme Mode */
+export type BrandThemeMode = 'light' | 'dark';
+
+/** User roles within the institution authorization hierarchy */
 export type UserRole = 'super_admin' | 'hod' | 'faculty';
 
 /**
@@ -61,6 +70,66 @@ export interface Screen {
 /** Notice priority levels determining display card styling and visual prominence. */
 export type NoticePriority = 'normal' | 'urgent';
 
+/** Notice categories for visual filtering and command center analytics. */
+export type NoticeCategory = 'announcement' | 'event' | 'placement' | 'exam' | 'emergency' | 'achievement';
+
+/** Display modes supported by Smart TV department screens. */
+export type DisplayMode = 'hero' | 'news_ticker' | 'emergency' | 'carousel' | 'split_screen';
+
+/** Department Theme Colors for instant visual recognition. */
+export interface DepartmentTheme {
+  primary: string;
+  accent: string;
+  badgeBg: string;
+  badgeText: string;
+  border: string;
+}
+
+export const DEPARTMENT_THEMES: Record<string, DepartmentTheme> = {
+  ECE: {
+    primary: '#F97316', // Orange
+    accent: '#EA580C',
+    badgeBg: '#FFEDD5',
+    badgeText: '#9A3412',
+    border: '#FB923C'
+  },
+  CSE: {
+    primary: '#2563EB', // Blue
+    accent: '#1D4ED8',
+    badgeBg: '#DBEAFE',
+    badgeText: '#1E40AF',
+    border: '#60A5FA'
+  },
+  AIML: {
+    primary: '#8B5CF6', // Purple
+    accent: '#7C3AED',
+    badgeBg: '#EDE9FE',
+    badgeText: '#5B21B6',
+    border: '#A78BFA'
+  },
+  MECH: {
+    primary: '#EF4444', // Red
+    accent: '#DC2626',
+    badgeBg: '#FEE2E2',
+    badgeText: '#991B1B',
+    border: '#F87171'
+  },
+  CIVIL: {
+    primary: '#22C55E', // Green
+    accent: '#16A34A',
+    badgeBg: '#DCFCE7',
+    badgeText: '#166534',
+    border: '#4ADE80'
+  },
+  EEE: {
+    primary: '#F59E0B', // Amber
+    accent: '#D97706',
+    badgeBg: '#FEF3C7',
+    badgeText: '#92400E',
+    border: '#FBBF24'
+  }
+};
+
 /** Notice lifecycle states managed centrally by backend Cloud Functions. */
 export type NoticeStatus = 'scheduled' | 'active' | 'expired' | 'deleted';
 
@@ -73,20 +142,25 @@ export type MediaType = 'image' | 'pdf';
  */
 export interface Notice {
   id: string;
-  departmentId: string; // Target department code or ID
+  departmentId: string; // Target department code or ID (e.g. "ECE", "CSE", "ALL")
+  title?: string; // Headline title
+  category?: NoticeCategory; // Notice category (announcement, event, placement, exam, emergency, achievement)
   content: string; // Sanitized notice text body
+  eventDate?: string; // Formatted event date string (e.g., "05 Oct 2026")
+  eventTime?: string; // Formatted event time string (e.g., "10:00 AM")
+  qrCodeUrl?: string; // QR Code target link for detailed student view
   mediaUrl: string | null; // Firebase Storage URL for poster image or PDF
   mediaType: MediaType | null;
   priority: NoticePriority; // 'urgent' triggers red alert styling and glow animation
   status: NoticeStatus; // 'active' notices are rendered live by display clients
-  createdBy: string; // Publisher E.164 phone number
+  createdBy: string; // Publisher E.164 phone number or admin identity
   createdAt: number; // Creation UNIX timestamp in ms
   scheduledAt: number | null; // Future UNIX timestamp when notice should promote to active
   expiresAt: number | null; // UNIX timestamp when notice should demote to expired
 }
 
 /** Audit event types logged to `audit_log` for compliance and security auditing. */
-export type AuditLogEventType = 'publish' | 'unauthorized_attempt' | 'edit' | 'delete';
+export type AuditLogEventType = 'publish' | 'unauthorized_attempt' | 'edit' | 'delete' | 'emergency_broadcast';
 
 /**
  * Immutable audit log document stored in Firestore collection `audit_log/{logId}`.
@@ -107,6 +181,7 @@ export interface AuditLog {
 export interface ParsedNoticeMessage {
   departmentCode: string | null; // Target department code if explicitly prefixed (e.g. "ECE:")
   priority: NoticePriority; // Priority derived from `#urgent` tag presence
+  category?: NoticeCategory; // Category derived from tags like `#event`, `#exam`, etc.
   scheduledAt: number | null; // Scheduled timestamp derived from `#schedule` date string
   content: string; // Cleaned body text with tags and prefixes stripped out
 }
