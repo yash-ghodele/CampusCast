@@ -1,32 +1,103 @@
+/**
+ * @file apps/admin/src/app/not-found.tsx
+ * @description Custom 404 Not Found Page for CampusCast Admin Command Center — Brand Kit v2 Light Theme.
+ */
+
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
-import { AlertCircle, ArrowLeft } from 'lucide-react';
+import {
+  FileQuestion,
+  ArrowLeft,
+  LayoutDashboard,
+  Kanban,
+  Tv,
+  Settings,
+  Radio,
+} from 'lucide-react';
 
-/**
- * Custom 404 Not Found Page for Admin App
- */
-export default function NotFound() {
+export default function AdminNotFound() {
   return (
-    <div className="min-h-screen bg-[#0F172A] flex flex-col items-center justify-center p-8 select-none text-center">
-      <div className="bg-[#1E293B] border border-[#334155] rounded-xl p-10 max-w-lg w-full space-y-6 shadow-2xl">
-        <div className="p-4 bg-red-500/10 text-red-400 rounded-full w-fit mx-auto border border-red-500/20">
-          <AlertCircle className="w-12 h-12" />
+    <div className="min-h-screen bg-[#F3F4F6] text-[#111111] flex flex-col items-center justify-center p-6 select-none font-sans">
+      <div className="bg-white border border-[#E5E7EB] rounded-3xl p-10 max-w-lg w-full space-y-8 shadow-xl text-center">
+        {/* Brand Badge */}
+        <div className="flex items-center justify-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-[#2563EB]/10 text-[#2563EB] flex items-center justify-center border border-[#2563EB]/20">
+            <Radio className="w-6 h-6" />
+          </div>
+          <div className="text-left">
+            <span className="text-lg font-black tracking-tight text-[#111111] block">CampusCast</span>
+            <span className="text-[10px] font-semibold text-[#60A5FA] uppercase tracking-wider block">
+              Management Portal
+            </span>
+          </div>
         </div>
-        <div className="space-y-2">
-          <h2 className="text-3xl font-bold text-white">Page Not Found</h2>
-          <p className="text-base text-slate-400">
-            The admin portal route you requested does not exist.
-          </p>
+
+        {/* 404 Visual Icon & Heading */}
+        <div className="space-y-4">
+          <div className="w-20 h-20 rounded-3xl bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto shadow-inner">
+            <FileQuestion className="w-10 h-10" />
+          </div>
+
+          <div className="space-y-1">
+            <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest bg-red-100 text-red-700">
+              Error 404 · Route Not Found
+            </span>
+            <h2 className="text-2xl font-black text-[#111111] pt-2">Page Does Not Exist</h2>
+            <p className="text-xs text-[#64748B] max-w-sm mx-auto">
+              The admin control center module you requested is either unavailable or has been relocated.
+            </p>
+          </div>
         </div>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Return to Dashboard</span>
-        </Link>
+
+        {/* Quick Navigation Action Pills */}
+        <div className="bg-[#F8FAFC] border border-[#E5E7EB] rounded-2xl p-4 space-y-2 text-xs text-left">
+          <span className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider block">
+            Suggested Quick Routes
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              href="/"
+              className="p-2.5 bg-white border border-[#E5E7EB] rounded-xl font-bold text-[#111111] hover:border-[#2563EB] hover:text-[#2563EB] flex items-center gap-2 transition-all"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5 text-[#2563EB]" />
+              <span>Dashboard</span>
+            </Link>
+            <Link
+              href="/notices"
+              className="p-2.5 bg-white border border-[#E5E7EB] rounded-xl font-bold text-[#111111] hover:border-[#2563EB] hover:text-[#2563EB] flex items-center gap-2 transition-all"
+            >
+              <Kanban className="w-3.5 h-3.5 text-[#2563EB]" />
+              <span>Notices</span>
+            </Link>
+            <Link
+              href="/displays"
+              className="p-2.5 bg-white border border-[#E5E7EB] rounded-xl font-bold text-[#111111] hover:border-[#2563EB] hover:text-[#2563EB] flex items-center gap-2 transition-all"
+            >
+              <Tv className="w-3.5 h-3.5 text-[#22C55E]" />
+              <span>Screens Wall</span>
+            </Link>
+            <Link
+              href="/settings"
+              className="p-2.5 bg-white border border-[#E5E7EB] rounded-xl font-bold text-[#111111] hover:border-[#2563EB] hover:text-[#2563EB] flex items-center gap-2 transition-all"
+            >
+              <Settings className="w-3.5 h-3.5 text-[#475569]" />
+              <span>Settings</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Primary Return Button */}
+        <div>
+          <Link
+            href="/"
+            className="w-full inline-flex items-center justify-center gap-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-3 px-6 rounded-2xl text-xs font-bold transition-all shadow-md shadow-[#2563EB]/20"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Return to Admin Command Center</span>
+          </Link>
+        </div>
       </div>
     </div>
   );
