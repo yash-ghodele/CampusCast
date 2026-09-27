@@ -1,44 +1,103 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
 :root {
-  --bg: #0B1220;
-  --card: #141C2E;
-  --text-primary: #F5F7FA;
-  --text-secondary: #8B96A8;
-  --accent-urgent: #E5484D;
-  --accent-normal: #3B82F6;
+  /* Brand Kit v2 Light Theme Tokens */
+  --brand-blue: #2563EB;
+  --brand-blue-light: #60A5FA;
+  --brand-green: #22C55E;
+  --brand-bg: #F3F4F6;
+  --brand-white: #FFFFFF;
+  --brand-ink: #111111;
+  --brand-slate: #64748B;
+  --brand-border: #E5E7EB;
+  --accent-urgent: #DC2626;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
-  background-color: var(--bg);
-  color: var(--text-primary);
+  background-color: var(--brand-bg);
+  color: var(--brand-ink);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar behavior for auto-pagination */
+/* Light-mode scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2563EB;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
-  display: none;
+  width: 5px;
 }
-.custom-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
 }
 
+/* Continuous Marquee Ticker Animation */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Emergency Alert Pulse Glow */
 @keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 15px rgba(229, 72, 77, 0.2);
-  }
-  50% {
-    box-shadow: 0 0 30px rgba(229, 72, 77, 0.45);
-  }
+  0%, 100% { box-shadow: 0 0 25px rgba(220, 38, 38, 0.25); }
+  50%       { box-shadow: 0 0 50px rgba(220, 38, 38, 0.55); }
 }
 
 .urgent-glow {
-  animation: pulseGlow 3s infinite ease-in-out;
+  animation: pulseGlow 2s infinite ease-in-out;
 }
+
+/* Hero card shadow */
+.hero-card-shadow {
+  box-shadow: 0 20px 40px -15px rgba(37, 99, 235, 0.12);
+}
+
+/* Fade-in utility */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+
