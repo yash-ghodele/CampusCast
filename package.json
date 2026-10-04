@@ -16,6 +16,7 @@
     "build": "npm run build --workspaces --if-present",
     "build:display": "npm run build --workspace=campuscast-display",
     "build:admin": "npm run build --workspace=campuscast-admin",
+    "seed:notices": "node scripts/seed-notices.cjs",
     "test": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
