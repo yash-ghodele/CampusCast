@@ -115,6 +115,83 @@ export function parseNoticeMessage(text: string): ParsedNoticeMessage {
 }
 
 /**
+ * Automatically detects whether a media URL points to an image poster, PDF document circular, or null.
+ * 
+ * @param url Inbound media URL or string
+ * @returns 'image' | 'pdf' | null
+ */
+export function detectMediaType(url: string | null | undefined): 'image' | 'pdf' | null {
+  if (!url || typeof url !== 'string') return null;
+  const clean = url.trim().toLowerCase();
+  if (clean.endsWith('.pdf') || clean.includes('.pdf?') || clean.includes('/pdf/')) {
+    return 'pdf';
+  }
+  if (
+    clean.endsWith('.png') ||
+    clean.endsWith('.jpg') ||
+    clean.endsWith('.jpeg') ||
+    clean.endsWith('.webp') ||
+    clean.endsWith('.svg') ||
+    clean.endsWith('.gif') ||
+    clean.includes('images.unsplash.com') ||
+    clean.includes('cloudinary.com') ||
+    clean.includes('imgur.com') ||
+    clean.includes('firebasestorage.googleapis.com') ||
+    clean.startsWith('data:image/') ||
+    clean.startsWith('http')
+  ) {
+    return 'image';
+  }
+  return null;
+}
+
+/**
+ * Notice partitioning interface for adaptive smart media block arrangement.
+ */
+export interface PartitionedNotices<T = any> {
+  urgentNotices: T[];
+  posterMediaNotices: T[];
+  documentPdfNotices: T[];
+  eventDateNotices: T[];
+  textOnlyNotices: T[];
+}
+
+/**
+ * Partitions notices into specific semantic blocks based on mediaType, date/time, and urgency.
+ */
+export function partitionNoticesByMediaType<T extends { priority?: string; category?: string; mediaType?: string | null; mediaUrl?: string | null; eventDate?: string; eventTime?: string }>(
+  notices: T[]
+): PartitionedNotices<T> {
+  const urgentNotices: T[] = [];
+  const posterMediaNotices: T[] = [];
+  const documentPdfNotices: T[] = [];
+  const eventDateNotices: T[] = [];
+  const textOnlyNotices: T[] = [];
+
+  for (const n of notices) {
+    if (n.priority === 'urgent' || n.category === 'emergency') {
+      urgentNotices.push(n);
+    } else if (n.mediaType === 'image' || (n.mediaUrl && !n.mediaUrl.toLowerCase().includes('.pdf'))) {
+      posterMediaNotices.push(n);
+    } else if (n.mediaType === 'pdf' || (n.mediaUrl && n.mediaUrl.toLowerCase().includes('.pdf'))) {
+      documentPdfNotices.push(n);
+    } else if (n.eventDate || n.eventTime) {
+      eventDateNotices.push(n);
+    } else {
+      textOnlyNotices.push(n);
+    }
+  }
+
+  return {
+    urgentNotices,
+    posterMediaNotices,
+    documentPdfNotices,
+    eventDateNotices,
+    textOnlyNotices
+  };
+}
+
+/**
  * Formats a UNIX timestamp (ms) into a standard 24-hour or 12-hour HH:MM:SS string.
  * @example formatHeartbeatTimestamp(1727450355000) => "20:49:15"
  */
@@ -140,4 +217,3 @@ export function formatDurationHHMMSS(secondsOrMs: number): string {
   const ss = String(totalSeconds % 60).padStart(2, '0');
   return `${hh}:${mm}:${ss}`;
 }
-
