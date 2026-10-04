@@ -33,5 +33,9 @@ This document preserves key architectural decisions, design rationales, and hist
 | **2026-09-27** | Resolved Notice Scope (`ALL`) & Stale Cache Issues | Upgraded Firestore queries to `where('departmentId', 'in', [deptCode, 'ALL'])` and added real-time expiration filtering to auto-clear deleted/expired notices. |
 | **2026-09-27** | Added Media Fallbacks & Brand Kit v2 404 Pages | Integrated image `onError` full-typography fallbacks in `NoticeCard.tsx` and custom light-theme `not-found.tsx` with `/logo-transparent.png`. |
 | **2026-09-27** | Completed Comprehensive Production Readiness Audit | Verified 0 build errors across all 4 monorepo packages, updated `firestore.rules`, and prepared pre-flight hardware runbooks. |
+| **2026-10-04** | Implemented In-Place Notice Editing Modal | Built comprehensive in-place edit modal for Kanban and Table views with Firestore sync and audit logging. |
+| **2026-10-04** | Added Multi-Criteria Notice Filtering Toolbar | Added 4-dimensional filter engine (scope, category, media type, live search, reset) with view persistence. |
+| **2026-10-04** | Upgraded Screen Heartbeat Telemetry Engine | Upgraded to 20s continuous telemetry maintaining active `🟢 Online` status across all hallway displays. |
+| **2026-10-04** | Generated Presentation Draft & Synced All Documentation | Created 27-slide standalone presentation draft ([`Docs/PRESENTATION_DRAFT.md`](file:///d:/Projects/CampusCast/Docs/PRESENTATION_DRAFT.md)) and synchronized architecture, user guide, and phase plan docs. |
 
 

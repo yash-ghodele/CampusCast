@@ -18,12 +18,13 @@ CampusCast bridges the gap between everyday messaging tools and physical campus 
 
 No Raspberry Pi, Mini-PC, HDMI dongles, or external media player boxes are required! Any Smart TV (Android TV, LG webOS, Samsung Tizen OS, Amazon Fire TV) opens the display URL (`http://<server-ip>:3000/display?dept=ECE`) directly in its native web browser.
 
-### 5 Display Experience Modes:
-1. **Mode 1: Hero Notice View (Default View)**: 80% screen footprint hero card with title, description, category badges (`EXAM`, `PLACEMENT`, `EVENT`, `URGENT`, `ACHIEVEMENT`), date/time chips (`📅 05 Oct 2026`, `⏰ 10:00 AM`), and interactive WhatsApp QR code snippet (`Scan QR for details`). Auto-rotates every 10 seconds.
-2. **Mode 2: News Ticker Marquee**: Always-visible 44px bottom scrolling ticker bar for secondary announcements and quick event reminders.
-3. **Mode 3: Emergency Override View**: High-contrast full-screen red background (`#DC2626`) for `priority == 'urgent'`, displaying bold emergency headlines and issuer signatures.
-4. **Mode 4: Event Carousel View**: Auto-sliding poster images and PDF previews (`mediaUrl` / `mediaType`).
-5. **Mode 5: Split Screen View**: Event poster on the left (7 columns), live notice feed on the right (5 columns).
+### 6 Display Experience Modes:
+1. **Adaptive Smart Multi-Media View (Default View)**: Automatically arranges notices into high-impact visual spotlight posters (7-column visual media), official circular cards (with instant QR code links for PDFs), and typographic bulletin feeds.
+2. **Mode 1: Hero Notice View**: 80% screen footprint hero card with title, description, category badges (`EXAM`, `PLACEMENT`, `EVENT`, `URGENT`, `ACHIEVEMENT`), date/time chips (`📅 05 Oct 2026`, `⏰ 10:00 AM`), and interactive WhatsApp QR code snippet (`Scan QR for details`). Auto-rotates every 10 seconds.
+3. **Mode 2: News Ticker Marquee**: Always-visible 48px bottom scrolling ticker bar for secondary announcements and live notice counters.
+4. **Mode 3: Emergency Override View**: High-contrast full-screen red background (`#DC2626`) for `priority == 'urgent'`, displaying bold emergency headlines and issuer signatures.
+5. **Mode 4: Event Carousel View**: Auto-sliding poster images and PDF previews (`mediaUrl` / `mediaType`).
+6. **Mode 5: All Screens Matrix View (`/display/all`)**: 6-tile grid overview rendering real-time notice feeds across all campus departments (`ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`).
 
 ---
 
@@ -43,8 +44,8 @@ No Raspberry Pi, Mini-PC, HDMI dongles, or external media player boxes are requi
 ## 💻 Admin Communication Command Center ([`admin/`](file:///d:/Projects/CampusCast/admin))
 
 The Admin Portal is architected using **8 dedicated standalone Next.js App Router pages** (zero in-memory tab state resets on browser refresh):
-- **Dashboard ([`/`](file:///d:/Projects/CampusCast/admin/src/app/page.tsx))**: Metric Overview Cards, Live Screen Map Grid (`Online` / `Offline` with `HH:MM:SS` active uptime via Firestore heartbeats), Recent Activity Stream.
-- **Notice Management ([`/notices`](file:///d:/Projects/CampusCast/admin/src/app/notices/page.tsx))**: Visual notice lifecycle Kanban columns (`Scheduled`, `Active`, `Expired`) and 5-Step Notice Creation Wizard (Category -> Content -> Scope -> Schedule -> TV Card Preview).
+- **Dashboard ([`/`](file:///d:/Projects/CampusCast/admin/src/app/page.tsx))**: Metric Overview Cards, Live Screen Map Grid (`Online 6/6` with `HH:MM:SS` active uptime via Firestore heartbeats), Recent Activity Stream.
+- **Notice Management ([`/notices`](file:///d:/Projects/CampusCast/admin/src/app/notices/page.tsx))**: Visual notice lifecycle Kanban columns (`Scheduled`, `Active`, `Expired`), **In-Place Notice Editing Modal**, **Multi-Criteria Filter Toolbar** (Department scopes, category pills, media type filters, and realtime search), and Notice Creation Wizard.
 - **Display Control & Screen Wall ([`/displays`](file:///d:/Projects/CampusCast/admin/src/app/displays/page.tsx))**: Real-time Smart TV telemetry monitoring (`1080p`, `lastSeenAt`), live screen status, and PIN-protected Force Emergency Broadcasts (`1234`).
 - **Department Scope Registry ([`/departments`](file:///d:/Projects/CampusCast/admin/src/app/departments/page.tsx))**: Visual theme registry, active notice counters, and direct TV kiosk launcher links.
 - **Faculty Roster ([`/users`](file:///d:/Projects/CampusCast/admin/src/app/users/page.tsx))**: Faculty onboarding, WhatsApp phone authorization, role badges (`Super Admin` -> `HOD` -> `Faculty`), and status toggles.
@@ -69,6 +70,7 @@ The Admin Portal is architected using **8 dedicated standalone Next.js App Route
 - [**`Docs/MEMORY.md`**](file:///d:/Projects/CampusCast/Docs/MEMORY.md): Project memory & decision log.
 - [**`Docs/ABSTRACT.md`**](file:///d:/Projects/CampusCast/Docs/ABSTRACT.md): Project abstract & problem statement.
 - [**`Docs/TECH_STACK_RATIONALE.md`**](file:///d:/Projects/CampusCast/Docs/TECH_STACK_RATIONALE.md): Technology selection justifications.
+- [**`Docs/PRESENTATION_DRAFT.md`**](file:///d:/Projects/CampusCast/Docs/PRESENTATION_DRAFT.md): PPT-ready presentation draft (27 standalone slides covering all project aspects).
 
 ---
 

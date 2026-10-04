@@ -149,3 +149,43 @@ interface AuditLog {
   - `users` & `audit_log`: Faculty identity roster and compliance action ledger.
 - **Offline Fallback Sync**: Display kiosks implement dual-sync persistence (`localStorage` fallback cache + live Firestore WebSocket) ensuring uninterrupted screen rotation during temporary campus Wi-Fi outages.
 
+---
+
+## 5. Smart TV Corridor Display Modes Specification
+
+The CampusCast Smart TV Kiosk client dynamically adapts its viewport layout based on active notice payloads, priority levels, and department scope:
+
+| Display Mode | Mode Key | Architecture & Rendering Pipeline | Trigger Conditions |
+| :--- | :--- | :--- | :--- |
+| **Adaptive Smart Blocks** | `auto` *(Default)* | Partitions notices by media type into optimal multi-column blocks: visual posters (images/PDFs) on prominent cards and structured text bulletins in side columns. | Default presentation mode on department corridor kiosks (`/display/[deptId]`). |
+| **Hero View** | `hero` *(Mode 1)* | Fullscreen spotlight view rendering high-impact headline typography, category badges, event dates, and QR codes with a 10-second auto-carousel. | Single notice emphasis or low-density publishing periods. |
+| **News Ticker Marquee** | `news_ticker` *(Mode 2)* | 48px fixed bottom banner running an infinite CSS marquee loop with live notice counter and connectivity indicator. | Continuously running across all corridor displays. |
+| **Emergency Override** | `emergency` *(Mode 3)* | Fullscreen high-visibility red alert mode taking immediate priority over all normal displays with pulse animation and audio cue support. | Triggered by PIN-authorized admin broadcast or `priority: 'urgent'` notices. |
+| **Split Screen View** | `split` *(Mode 5)* | Dual-pane layout rendering visual media posters on the left viewport (55% width) and structured bulleted notice text on the right (45% width). | Activated for mixed multimedia payloads with long descriptive text. |
+| **All Screens Matrix View** | `ALL` scope | Multi-screen 6-tile grid (`ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`) showing real-time active notice streams and hardware telemetry. | Rendered on central campus directory screens (`/display` or `/display/all`). |
+
+---
+
+## 6. Admin Command Center Architecture & Management Pipeline
+
+The CampusCast Admin Command Center ([`apps/admin`](file:///d:/Projects/CampusCast/admin)) provides comprehensive operational control over digital hallway displays and campus notice lifecycles:
+
+### 6.1 In-Place Notice Editing & Lifecycle Management
+- **Full In-Place Editing Modal**: Allows administrators to modify any Active, Scheduled, or Archived notice without creating duplicate entries.
+- **Editable Metadata**: Headline Title, Full Body Content, Target Department Scope (`ALL`, `ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`), Category (`announcement`, `exam`, `placement`, `event`, `achievement`, `emergency`), Media Attachment URLs (with auto-detection), Priority (`normal`, `urgent`), Broadcast Status (`active`, `scheduled`, `expired`), and Event Date/Time.
+- **Audit Logging**: Every edit automatically writes an immutable audit record to Firestore `audit_log` (`type: 'edit'`) capturing the actor, timestamp, and modification payload.
+
+### 6.2 Multi-Criteria Notice Filtering System
+- **Department Scope Selector**: Instant scope filtering across all 6 departments and institution-wide broadcasts.
+- **Category Filter Pills**: Filter by notice type (`Announcement`, `Exam`, `Placement`, `Event`, `Achievement`, `Emergency`).
+- **Media Attachment Selector**: Filter notices by media capability (`All Media`, `With Image`, `With PDF`, `Text Only`).
+- **Real-time Query Search**: Sub-string search across titles, descriptions, sender identities, and department scopes with a one-click **Reset** control.
+- **Dual-View Support**: Full filtering parity across both visual **Kanban Columns** and structured **Table List Views**.
+
+### 6.3 Hardware Telemetry & Screen Wall
+- **Live Stream Listeners**: Real-time Firestore `screens` collection subscriptions rendering live connection statuses and uptime clocks.
+- **Continuous Heartbeat Engine**: 20-second telemetry polling maintains active `Online` status indicators across all registered hallway displays.
+- **Emergency Broadcast Override**: PIN-protected modal (`PIN: 1234`) triggers an immediate high-visibility red banner across all corridor screens with zero latency.
+
+
+

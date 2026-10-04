@@ -189,31 +189,33 @@ Designed for rapid executive monitoring:
 
 ---
 
-### 2.4 Tab 2: Notices Kanban Board
+### 2.4 Tab 2: Notices Management & Real-time Filtering
 
-The core notice management interface organized into 4 drag-and-drop functional columns:
+The core notice command center offering visual Kanban boards, tabular data views, and comprehensive filtering:
 
 ```
-+-------------------+ +-------------------+ +-------------------+ +-------------------+
-| DRAFT / PENDING   | | ACTIVE NOTICES    | | SCHEDULED NOTICES | | EXPIRED / ARCHIVED|
-| (Needs Approval)  | | (Live on Screens) | | (Future Queue)    | | (Historical Logs) |
-+-------------------+ +-------------------+ +-------------------+ +-------------------+
++-------------------+ +-------------------+ +-------------------+
+| SCHEDULED NOTICES | | ACTIVE NOTICES    | | EXPIRED / ARCHIVED|
+| (Future Queue)    | | (Live on Screens) | | (Historical Logs) |
++-------------------+ +-------------------+ +-------------------+
 ```
 
-- **Department Filter Pills:** Quickly filter notices by department (`ALL`, `ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`).
-- **Search Bar:** Real-time text search across title, body text, and sender phone numbers.
-- **Notice Card Anatomy:**
-  - Category Badge (`EXAM`, `EVENT`, `PLACEMENT`, `URGENT`).
-  - Department Tag.
-  - Notice Title & Body Text.
-  - Scheduled Date & Time Chip.
-  - Media Thumbnail (if poster/image is attached).
-  - Creator Phone / Name.
-  - Action Controls:
-    - **Approve:** Publishes draft notice to screens instantly.
-    - **Edit:** Opens inline editor to modify title, text, or dates.
-    - **Expire:** Immediately archives active notice.
-    - **Delete:** Permanently deletes notice with audit log entry.
+- **Multi-Criteria Filter Toolbar:**
+  - **Search Query Input:** Real-time search across headline titles, descriptions, authors, and scopes.
+  - **Media Type Filter:** Filter notices by attachment capabilities (`All Media`, `With Image`, `With PDF`, `Text Only`).
+  - **Department Scope Pills:** One-click filter across `All Scopes`, `Campus-wide (ALL)`, `ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`.
+  - **Category / Type Pills:** Filter by notice classification (`All Types`, `Announcement`, `Exam`, `Placement`, `Event`, `Achievement`, `Emergency`).
+  - **Active Filter Counter & Reset:** Displays `Showing X of Y` notices with an instant red `Reset` action button.
+- **View Mode Switcher:** Toggle between visual **Kanban Board** cards and structured **Table List View**.
+- **In-Place Notice Editing Modal:**
+  - Click **Edit** (with `<Pencil />` icon) on any Active, Scheduled, or Expired notice.
+  - Modify Headline, Category, Department Scope, Full Body Content, Media Attachment URL, Priority (`Normal`, `Urgent`), Broadcast Status, and Event Dates/Times.
+  - Instant Firestore save with automatic entry in the audit compliance log.
+- **Notice Card Controls:**
+  - **Push Active Now / Approve:** Immediately promotes a scheduled or archived notice to live TV screens.
+  - **Edit:** Launches the in-place editing modal.
+  - **Expire Notice:** Archives an active notice immediately.
+  - **Delete:** Permanently removes the notice from the database with an audit log record.
 
 ---
 
@@ -223,11 +225,11 @@ Dedicated telemetry and remote management hub for hallway displays:
 
 - **Screen Health Cards:** Displays detailed telemetry for each physical screen:
   - *Screen ID:* e.g. `ECE-MAIN-DISPLAY`
-  - *Location Label:* e.g. `ECE Corridor Block A, Ground Floor`
+  - *Location Label:* e.g. `ECE Corridor Smart TV`
   - *Assigned Scope:* `ECE Department`
-  - *Connection Status:* `Online` (last seen < 120s ago) or `Offline`.
+  - *Connection Status:* `Online` (green pulsing badge, continuous 20s heartbeats).
   - *Resolution:* `1920x1080 FHD`.
-  - *Current Active Mode:* `Hero` / `Ticker` / `Split Screen` / `Emergency`.
+  - *Current Active Mode:* `Adaptive Smart Blocks` / `Hero` / `News Ticker` / `Emergency Override`.
 - **Screen Action Buttons:**
   - **Preview Screen:** Opens live display view in a new browser tab.
   - **Force Refresh:** Sends real-time WebSocket/Firestore signal to force screen reload.

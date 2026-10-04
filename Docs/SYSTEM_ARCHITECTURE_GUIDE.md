@@ -128,27 +128,31 @@ flowchart TD
     Mode5 --> AddTicker
 ```
 
-#### Detailed Breakdown of the 5 Display Modes:
+#### Detailed Breakdown of the Display Experience Modes:
 
-1. **Mode 1: Hero Notice View (Default View)**:
+1. **Adaptive Smart Multi-Media View (Default View)**:
+   - Dynamic viewport partitioning: visual poster attachments (PNG/JPEG) are allocated prominent 7-column spotlight showcase blocks, while PDF circulars generate clean official document cards with instant QR code mobile download links.
+   - Text announcements render in high-impact typographic cards formatted with Poppins typography and department theme accents.
+   - Full un-truncated titles, complete descriptive content, event dates (`📅 15 Oct 2026`), and event times (`⏰ 10:00 AM`).
+
+2. **Mode 1: Hero Notice View**:
    - Occupies **80%** of viewport space.
-   - Renders headline title, full notice text, category badge (`EXAM`, `PLACEMENT`, `EVENT`, `URGENT`, `ACHIEVEMENT`), date chip (`📅 05 Oct 2026`), time chip (`⏰ 10:00 AM`), department badge, and interactive WhatsApp QR code snippet (`Scan QR for details`).
+   - Renders headline title, full notice text, category badge (`EXAM`, `PLACEMENT`, `EVENT`, `URGENT`, `ACHIEVEMENT`), date/time chips, department badge, and interactive WhatsApp QR code snippet (`Scan QR for details`).
    - Auto-rotates featured notice cards every **10 seconds** with smooth keyframe transitions.
 
-2. **Mode 2: News Ticker Marquee (Bottom Marquee)**:
-   - Always-visible 44px bottom scrolling marquee ticker bar.
-   - Continuously scrolls secondary announcements and quick reminders across the screen (`📢 Midterm Examination schedule released  •••  📢 Placement Drive by Infosys on Monday`).
+3. **Mode 2: News Ticker Marquee (Bottom Marquee)**:
+   - Always-visible 48px bottom scrolling marquee ticker bar with live active notice counters and connectivity indicators.
 
-3. **Mode 3: Emergency Override View**:
+4. **Mode 3: Emergency Override View**:
    - Triggered automatically when `priority == 'urgent'` or `category == 'emergency'`.
    - Transforms the entire screen into a full-bleed red alert display (`#DC2626`).
-   - Displays `⚠️ URGENT CAMPUS ANNOUNCEMENT`, bold notice text, issuer signature (`- Principal Office / Campus Security`), and pulsing alert animation (`urgent-glow`). Normal notice carousels are temporarily paused.
+   - Displays bold emergency headlines, body text, issuer signatures, and pulsating alert animation. Normal notice carousels are temporarily paused.
 
-4. **Mode 4: Event Carousel View**:
-   - Auto-sliding view for poster images, PNGs, JPEGs, and PDF circular previews (`mediaUrl` / `mediaType`).
+5. **Mode 4: Event Carousel View**:
+   - Auto-sliding carousel for poster images, event banners, and PDF circulars.
 
-5. **Mode 5: Split Screen View**:
-   - Split layout: Event poster image on the left (7 columns) and a live announcement feed list on the right (5 columns).
+6. **Mode 5: All Screens Matrix Overview (`/display/all` & `/display`)**:
+   - Multi-screen 6-tile matrix view rendering real-time active notice streams and live hardware telemetry across all 6 departments (`ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`).
 
 ---
 
@@ -161,7 +165,7 @@ flowchart TD
     AdminLogin([Admin Opens Portal at :3001]) --> NavRoutes[Standalone App Router Routes]
     
     NavRoutes --> P1[1. / : Dashboard Metric Cards, Live Screen Map Grid, Recent Activity]
-    NavRoutes --> P2[2. /notices : Kanban Board - Scheduled, Active, Expired & 5-Step Wizard]
+    NavRoutes --> P2[2. /notices : Kanban Board, In-Place Editor, Multi-Filter Toolbar, Wizard]
     NavRoutes --> P3[3. /displays : Display Control Screen Wall Grid & Emergency Force Broadcast]
     NavRoutes --> P4[4. /departments : Department Scope Theme Mappings & TV Launcher Links]
     NavRoutes --> P5[5. /users : Faculty Roster, WhatsApp Phone Auth & Role Hierarchy]
@@ -176,36 +180,40 @@ flowchart TD
 #### Exhaustive Module Specs:
 
 1. **Dashboard Command Center**:
-   - System Metric Cards: `Total Screens (12)`, `Online Screens (11)`, `Active Notices (8)`, `Registered Faculty (5)`.
-   - Live Screen Map Grid: Displays real-time online/offline status pills (`ECE Screen 🟢 Online`, `CSE Screen 🟢 Online`, `AIML Screen 🔴 Offline` based on 120s heartbeat threshold).
+   - System Metric Cards: `Total Screens (6)`, `Online Screens (6/6)`, `Active Notices (28)`, `Registered Faculty (5)`.
+   - Live Screen Map Grid: Displays real-time online status pills (`ECE Screen 🟢 Online`, `CSE Screen 🟢 Online`, `AIML Screen 🟢 Online` with continuous 20s telemetry).
 
-2. **Notice Kanban Board**:
-   - Visual Kanban columns (`Scheduled`, `Active`, `Expired`) representing Firestore `NoticeStatus` lifecycles.
-   - Interactive toggle between Kanban Board View and List Table View.
-   - Retract / Force Expire buttons to withdraw announcements from TV screens in real time.
+2. **Notice Management & Real-time Filtering (`/notices`)**:
+   - **Visual Kanban Board**: Drag-and-drop functional columns (`Scheduled`, `Active on Kiosks`, `Expired / Archived`).
+   - **Table List View**: Structured data table with direct activation, expiration, and deletion controls.
+   - **Multi-Criteria Filter Toolbar**:
+     - *Department Scope Pills*: (`All Scopes`, `Campus-wide (ALL)`, `ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`).
+     - *Category / Notice Type Selector*: (`All Types`, `Announcement`, `Exam`, `Placement`, `Event`, `Achievement`, `Emergency`).
+     - *Media Attachment Filter*: (`All Media`, `With Image`, `With PDF`, `Text Only`).
+     - *Instant Search*: Real-time substring filtering across headline titles, descriptions, authors, and scopes with an active filter counter and one-click `Reset` button.
+   - **In-Place Notice Editing Modal**:
+     - Edit any notice directly from Kanban cards or table rows.
+     - Modify Headline, Body text, Department Scope, Category, Media URL, Priority (`Normal`, `Urgent`), Broadcast Status (`Active`, `Scheduled`, `Expired`), and Event Date/Time.
+     - Syncs directly with Firestore and logs an audit trail record (`type: 'edit'`).
 
-3. **Notice Creation Wizard Modal (5 Steps)**:
-   - *Step 1: Category Selection*: (`Announcement`, `Event`, `Placement`, `Exam`, `Emergency`, `Achievement`).
-   - *Step 2: Content Input*: Headline Title, Description text, Media URL attachment.
-   - *Step 3: Audience Scope*: (`ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`, `ALL`).
-   - *Step 4: Publication Schedule*: (`Publish Now` or `Schedule for Later` Date+Time).
-   - *Step 5: Smart TV Card Preview*: Renders live preview of card before broadcasting to screens.
+3. **Notice Creation Wizard Modal**:
+   - 3-step structured creation wizard with real-time smart layout preview and instant publication scheduling.
 
-4. **Display Control Center & Screen Wall**:
-   - Screen Wall Grid showing screen label, ID, resolution (`1080p`), last heartbeat timestamp, and direct display launcher link.
+4. **Display Control Center & Screen Wall (`/displays`)**:
+   - Screen Wall Grid showing screen label, ID, resolution (`1080p`), live heartbeat timestamp, and direct display launcher link.
    - PIN-Protected Force Broadcast Modal (`1234` master PIN) to launch campus-wide emergency overrides.
 
-5. **Analytics Module**:
-   - Notice Analytics: Total published notices, most active department (`ECE` at 52%), category distribution, peak posting hours.
-   - Faculty Analytics: Top contributor rankings, notices posted per faculty member, department activity distribution.
+5. **Analytics Module (`/analytics`)**:
+   - Notice Analytics: Total published notices, category distribution, department breakdown, peak posting hours.
+   - Faculty Analytics: Top contributor rankings, notices posted per faculty member.
 
-6. **Faculty Roster**:
+6. **Faculty Roster (`/users`)**:
    - Onboarding modal for new faculty numbers (`E.164` format).
    - Role hierarchy badges (`Super Admin` -> `HOD` -> `Faculty`).
    - One-click **Suspend / Activate** buttons for instant emergency phone lockouts.
 
-7. **Security Audit Trail**:
-   - Searchable, immutable chronological log of all WhatsApp publishes, direct admin broadcasts, and blocked probing attempts.
+7. **Security Audit Trail (`/audit`)**:
+   - Searchable, immutable chronological log of all WhatsApp publishes, notice edits, deletions, direct admin broadcasts, and blocked probing attempts.
 
 ---
 

@@ -51,3 +51,13 @@ Phased development roadmap, completed features, and verification status for Camp
 - [x] 5 Display Modes: Mode 1 Hero View (80% screen + QR Code), Mode 2 News Ticker, Mode 3 Emergency Override (`#DC2626`), Mode 4 Event Carousel, Mode 5 Split Screen.
 - [x] Admin Command Center: Sidebar Navigation, Dashboard metric cards, Live Screen Map, Kanban Notice Lifecycle (`Scheduled`, `Active`, `Expired`), 5-step Notice Wizard, Screen Wall grid, Analytics Module, and PIN Emergency Authorization (`1234`).
 - [x] Vertical layout scrolling (`overflow-y: auto`, `min-height: 100vh;`) across all pages.
+
+---
+
+## Phase 6 — Advanced Management Pipeline & Presentation Readiness [COMPLETED]
+- [x] In-Place Notice Editing Modal for Kanban and Table views (headline, body, department scope, category, media URLs, priority, status, event date/time).
+- [x] Multi-Criteria Filtering Toolbar (4-dimensional filters: department scope, category, media attachment, real-time search with instant reset).
+- [x] Real-time 20-second screen heartbeat telemetry engine maintaining active `Online` statuses.
+- [x] Notice Lifecycle action controls (instant Activate, Expire, Delete, and Approve).
+- [x] Production build validation (`npm run build`) and Firestore seed script (`npm run seed:notices`).
+- [x] Comprehensive 27-slide PPT presentation draft ([`Docs/PRESENTATION_DRAFT.md`](file:///d:/Projects/CampusCast/Docs/PRESENTATION_DRAFT.md)).
