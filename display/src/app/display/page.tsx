@@ -5,8 +5,11 @@
 
 'use client';
 
-import DepartmentDisplayPage from './[deptId]/page';
+export const dynamic = 'force-dynamic';
+
+import React from 'react';
+import { DepartmentDisplayView } from '@/components/DepartmentDisplayView';
 
 export default function GeneralDisplayPage() {
-  return <DepartmentDisplayPage />;
+  return <DepartmentDisplayView deptCode="ALL" />;
 }

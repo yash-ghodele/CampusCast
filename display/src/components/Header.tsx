@@ -104,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-2xl font-black tracking-tight text-[#111111] flex items-center gap-2">
               CampusCast
               <span className="text-xs px-2 py-0.5 rounded bg-[#2563EB]/15 text-[#2563EB] border border-[#2563EB]/30 font-semibold uppercase">
-                v2.0 OS
+                OS
               </span>
             </span>
             <span className="text-[11px] font-semibold uppercase tracking-widest text-[#64748B]">
@@ -140,7 +140,7 @@ export const Header: React.FC<HeaderProps> = ({
           return (
             <Link
               key={dept}
-              href={dept === 'ALL' ? '/display' : `/display/${dept.toLowerCase()}`}
+              href={dept === 'ALL' ? '/display/all' : `/display/${dept.toLowerCase()}`}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                 isActive
                   ? 'bg-[#2563EB] text-white shadow-md shadow-[#2563EB]/30'

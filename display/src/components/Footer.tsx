@@ -21,68 +21,36 @@ interface FooterProps {
   onModeChange?: (mode: string) => void;
 }
 
-
 export const Footer: React.FC<FooterProps> = ({
   noticeCount,
   status,
   tickerMessages = [],
-  activeMode = 'hero',
-  onModeChange,
 }) => {
-  const combinedTickerText = tickerMessages.join('   •••   ');
+  const combinedTickerText =
+    tickerMessages.length > 0
+      ? tickerMessages.join('   •••   ')
+      : 'CampusCast Digital Hallway Signage • Realtime Firestore Cloud Stream';
 
   return (
-    <footer className="w-full bg-white border-t border-[#E5E7EB] select-none z-30">
-      {/* Top Bar: Mode Switcher & Counter (40px) */}
-      <div className="h-[40px] px-8 flex items-center justify-between border-b border-[#F1F5F9] text-xs font-semibold">
-        {/* Left: Display Modes */}
-        <div className="flex items-center gap-2">
-          <span className="text-[#64748B] font-medium mr-2">Display Mode:</span>
-          <button
-            onClick={() => onModeChange?.('hero')}
-            className={`px-3 py-1 rounded flex items-center gap-1.5 transition-colors ${
-              activeMode === 'hero'
-                ? 'bg-[#2563EB] text-white shadow-sm'
-                : 'bg-[#F3F4F6] text-[#64748B] hover:text-[#111111] hover:bg-[#E5E7EB]'
-            }`}
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span>Hero View (Mode 1)</span>
-          </button>
-
-          <button
-            onClick={() => onModeChange?.('split')}
-            className={`px-3 py-1 rounded flex items-center gap-1.5 transition-colors ${
-              activeMode === 'split'
-                ? 'bg-[#2563EB] text-white shadow-sm'
-                : 'bg-[#F3F4F6] text-[#64748B] hover:text-[#111111] hover:bg-[#E5E7EB]'
-            }`}
-          >
-            <ImageIcon className="w-3.5 h-3.5" />
-            <span>Split Screen (Mode 5)</span>
-          </button>
-        </div>
-
-        {/* Right: Notice Counter & System Attribution */}
-        <div className="flex items-center gap-4 text-[#64748B]">
-          <div className="bg-[#F3F4F6] px-3 py-0.5 rounded border border-[#E5E7EB] text-[#111111] font-bold">
-            {noticeCount} Active Announcements
-          </div>
-          <span>CampusCast Communication OS</span>
-        </div>
-      </div>
-
-      {/* Bottom Bar: Mode 2 News Ticker Marquee (44px) */}
-      <div className="h-[44px] bg-[#F8FAFC] flex items-center overflow-hidden border-t border-[#E5E7EB] relative">
-        <div className="bg-[#2563EB] text-white px-4 h-full flex items-center gap-2 font-bold text-xs z-10 shadow-md shrink-0">
+    <footer className="w-full bg-white border-t border-[#E5E7EB] select-none z-30 shadow-sm">
+      {/* Mode 2 News Ticker Marquee (48px) */}
+      <div className="h-[48px] bg-[#F8FAFC] flex items-center overflow-hidden relative">
+        <div className="bg-[#2563EB] text-white px-5 h-full flex items-center gap-2.5 font-black text-xs z-10 shadow-md shrink-0 tracking-wider uppercase">
           <Megaphone className="w-4 h-4" />
-          <span className="uppercase tracking-wider">LIVE TICKER</span>
+          <span>Live Ticker</span>
         </div>
 
         <div className="flex-1 overflow-hidden relative">
           <div className="animate-marquee whitespace-nowrap py-2 text-sm font-semibold text-[#334155] flex items-center gap-8 px-4">
             <span>{combinedTickerText}</span>
             <span>{combinedTickerText}</span>
+          </div>
+        </div>
+
+        <div className="hidden md:flex items-center gap-3 px-4 h-full bg-white border-l border-[#E5E7EB] text-xs font-bold text-[#64748B] shrink-0 z-10">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#22C55E] animate-pulse" />
+            <span className="text-[#111111]">{noticeCount} Active</span>
           </div>
         </div>
       </div>

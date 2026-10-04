@@ -21,6 +21,7 @@ import {
   GraduationCap,
   Trophy,
   Megaphone,
+  FileText,
 } from 'lucide-react';
 
 interface NoticeCardProps {
@@ -157,13 +158,36 @@ export const NoticeCard: React.FC<NoticeCardProps> = ({ notice, isHero = false }
 
         {/* Media Attachment View */}
         {notice.mediaUrl && !imgError && (
-          <div className="mb-6 rounded-xl overflow-hidden border border-[#E2E8F0] max-h-[350px] bg-[#F8FAFC] flex items-center justify-center p-2">
-            <img
-              src={notice.mediaUrl}
-              alt="Notice Attachment"
-              onError={() => setImgError(true)}
-              className="max-h-[330px] w-auto object-contain rounded-lg shadow-sm"
-            />
+          <div className="mb-6 rounded-2xl overflow-hidden border border-[#E2E8F0] max-h-[380px] bg-[#F8FAFC] flex items-center justify-center p-3 shadow-inner">
+            {notice.mediaType === 'pdf' || notice.mediaUrl.toLowerCase().includes('.pdf') ? (
+              <div className="w-full py-8 px-6 bg-red-50/50 border border-red-200/60 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-red-500 text-white flex items-center justify-center font-black text-sm shadow-md">
+                    PDF
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm text-[#111111]">Official PDF Document Attached</span>
+                    <span className="text-xs text-[#64748B]">Scan QR code or click below to view complete circular</span>
+                  </div>
+                </div>
+                <a
+                  href={notice.mediaUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-2 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-xl font-bold text-xs shadow-xs flex items-center gap-1.5 transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Open PDF</span>
+                </a>
+              </div>
+            ) : (
+              <img
+                src={notice.mediaUrl}
+                alt="Notice Attachment"
+                onError={() => setImgError(true)}
+                className="max-h-[350px] w-auto object-contain rounded-xl shadow-md"
+              />
+            )}
           </div>
         )}
 
@@ -237,13 +261,33 @@ export const NoticeCard: React.FC<NoticeCardProps> = ({ notice, isHero = false }
       </div>
 
       {notice.mediaUrl && !imgError && (
-        <div className="mt-3 rounded-lg overflow-hidden border border-[#E2E8F0] max-h-[200px] bg-[#F8FAFC] flex items-center justify-center p-2">
-          <img
-            src={notice.mediaUrl}
-            alt="Notice Attachment"
-            onError={() => setImgError(true)}
-            className="max-h-[180px] w-auto object-contain rounded"
-          />
+        <div className="mt-3 rounded-xl overflow-hidden border border-[#E2E8F0] bg-[#F8FAFC] p-2.5">
+          {notice.mediaType === 'pdf' || notice.mediaUrl.toLowerCase().includes('.pdf') ? (
+            <div className="p-3 bg-red-50/60 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-red-500 text-white flex items-center justify-center font-bold text-xs">
+                  PDF
+                </div>
+                <span className="text-xs font-bold text-[#111111]">Document Attached</span>
+              </div>
+              <a
+                href={notice.mediaUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="px-2.5 py-1 bg-white text-red-600 border border-red-200 rounded-lg font-bold text-xs flex items-center gap-1 shadow-xs"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>View</span>
+              </a>
+            </div>
+          ) : (
+            <img
+              src={notice.mediaUrl}
+              alt="Notice Attachment"
+              onError={() => setImgError(true)}
+              className="max-h-[180px] w-auto object-contain rounded mx-auto"
+            />
+          )}
         </div>
       )}
     </div>

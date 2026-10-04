@@ -10,8 +10,10 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Notice } from '@campuscast/shared';
+import { subscribeToDepartmentNotices } from '@/lib/firebase';
 import {
   Radio,
   ArrowRight,
@@ -110,12 +112,33 @@ const DEPARTMENTS: DeptItem[] = [
 export default function DisplayIndexPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [logoError, setLogoError] = useState(false);
+  const [liveNotices, setLiveNotices] = useState<Notice[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('campuscast_notices');
+      if (stored) {
+        const parsed: Notice[] = JSON.parse(stored);
+        setLiveNotices(parsed.filter((n) => n.status === 'active'));
+      }
+    } catch {
+      // ignore
+    }
+
+    const unsubscribe = subscribeToDepartmentNotices('ALL', (notices) => {
+      setLiveNotices(notices);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const filteredDepts = DEPARTMENTS.filter(
     (dept) =>
       dept.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       dept.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const previewNotice = liveNotices.length > 0 ? liveNotices[0] : null;
 
   return (
     <div className="min-h-screen bg-[#F4F7FC] text-[#111111] font-sans selection:bg-[#2563EB] selection:text-white flex flex-col justify-between relative overflow-x-hidden">
@@ -163,7 +186,7 @@ export default function DisplayIndexPage() {
           <div className="lg:col-span-6 space-y-6 text-left">
             <div className="inline-flex items-center gap-2 bg-[#2563EB]/10 text-[#2563EB] px-4 py-1.5 rounded-full border border-[#2563EB]/25 text-xs font-extrabold uppercase tracking-wider">
               <Sparkles className="w-4 h-4 text-[#2563EB]" />
-              <span>CAMPUS COMMUNICATION OPERATING SYSTEM V2.0</span>
+              <span>CAMPUS COMMUNICATION OPERATING SYSTEM</span>
             </div>
 
             <h1 className="text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-[#111111]">
@@ -238,51 +261,70 @@ export default function DisplayIndexPage() {
                     </div>
 
                     <div className="flex items-center gap-2 text-slate-300 font-medium">
-                      <span>ECE Department</span>
+                      <span>{previewNotice ? `${previewNotice.departmentId} Screen` : 'All Screens Live'}</span>
                       <span>|</span>
-                      <span>Tue, 23 Sep 2026 10:45 AM</span>
+                      <span className="inline-flex items-center gap-1.5 text-emerald-400 font-bold">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        LIVE
+                      </span>
                     </div>
                   </div>
 
                   {/* Notice Content inside TV Preview */}
                   <div className="relative z-10 p-5 flex-1 flex flex-col justify-center text-left">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/40 text-[10px] font-bold uppercase w-fit mb-2">
-                      <Zap className="w-3 h-3" />
-                      <span>EXAM NOTICE</span>
-                    </div>
+                    {previewNotice ? (
+                      <>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/40 text-[10px] font-bold uppercase w-fit mb-2">
+                          <Zap className="w-3 h-3" />
+                          <span>{previewNotice.category}</span>
+                        </div>
 
-                    <h3 className="text-xl font-black text-white tracking-tight mb-1">
-                      MIDTERM EXAMINATION
-                    </h3>
+                        <h3 className="text-xl font-black text-white tracking-tight mb-1 line-clamp-1">
+                          {previewNotice.title}
+                        </h3>
 
-                    <p className="text-xs text-slate-200 line-clamp-2 mb-3">
-                      Semester Midterm Examination begins from 5th October 2026 as per the revised schedule.
-                    </p>
+                        <p className="text-xs text-slate-200 line-clamp-2 mb-3">
+                          {previewNotice.content}
+                        </p>
 
-                    <div className="flex items-center gap-3 text-[10px] text-slate-300 font-medium">
-                      <div className="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded border border-slate-700">
-                        <Calendar className="w-3 h-3 text-[#2563EB]" />
-                        <span>05 Oct 2026</span>
+                        <div className="flex items-center gap-3 text-[10px] text-slate-300 font-medium">
+                          <div className="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded border border-slate-700">
+                            <Calendar className="w-3 h-3 text-[#2563EB]" />
+                            <span>{new Date(previewNotice.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded border border-slate-700">
+                            <Clock className="w-3 h-3 text-[#22C55E]" />
+                            <span>Live Broadcast</span>
+                          </div>
+                          <div className="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded border border-slate-700">
+                            <MapPin className="w-3 h-3 text-amber-400" />
+                            <span>{previewNotice.departmentId} Kiosk</span>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-4 space-y-2">
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center mx-auto text-[#60A5FA]">
+                          <Monitor className="w-5 h-5" />
+                        </div>
+                        <h4 className="text-sm font-bold text-white">Smart TV Screen Connected</h4>
+                        <p className="text-xs text-slate-400 max-w-xs mx-auto">
+                          Ready for real-time broadcasts from WhatsApp and Admin Portal
+                        </p>
                       </div>
-                      <div className="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded border border-slate-700">
-                        <Clock className="w-3 h-3 text-[#22C55E]" />
-                        <span>10:00 AM Onwards</span>
-                      </div>
-                      <div className="flex items-center gap-1 bg-slate-800/80 px-2 py-1 rounded border border-slate-700">
-                        <MapPin className="w-3 h-3 text-amber-400" />
-                        <span>MIT Campus</span>
-                      </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Bottom Ticker Bar inside TV Preview */}
                   <div className="relative z-10 h-7 bg-[#141C2E] border-t border-slate-700/60 flex items-center text-[10px]">
                     <div className="bg-[#2563EB] text-white px-2.5 h-full flex items-center gap-1 font-bold">
                       <Megaphone className="w-3 h-3" />
-                      <span>Latest Updates</span>
+                      <span>Updates</span>
                     </div>
                     <div className="flex-1 overflow-hidden px-3 text-slate-300 font-medium truncate">
-                      Robotics Workshop Registration Open | Placement Drive by Infosys on Monday | Hostel Fee Deadline
+                      {liveNotices.length > 0
+                        ? liveNotices.map((n) => n.title).join(' • ')
+                        : 'CampusCast Digital Hallway Signage • Realtime Firestore Cloud Stream'}
                     </div>
                   </div>
                 </div>
