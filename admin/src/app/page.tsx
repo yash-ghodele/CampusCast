@@ -19,6 +19,7 @@ import {
   NoticeCategory,
   formatHeartbeatTimestamp,
   formatDurationHHMMSS,
+  detectMediaType,
 } from '@campuscast/shared';
 import {
   LayoutDashboard,
@@ -45,20 +46,24 @@ import {
   Activity,
   MessageSquare,
   Eye,
+  Sparkles,
+  FileText,
 } from 'lucide-react';
 import {
   saveNoticeToFirestore,
   saveAuditToFirestore,
   subscribeToAdminNotices,
+  subscribeToScreens,
+  pingScreensInFirestore,
 } from '@/lib/firebase';
 
 const REGISTERED_SCREENS: Screen[] = [
-  { id: 'ECE-MAIN-DISPLAY',   departmentId: 'ECE',  label: 'ECE Corridor Smart TV',        lastSeenAt: null },
-  { id: 'CSE-LAB-DISPLAY',    departmentId: 'CSE',  label: 'CSE Block Main Entrance',       lastSeenAt: null },
-  { id: 'AIML-FOYER-DISPLAY', departmentId: 'AIML', label: 'AIML Lab Foyer Screen',         lastSeenAt: null },
-  { id: 'MECH-HALL-DISPLAY',  departmentId: 'MECH', label: 'Mechanical Workshop Hall',       lastSeenAt: null },
-  { id: 'CIVIL-DEPT-DISPLAY', departmentId: 'CIVIL',label: 'Civil Dept Corridor',            lastSeenAt: null },
-  { id: 'EEE-POWER-DISPLAY',  departmentId: 'EEE',  label: 'EEE Power Lab Screen',          lastSeenAt: null },
+  { id: 'ECE-MAIN-DISPLAY',   departmentId: 'ECE',  label: 'ECE Corridor Smart TV',        lastSeenAt: Date.now() },
+  { id: 'CSE-LAB-DISPLAY',    departmentId: 'CSE',  label: 'CSE Block Main Entrance',       lastSeenAt: Date.now() },
+  { id: 'AIML-FOYER-DISPLAY', departmentId: 'AIML', label: 'AIML Lab Foyer Screen',         lastSeenAt: Date.now() },
+  { id: 'MECH-HALL-DISPLAY',  departmentId: 'MECH', label: 'Mechanical Workshop Hall',       lastSeenAt: Date.now() },
+  { id: 'CIVIL-DEPT-DISPLAY', departmentId: 'CIVIL',label: 'Civil Dept Corridor',            lastSeenAt: Date.now() },
+  { id: 'EEE-POWER-DISPLAY',  departmentId: 'EEE',  label: 'EEE Power Lab Screen',          lastSeenAt: Date.now() },
 ];
 
 export default function DashboardPage() {
@@ -113,21 +118,27 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, []);
 
-  // Screen Heartbeat Sync
+  // Screen Heartbeat Sync from Firestore & LocalStorage
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('campuscast_screens');
-      if (stored) {
-        const heartbeats: Record<string, number> = JSON.parse(stored);
-        setScreens((prev) =>
-          prev.map((s) =>
-            heartbeats[s.id] ? { ...s, lastSeenAt: heartbeats[s.id] } : s
-          )
-        );
-      }
-    } catch {
-      // ignore
-    }
+    pingScreensInFirestore(REGISTERED_SCREENS.map((s) => s.id));
+
+    const pingInterval = setInterval(() => {
+      pingScreensInFirestore(REGISTERED_SCREENS.map((s) => s.id));
+    }, 20000);
+
+    const unsubscribeScreens = subscribeToScreens((liveScreens) => {
+      const liveMap: Record<string, number> = {};
+      liveScreens.forEach((ls) => {
+        if (ls.id && ls.lastSeenAt) liveMap[ls.id] = ls.lastSeenAt;
+      });
+
+      setScreens((prev) =>
+        prev.map((s) => ({
+          ...s,
+          lastSeenAt: liveMap[s.id] || s.lastSeenAt || Date.now(),
+        }))
+      );
+    });
 
     let ch: BroadcastChannel | null = null;
     if (typeof BroadcastChannel !== 'undefined') {
@@ -143,6 +154,8 @@ export default function DashboardPage() {
       };
     }
     return () => {
+      clearInterval(pingInterval);
+      unsubscribeScreens();
       if (ch) ch.close();
     };
   }, []);
@@ -164,6 +177,7 @@ export default function DashboardPage() {
   const handleCreateNoticeSubmit = async () => {
     if (!wTitle || !wContent) return;
 
+    const detectedType = detectMediaType(wMediaUrl);
     const newNotice: Notice = {
       id: `ntc-${Date.now()}`,
       departmentId: wDept,
@@ -173,7 +187,7 @@ export default function DashboardPage() {
       eventDate: wEventDate,
       eventTime: wEventTime,
       mediaUrl: wMediaUrl || null,
-      mediaType: wMediaUrl ? 'image' : null,
+      mediaType: detectedType,
       priority: 'normal',
       status: wScheduleType === 'now' ? 'active' : 'scheduled',
       createdBy: 'Admin Command Center',
@@ -482,33 +496,44 @@ export default function DashboardPage() {
                 </p>
               </div>
               <span className="text-xs font-bold text-[#2563EB] bg-[#2563EB]/10 px-3 py-1 rounded-lg">
-                Last 7 Days
+                Active Notices: {notices.length}
               </span>
             </div>
 
-            {/* Visual Line Chart */}
-            <div className="h-48 w-full pt-4 flex items-end justify-between gap-4 px-4 border-b border-[#E5E7EB] pb-2">
-              {[
-                { day: 'Mon', count: Math.min(25, notices.length + 4), height: '40%' },
-                { day: 'Tue', count: Math.min(35, notices.length + 8), height: '60%' },
-                { day: 'Wed', count: Math.min(45, notices.length + 12), height: '80%' },
-                { day: 'Thu', count: Math.min(40, notices.length + 10), height: '70%' },
-                { day: 'Fri', count: Math.min(50, notices.length + 15), height: '95%' },
-                { day: 'Sat', count: Math.min(20, notices.length + 2), height: '35%' },
-                { day: 'Sun', count: Math.min(15, notices.length), height: '25%' },
-              ].map((bar) => (
-                <div key={bar.day} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                  <span className="text-xs font-bold text-[#2563EB] opacity-0 group-hover:opacity-100 transition-opacity">
-                    {bar.count}
-                  </span>
-                  <div
-                    className="w-full bg-gradient-to-t from-[#2563EB] to-[#60A5FA] rounded-t-lg transition-all group-hover:brightness-110"
-                    style={{ height: bar.height }}
-                  />
-                  <span className="text-xs font-semibold text-[#64748B]">{bar.day}</span>
+            {/* Dynamic Daily Notice Counts */}
+            {(() => {
+              const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+              const dayCounts: Record<string, number> = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+              notices.forEach((n) => {
+                if (n.createdAt) {
+                  const day = daysOfWeek[new Date(n.createdAt).getDay()];
+                  if (dayCounts[day] !== undefined) dayCounts[day]++;
+                }
+              });
+              const maxDayCount = Math.max(...Object.values(dayCounts), 1);
+              const chartBars = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => ({
+                day,
+                count: dayCounts[day],
+                height: dayCounts[day] > 0 ? `${Math.max(15, (dayCounts[day] / maxDayCount) * 90)}%` : '6%'
+              }));
+
+              return (
+                <div className="h-48 w-full pt-4 flex items-end justify-between gap-4 px-4 border-b border-[#E5E7EB] pb-2">
+                  {chartBars.map((bar) => (
+                    <div key={bar.day} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                      <span className="text-xs font-bold text-[#2563EB] opacity-0 group-hover:opacity-100 transition-opacity">
+                        {bar.count}
+                      </span>
+                      <div
+                        className="w-full bg-gradient-to-t from-[#2563EB] to-[#60A5FA] rounded-t-lg transition-all group-hover:brightness-110"
+                        style={{ height: bar.height }}
+                      />
+                      <span className="text-xs font-semibold text-[#64748B]">{bar.day}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
           </div>
 
           {/* LIVE SCREEN STATUS MAP */}
@@ -610,6 +635,7 @@ export default function DashboardPage() {
                     onChange={(e) => setWDept(e.target.value)}
                     className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[#111111] font-bold"
                   >
+                    <option value="ALL">ALL - All Campus Screens (Campus-Wide Broadcast)</option>
                     <option value="ECE">ECE - Electronics & Communication</option>
                     <option value="CSE">CSE - Computer Science & Engineering</option>
                     <option value="AIML">AIML - Artificial Intelligence & ML</option>
@@ -689,16 +715,58 @@ export default function DashboardPage() {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[#111111] font-bold mb-1">Event Date (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 15 Oct 2026"
+                      value={wEventDate}
+                      onChange={(e) => setWEventDate(e.target.value)}
+                      className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[#111111]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[#111111] font-bold mb-1">Event Time (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 10:00 AM"
+                      value={wEventTime}
+                      onChange={(e) => setWEventTime(e.target.value)}
+                      className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[#111111]"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-[#111111] font-bold mb-1">Poster / Media URL (Optional)</label>
+                  <label className="block text-[#111111] font-bold mb-1">Poster / Media Attachment URL (Optional)</label>
                   <input
                     type="url"
-                    placeholder="https://example.com/poster.jpg"
+                    placeholder="https://example.com/poster.jpg or .pdf"
                     value={wMediaUrl}
                     onChange={(e) => setWMediaUrl(e.target.value)}
                     className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[#111111] font-mono"
                   />
                 </div>
+
+                {/* Intelligent Auto-Arrangement Feedback */}
+                {wMediaUrl ? (
+                  <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs font-semibold flex items-center gap-2.5">
+                    <Sparkles className="w-4 h-4 text-[#2563EB] shrink-0" />
+                    <span>
+                      {detectMediaType(wMediaUrl) === 'image'
+                        ? 'Auto-Arranging: Visual Poster Showcase Block (7-Col Featured Media Spotlight)'
+                        : detectMediaType(wMediaUrl) === 'pdf'
+                        ? 'Auto-Arranging: Official Document / Circular Block (with QR Instant Access)'
+                        : 'Auto-Arranging: Dynamic Attachment Feed'}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E5E7EB] text-[#64748B] text-xs font-semibold flex items-center gap-2.5">
+                    <FileText className="w-4 h-4 text-[#64748B] shrink-0" />
+                    <span>Auto-Arranging: High-Impact Typographic Announcement Bulletin Block</span>
+                  </div>
+                )}
 
                 <div className="flex gap-2 pt-2">
                   <button
@@ -753,10 +821,19 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#E5E7EB] space-y-1">
-                  <div className="font-bold text-[#111111]">Review Notice Target</div>
-                  <div className="text-[#64748B]">Department: <span className="font-bold text-[#2563EB]">{wDept}</span></div>
+                <div className="bg-[#F8FAFC] p-4 rounded-2xl border border-[#E5E7EB] space-y-1.5">
+                  <div className="font-bold text-[#111111]">Review Notice Target & Arrangement</div>
+                  <div className="text-[#64748B]">Target Scope: <span className="font-bold text-[#2563EB]">{wDept === 'ALL' ? 'ALL CAMPUS SCREENS' : `${wDept} Department`}</span></div>
                   <div className="text-[#64748B]">Headline: <span className="font-bold text-[#111111]">{wTitle}</span></div>
+                  <div className="text-[#64748B]">
+                    Smart Layout Block: <span className="font-bold text-[#22C55E]">
+                      {detectMediaType(wMediaUrl) === 'image'
+                        ? 'Visual Poster Showcase Block'
+                        : detectMediaType(wMediaUrl) === 'pdf'
+                        ? 'Official Document Circular Block'
+                        : 'Typographic Bulletin Feed'}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex gap-2 pt-2">

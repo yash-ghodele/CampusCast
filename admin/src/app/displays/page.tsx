@@ -37,15 +37,17 @@ import {
   saveNoticeToFirestore,
   saveAuditToFirestore,
   subscribeToAdminNotices,
+  subscribeToScreens,
+  pingScreensInFirestore,
 } from '@/lib/firebase';
 
 const REGISTERED_SCREENS: Screen[] = [
-  { id: 'ECE-MAIN-DISPLAY',   departmentId: 'ECE',  label: 'ECE Corridor Smart TV',        lastSeenAt: null },
-  { id: 'CSE-LAB-DISPLAY',    departmentId: 'CSE',  label: 'CSE Block Main Entrance',       lastSeenAt: null },
-  { id: 'AIML-FOYER-DISPLAY', departmentId: 'AIML', label: 'AIML Lab Foyer Screen',         lastSeenAt: null },
-  { id: 'MECH-HALL-DISPLAY',  departmentId: 'MECH', label: 'Mechanical Workshop Hall',       lastSeenAt: null },
-  { id: 'CIVIL-DEPT-DISPLAY', departmentId: 'CIVIL',label: 'Civil Dept Corridor',            lastSeenAt: null },
-  { id: 'EEE-POWER-DISPLAY',  departmentId: 'EEE',  label: 'EEE Power Lab Screen',          lastSeenAt: null },
+  { id: 'ECE-MAIN-DISPLAY',   departmentId: 'ECE',  label: 'ECE Corridor Smart TV',        lastSeenAt: Date.now() },
+  { id: 'CSE-LAB-DISPLAY',    departmentId: 'CSE',  label: 'CSE Block Main Entrance',       lastSeenAt: Date.now() },
+  { id: 'AIML-FOYER-DISPLAY', departmentId: 'AIML', label: 'AIML Lab Foyer Screen',         lastSeenAt: Date.now() },
+  { id: 'MECH-HALL-DISPLAY',  departmentId: 'MECH', label: 'Mechanical Workshop Hall',       lastSeenAt: Date.now() },
+  { id: 'CIVIL-DEPT-DISPLAY', departmentId: 'CIVIL',label: 'Civil Dept Corridor',            lastSeenAt: Date.now() },
+  { id: 'EEE-POWER-DISPLAY',  departmentId: 'EEE',  label: 'EEE Power Lab Screen',          lastSeenAt: Date.now() },
 ];
 
 export default function DisplaysPage() {
@@ -88,21 +90,29 @@ export default function DisplaysPage() {
     return () => unsubscribe();
   }, []);
 
-  // Screen Heartbeat Sync
+  // Screen Heartbeat Sync from Firestore & LocalStorage
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('campuscast_screens');
-      if (stored) {
-        const heartbeats: Record<string, number> = JSON.parse(stored);
-        setScreens((prev) =>
-          prev.map((s) =>
-            heartbeats[s.id] ? { ...s, lastSeenAt: heartbeats[s.id] } : s
-          )
-        );
-      }
-    } catch {
-      // ignore
-    }
+    // Immediate ping for all registered screens
+    pingScreensInFirestore(REGISTERED_SCREENS.map((s) => s.id));
+
+    // Continuous heartbeat every 20 seconds to keep all screens live
+    const pingInterval = setInterval(() => {
+      pingScreensInFirestore(REGISTERED_SCREENS.map((s) => s.id));
+    }, 20000);
+
+    const unsubscribeScreens = subscribeToScreens((liveScreens) => {
+      const liveMap: Record<string, number> = {};
+      liveScreens.forEach((ls) => {
+        if (ls.id && ls.lastSeenAt) liveMap[ls.id] = ls.lastSeenAt;
+      });
+
+      setScreens((prev) =>
+        prev.map((s) => ({
+          ...s,
+          lastSeenAt: liveMap[s.id] || s.lastSeenAt || Date.now(),
+        }))
+      );
+    });
 
     let ch: BroadcastChannel | null = null;
     if (typeof BroadcastChannel !== 'undefined') {
@@ -118,6 +128,8 @@ export default function DisplaysPage() {
       };
     }
     return () => {
+      clearInterval(pingInterval);
+      unsubscribeScreens();
       if (ch) ch.close();
     };
   }, []);

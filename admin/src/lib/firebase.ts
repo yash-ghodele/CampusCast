@@ -119,3 +119,19 @@ export function subscribeToScreens(onUpdate: (screens: { id: string; departmentI
   }
 }
 
+/**
+ * Pings active telemetry for screens in Firestore.
+ */
+export async function pingScreensInFirestore(screenIds: string[]) {
+  try {
+    const now = Date.now();
+    for (const screenId of screenIds) {
+      const dept = screenId.split('-')[0] || 'ECE';
+      const screenRef = doc(db, 'screens', screenId);
+      await setDoc(screenRef, { id: screenId, departmentId: dept, lastSeenAt: now }, { merge: true });
+    }
+  } catch (err) {
+    console.warn('Firestore screens ping error:', err);
+  }
+}
+
