@@ -431,7 +431,7 @@ const TEST_NOTICES = [
     content: 'EEE final year project team successfully commissioned a 5kW solar charging kiosk at Campus Parking Lot B.',
     eventDate: '08 Oct 2026',
     eventTime: '03:00 PM',
-    mediaUrl: 'https://images.unsplash.com/photo-1508873696983-2df5293cb32f?w=1000&auto=format&fit=crop&q=80',
+    mediaUrl: 'https://unsplash.com/photos/a-woman-is-pumping-gas-into-her-car-9166Worfn_Q',
     mediaType: 'image',
     priority: 'normal',
     status: 'active',
