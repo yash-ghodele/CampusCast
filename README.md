@@ -74,7 +74,6 @@ The Admin Portal is architected using **8 dedicated standalone Next.js App Route
 - [**`Docs/USER_GUIDE.md`**](file:///d:/Projects/CampusCast/Docs/USER_GUIDE.md): Quick Start User Guide for non-technical faculty & commercial leadership handbook.
 - [**`Docs/DESIGN_v2.md`**](file:///d:/Projects/CampusCast/Docs/DESIGN_v2.md): Official Brand Kit v2, logo system, palette tokens, and signage UI specifications.
 - [**`Docs/SYSTEM_ARCHITECTURE_GUIDE.md`**](file:///d:/Projects/CampusCast/Docs/SYSTEM_ARCHITECTURE_GUIDE.md): Master system overview, sequence diagrams, & App Flows for Display Modes 1-5 and Admin Command Center.
-- [**`Docs/DESIGN.md`**](file:///d:/Projects/CampusCast/Docs/DESIGN.md): Brand Kit, Poppins typography specs, master color tokens, and department themes.
 - [**`Docs/OPERATIONAL_RUNBOOKS.md`**](file:///d:/Projects/CampusCast/Docs/OPERATIONAL_RUNBOOKS.md): Smart TV direct browser setup & IT runbooks.
 - [**`Docs/PRD.md`**](file:///d:/Projects/CampusCast/Docs/PRD.md): Product requirements & functional SLAs.
 - [**`Docs/ARCHITECTURE.md`**](file:///d:/Projects/CampusCast/Docs/ARCHITECTURE.md): Technical architecture & NoSQL Firestore document schemas.
