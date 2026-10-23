@@ -93,6 +93,20 @@ export function parseNoticeMessage(text: string): ParsedNoticeMessage {
     content = content.replace(scheduleMatch[0], '').trim();
   }
 
+  // STEP 2.5: Department Hashtag Resolution (e.g., #ece, #cse, #aiml, #mech, #civil, #eee, #all)
+  // Need: Faculty and evaluators frequently use hashtags for department scoping (#ece) alongside #urgent.
+  const SYSTEM_TAGS = ['URGENT', 'EXAM', 'EVENT', 'PLACEMENT', 'ACHIEVEMENT', 'SCHEDULE'];
+  const hashMatches = Array.from(content.matchAll(/(?:^|\s)#([A-Za-z0-9_\-]+)\b/g));
+  for (const match of hashMatches) {
+    const candidate = match[1].toUpperCase();
+    if (!SYSTEM_TAGS.includes(candidate)) {
+      if (!departmentCode) {
+        departmentCode = candidate;
+      }
+      content = content.replace(match[0], ' ').trim();
+    }
+  }
+
   // STEP 3: Department Prefix Resolution (e.g., "ECE:" or "DEPT: ECE")
   // Need: Routes notice to the appropriate department's LCD screens when a faculty member has multi-dept access.
   // Working: Regex matches leading "DEPT: CODE" or "CODE:" patterns. Normalizes extracted code to uppercase.
@@ -100,7 +114,10 @@ export function parseNoticeMessage(text: string): ParsedNoticeMessage {
   const deptMatch = content.match(deptPrefixRegex);
 
   if (deptMatch) {
-    departmentCode = (deptMatch[1] || deptMatch[2]).toUpperCase();
+    const extractedDept = (deptMatch[1] || deptMatch[2]).toUpperCase();
+    if (!departmentCode) {
+      departmentCode = extractedDept;
+    }
     content = content.replace(deptPrefixRegex, '').trim();
   }
 
