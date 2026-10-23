@@ -64,62 +64,94 @@
 
 ### 1.1 Quick Start (3-Step Publishing)
 
-Publishing a notice to department displays requires **zero portal logins and zero technical training**:
+Publishing a notice to corridor Smart TVs requires **zero logins, zero mobile app installations, and zero technical training**:
 
-1. **Open WhatsApp** on your registered mobile device.
-2. **Send your message** to the official CampusCast WhatsApp Hotline (`+91 98765 43210`).
+1. **Connect to Hotline:**
+   * **Twilio Sandbox (Trial / Evaluation):** Open WhatsApp, send `join twilio-trial` (or your sandbox join keyword) to **`+1 737 250 8034`** once.
+   * **Production Hotline (Meta Cloud API):** Save the college WhatsApp number directly into your contacts and open the chat.
+2. **Text Your Notice:** Format your text using simple hashtags (e.g. `#urgent #ece ECE: Lab cancelled today`).
 3. **Receive Instant Confirmation:**
-   > `Posted to ECE — visible now on hallway displays!`
+   > `🚨 EMERGENCY ALERT BROADCAST to ECE corridor Smart TVs!`
+   * The notice renders on physical hallway displays in **under 1 second**.
 
 ---
 
-### 1.2 Complete Hashtag & Category Matrix
+### 1.2 Complete Messaging Syntax Matrix
 
-Include target department tags (`#ece`, `#cse`, `#aiml`, `#mech`, `#civil`, `#eee`, `#all`) and category tags in your WhatsApp text:
+CampusCast utilizes a **deterministic, zero-prompt-injection parsing engine** to classify inbound WhatsApp messages without AI latency or unpredictability:
 
-| Category Hashtag | Official Category | Primary Theme Color | Recommended Use Cases | Default Expiry |
+| Syntax Element | Token / Pattern | Required? | Purpose & Display Effect | Example |
 |---|---|---|---|---|
-| `#exam` | EXAMINATION | Brand Blue (`#2563EB`) | Exam timetables, seating arrangements, hall tickets | 24 Hours |
-| `#event` | EVENT | Indigo / Purple | Guest lectures, workshops, hackathons, symposia | 48 Hours |
-| `#placement` | PLACEMENT DRIVE | Success Green (`#22C55E`) | Recruitment drives, interview schedules, shortlisted candidates | 48 Hours |
-| `#academic` | ACADEMIC | Sky Blue (`#60A5FA`) | Class reschedules, lab submissions, syllabus updates | 24 Hours |
-| `#sports` | SPORTS | Caution Amber (`#F59E0B`) | Inter-college tournaments, trials, sports day notices | 48 Hours |
-| `#cultural` | CULTURAL | Magenta / Pink | Annual festival, music club auditions, drama rehearsals | 48 Hours |
-| `#urgent` | URGENT ALERT | High-Contrast Red (`#DC2626`) | Weather alerts, sudden holidays, emergency evacuations | 6 Hours |
+| **Department Tag** | `#ece`, `#cse`, `#aiml`, `#mech`, `#civil`, `#eee`, `#all` | Optional for 1-dept faculty; **Mandatory** for multi-dept | Routes notice to target hallway Smart TVs. | `#ece` or `#all` |
+| **Department Prefix** | `ECE:`, `CSE:`, `DEPT: ECE` | Alternative to hashtag | Legacy prefix syntax recognized by parser. | `ECE: Workshop today` |
+| **Emergency Priority** | `#urgent` | Optional | Triggers **fullscreen red alert**, pulsing border, and high-visibility priority banner. | `#urgent #ece Fire drill at 3 PM` |
+| **Category Badge** | `#exam`, `#event`, `#placement`, `#achievement` | Optional (default: `general`) | Styles notice card with themed badge & icon on TV. | `#exam Midterm timetable released` |
+| **Future Scheduling** | `#schedule DD-MM-YYYY HH:mm` or `YYYY-MM-DD HH:mm` | Optional | Holds notice in queue until designated time, then automatically pushes live. | `#schedule 28-10-2026 09:00` |
+| **Poster / Image** | WhatsApp Image Attachment | Optional | Displays high-definition poster in hero section or side block. | Attached `.png` / `.jpg` |
+| **PDF Circular** | WhatsApp Document Attachment | Optional | Renders PDF document viewer on display screen. | Attached `.pdf` circular |
 
 ---
 
-### 1.3 Message Formatting & Examples
+### 1.3 How the Parser Works (Tag Resolution & Cleaning)
 
-#### Example 1: Standard Department Exam Notice
+1. **Tag Extraction & Stripping:** The parser scans for `#urgent`, category tags, and `#schedule` timestamps, extracts their values, and **automatically strips them from the visible text**.
+2. **Hashtag & Prefix Pairing:** If you include both a hashtag and prefix (e.g. `#ece ECE: Notice text`), the engine detects `departmentCode: ECE` and cleanly strips both `#ece` and `ECE:`, displaying only the clean text `Notice text` on the Smart TV screen.
+3. **Case Insensitivity:** All tags are case-insensitive (`#URGENT`, `#urgent`, `#Ece`, `#ece` work identically).
+4. **Order Independent:** Tags can appear anywhere in the message (beginning, middle, or end).
+
+---
+
+### 1.4 Department Ambiguity Resolution
+
+* **Single-Department Faculty (e.g. assigned only to `ECE`):**
+  * You do **NOT** need to include `#ece`. Any notice you text automatically routes to the ECE corridor display.
+* **Multi-Department Faculty & HODs (e.g. assigned to `ECE, CSE`):**
+  * You **MUST** specify `#ece`, `#cse`, or `#all`.
+  * If omitted, CampusCast returns a friendly clarification WhatsApp reply:
+    > `❌ Department ambiguous. Please prefix your notice with your target department code (e.g. #ece or ECE:). Your assigned departments: ECE, CSE`
+* **Super Admins & Principals (assigned to all departments):**
+  * Can broadcast to individual departments (`#ece`, `#mech`) or broadcast campus-wide (`#all`).
+
+---
+
+### 1.5 Real-World Message Examples (Copy-Paste Ready)
+
+#### 1. Emergency Department Alert (Immediate Override)
 ```text
-#ece #exam MIDTERM EXAMINATION SCHEDULE: 3rd Year B.Tech midterm exams begin 05 Oct 2026. Hall tickets can be collected from the HOD desk starting tomorrow 10:00 AM.
+#urgent #ece ECE: Power fluctuation in DSP Lab. All afternoon lab sessions suspended immediately.
 ```
-* **Target:** ECE Department Display (`/display/ece`)
-* **Visual:** Highlighted with **EXAM** badge and blue border.
+* **Routing:** ECE Corridor Smart TV (`/display/ece`).
+* **Display Behavior:** Fullscreen high-contrast crimson banner, flashing indicator, prominent headline.
 
-#### Example 2: Campus-Wide Placement Announcement
+#### 2. Scheduled Campus-Wide Placement Announcement
 ```text
-#all #placement Microsoft Campus Recruitment Drive for Final Year B.Tech (CSE, ECE, AIML). Pre-placement talk on 12 Oct at 10:00 AM in Main Auditorium.
+#all #placement #schedule 26-10-2026 09:30 Tata Consultancy Services Recruitment Drive for 4th Year B.Tech. Pre-placement talk in Main Auditorium.
 ```
-* **Target:** ALL Department Displays simultaneously (`/display`)
-* **Visual:** Success Green **PLACEMENT** banner on all screens.
+* **Routing:** Broadcasts to **ALL** hallway displays across campus.
+* **Display Behavior:** Queued until Oct 26 at 9:30 AM, then displays with a green **PLACEMENT** badge.
+
+#### 3. Standard Examination Circular
+```text
+#cse #exam CSE: Semester V internal examination timetable released. Students must collect hall tickets from Department Office before Friday 4 PM.
+```
+* **Routing:** CSE Main Corridor Display (`/display/cse`).
+* **Display Behavior:** Blue **EXAM** card in the main hero display carousel.
+
+#### 4. Event Poster with Attached Media
+```text
+#aiml #event AI & Machine Learning Hackathon 2026. Register your teams before midnight! [Image Attached]
+```
+* **Routing:** AIML Lab Foyer Screen (`/display/aiml`).
+* **Display Behavior:** Renders the attached graphic poster in high definition alongside title and event metadata.
 
 ---
 
-### 1.4 Media & Document Attachments
+### 1.6 Security, Rate Limits & Silent Drop Policy
 
-You can attach media files directly to your WhatsApp message:
-- **Images (`.png`, `.jpg`, `.jpeg`):** Rendered in high definition on the display card or inside Carousel Mode.
-- **Posters & Pamphlets:** Automatically scaled to preserve aspect ratio without cropping.
-
----
-
-### 1.5 Notice Lifecycle & WhatsApp Bot Management
-
-- **Automated Confirmation:** Sender receives an automated WhatsApp reply with Notice ID (`ntc-101`) and direct view link.
-- **Notice Expiration:** Notices automatically expire after their designated TTL (Time-To-Live).
-- **Manual Notice Cancellation:** Sender can reply `#cancel <Notice_ID>` or `#delete` to remove a notice instantly.
+1. **Whitelisting Enforcement:** Only mobile numbers registered in the Admin Panel can publish.
+2. **Silent Drop for Strangers:** If an unregistered phone texts the hotline, the system silently discards the message and records an `unauthorized_attempt` in the immutable `audit_log`. **No reply is sent to the sender**, strictly preventing telephone number enumeration attacks.
+3. **Rate Limiting:** Each registered faculty member is rate-limited to **10 notices per minute** to prevent spam loops or accidental message flooding.
+4. **Instant Receipts:** Authorized senders receive an automated WhatsApp confirmation message within 1 second of publication.
 
 ---
 
@@ -248,19 +280,39 @@ Provides institutional insights into campus communication patterns:
 
 ---
 
-### 2.7 Tab 5: Faculty & Staff Roster
+### 2.7 Tab 5: Faculty & Staff Roster (Phone Number Management)
 
-Manages user authentication and publishing privileges:
+The **Faculty Roster** (`/users`) is the central whitelist security authority for CampusCast. Any mobile phone number registered here is granted permission to update hallway Smart TVs via WhatsApp.
 
-- **Faculty Roster Table:**
-  - *Name:* Full name of faculty member (e.g. `Dr. Sarah Sharma`).
-  - *Phone Number:* Verified WhatsApp number (`+919876543210`).
-  - *Role Badge:* `HOD` (Blue), `Faculty` (Gray), `Super Admin` (Purple).
-  - *Departments:* Multi-department access tags (e.g., `ECE`, `CSE`).
-  - *Status:* `Active` (Green) or `Suspended` (Red).
-- **Actions & Controls:**
-  - **`+ Add Faculty Member` Modal:** Form to register a new phone number into the whitelist.
-  - **Toggle Status:** 1-click button to suspend or reactivate publishing access.
+#### Capacity & Scalability Limits
+* **Maximum Phone Numbers:** **Unlimited.**
+* **Cost:** **$0 (Zero Cost).**
+* **Storage Footprint:** Cloud Firestore's Spark Free Tier provides 1 GiB storage, which can accommodate over **2,000,000+ faculty profiles** with zero monthly fees.
+* **Gateway Quotas:**
+  * **Twilio Sandbox Mode:** Supports ~5 to 10 concurrent tester phones for evaluations and college demos (each phone texts `join <keyword>` once).
+  * **Meta WhatsApp Cloud API (Production):** Supports **unlimited phones** with 1,000 free service conversations per month.
+
+#### Step-by-Step: Adding a New Faculty Phone Number
+1. Navigate to **Faculty Roster** in the sidebar (or visit `https://campus-cast-admin.vercel.app/users`).
+2. Click the blue **`+ Add Faculty`** button in the upper-right corner.
+3. Fill out the registration form:
+   * **Full Name:** Enter faculty title and name (e.g. `Dr. Arvind Kulkarni`).
+   * **WhatsApp Phone Number:** Enter phone with country code (e.g. `+91 98765 43210` or `9876543210`). The system automatically normalizes into international E.164 format (`+919876543210`).
+   * **Role:**
+     * `Faculty`: Standard lecturer / assistant professor permissions.
+     * `HOD`: Department head; highlighted with a distinct blue badge on displays.
+     * `Super Admin`: Campus administrator or Principal; possesses override powers across all 6 corridor displays.
+   * **Assigned Departments:** Comma-separated department codes (e.g. `ECE` or `ECE, CSE` or `ALL`).
+4. Click **`Register Faculty`**.
+
+#### Instant Real-Time Synchronization
+* When you submit the form, the Admin Panel immediately executes `saveUserToFirestore(newUser)`.
+* The profile is written to the Cloud Firestore `users` collection in **<200 milliseconds**.
+* **Zero Restarts Needed:** The Vercel Serverless Webhook immediately authorizes incoming WhatsApp messages from this new number with zero downtime.
+
+#### Managing Access & Revoking Numbers
+* **1-Click Suspend / Activate:** Next to each faculty member in the table, click the **Status toggle** (`Active` $\leftrightarrow$ `Suspended`).
+* If a faculty member is set to `Suspended`, any subsequent WhatsApp message they send is immediately blocked and logged as an `unauthorized_attempt` in the immutable audit ledger.
 
 ---
 
