@@ -135,3 +135,40 @@ export async function pingScreensInFirestore(screenIds: string[]) {
   }
 }
 
+/**
+ * Saves or updates a faculty user directly in Firestore.
+ */
+export async function saveUserToFirestore(user: User): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', user.id);
+    await setDoc(userRef, user, { merge: true });
+  } catch (err) {
+    console.warn('Firestore user write error:', err);
+  }
+}
+
+/**
+ * Subscribes to real-time updates for authorized faculty users from Firestore.
+ */
+export function subscribeToUsers(onUpdate: (users: User[]) => void) {
+  try {
+    const q = query(collection(db, 'users'));
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const usersList: User[] = [];
+        snapshot.forEach((docSnap) => {
+          usersList.push({ id: docSnap.id, ...(docSnap.data() as any) } as User);
+        });
+        onUpdate(usersList);
+      },
+      (err) => {
+        console.warn('Firestore users subscription error:', err);
+      }
+    );
+  } catch (err) {
+    console.warn('Failed to initialize Firestore users listener:', err);
+    return () => {};
+  }
+}
+

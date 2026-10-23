@@ -33,6 +33,8 @@ import {
   saveNoticeToFirestore,
   saveAuditToFirestore,
   subscribeToAdminNotices,
+  saveUserToFirestore,
+  subscribeToUsers,
 } from '@/lib/firebase';
 
 const REGISTERED_SCREENS: Screen[] = [
@@ -79,7 +81,7 @@ export default function UsersPage() {
       console.warn('LocalStorage load error:', err);
     }
 
-    const unsubscribe = subscribeToAdminNotices((liveNotices) => {
+    const unsubNotices = subscribeToAdminNotices((liveNotices) => {
       setNotices(liveNotices);
       try {
         localStorage.setItem('campuscast_notices', JSON.stringify(liveNotices));
@@ -88,7 +90,21 @@ export default function UsersPage() {
       }
     });
 
-    return () => unsubscribe();
+    const unsubUsers = subscribeToUsers((liveUsers) => {
+      if (liveUsers && liveUsers.length > 0) {
+        setUsers(liveUsers);
+        try {
+          localStorage.setItem('campuscast_users', JSON.stringify(liveUsers));
+        } catch {
+          // ignore
+        }
+      }
+    });
+
+    return () => {
+      unsubNotices();
+      unsubUsers();
+    };
   }, []);
 
   // Screen Heartbeat Sync
@@ -125,7 +141,7 @@ export default function UsersPage() {
     };
   }, []);
 
-  const handleAddFaculty = (e: React.FormEvent) => {
+  const handleAddFaculty = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fName || !fPhone) return;
 
@@ -148,23 +164,32 @@ export default function UsersPage() {
     } catch {
       // ignore
     }
+
+    // Persist directly to Cloud Firestore so the WhatsApp webhook instantly authorizes this phone
+    await saveUserToFirestore(newUser);
+
     setFName('');
     setFPhone('');
     setShowAddFacultyModal(false);
   };
 
-  const toggleUserStatus = (userId: string) => {
-    const updatedUsers = users.map((u) =>
-      u.id === userId
-        ? { ...u, status: u.status === 'active' ? ('suspended' as const) : ('active' as const) }
-        : u
-    );
+  const toggleUserStatus = async (userId: string) => {
+    const targetUser = users.find((u) => u.id === userId);
+    if (!targetUser) return;
+
+    const nextStatus = targetUser.status === 'active' ? ('suspended' as const) : ('active' as const);
+    const updatedUser: User = { ...targetUser, status: nextStatus };
+
+    const updatedUsers = users.map((u) => (u.id === userId ? updatedUser : u));
     setUsers(updatedUsers);
     try {
       localStorage.setItem('campuscast_users', JSON.stringify(updatedUsers));
     } catch {
       // ignore
     }
+
+    // Update in Cloud Firestore
+    await saveUserToFirestore(updatedUser);
   };
 
   const handleEmergencyBroadcastSubmit = async (e: React.FormEvent) => {
