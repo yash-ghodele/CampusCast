@@ -14,9 +14,22 @@ CampusCast bridges the gap between everyday messaging tools and physical campus 
 
 ---
 
+## 🚀 Live Production Deployments
+
+| Component | Production URL | Description |
+|---|---|---|
+| **Smart TV Display Kiosk** | [https://campus-cast-display.vercel.app/](https://campus-cast-display.vercel.app/) | Live Hallway Kiosk & Department Corridor Displays |
+| **Admin Command Center** | [https://campus-cast-admin.vercel.app/](https://campus-cast-admin.vercel.app/) | 8-Module Administrative Console & Screen Wall |
+| **ECE Corridor Display** | [`/display/ece`](https://campus-cast-display.vercel.app/display/ece) | Electronics & Communication corridor kiosk |
+| **CSE Corridor Display** | [`/display/cse`](https://campus-cast-display.vercel.app/display/cse) | Computer Science corridor kiosk |
+| **AIML Corridor Display** | [`/display/aiml`](https://campus-cast-display.vercel.app/display/aiml) | AI & Machine Learning corridor kiosk |
+| **All-Screens Matrix** | [`/display/all`](https://campus-cast-display.vercel.app/display/all) | 6-department live status grid & telemetry |
+
+---
+
 ## 📺 Zero-Hardware Smart TV Model & Display Modes
 
-No Raspberry Pi, Mini-PC, HDMI dongles, or external media player boxes are required! Any Smart TV (Android TV, LG webOS, Samsung Tizen OS, Amazon Fire TV) opens the display URL (`http://<server-ip>:3000/display?dept=ECE`) directly in its native web browser.
+No Raspberry Pi, Mini-PC, HDMI dongles, or external media player boxes are required! Any Smart TV (Android TV, LG webOS, Samsung Tizen OS, Amazon Fire TV) opens the display URL (`https://campus-cast-display.vercel.app/display/ece` or local `http://<server-ip>:3000/display/ece`) directly in its native web browser.
 
 ### 6 Display Experience Modes:
 1. **Adaptive Smart Multi-Media View (Default View)**: Automatically arranges notices into high-impact visual spotlight posters (7-column visual media), official circular cards (with instant QR code links for PDFs), and typographic bulletin feeds.
@@ -71,6 +84,7 @@ The Admin Portal is architected using **8 dedicated standalone Next.js App Route
 - [**`Docs/ABSTRACT.md`**](file:///d:/Projects/CampusCast/Docs/ABSTRACT.md): Project abstract & problem statement.
 - [**`Docs/TECH_STACK_RATIONALE.md`**](file:///d:/Projects/CampusCast/Docs/TECH_STACK_RATIONALE.md): Technology selection justifications.
 - [**`Docs/PRESENTATION_DRAFT.md`**](file:///d:/Projects/CampusCast/Docs/PRESENTATION_DRAFT.md): PPT-ready presentation draft (27 standalone slides covering all project aspects).
+- [**`Docs/ZERO_COST_INGESTION_PLAN.md`**](file:///d:/Projects/CampusCast/Docs/ZERO_COST_INGESTION_PLAN.md): Complete plan for zero-cost Vercel Route Handlers and Twilio WhatsApp Sandbox integration.
 
 ---
 

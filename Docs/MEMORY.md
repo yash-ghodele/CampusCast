@@ -37,5 +37,9 @@ This document preserves key architectural decisions, design rationales, and hist
 | **2026-10-04** | Added Multi-Criteria Notice Filtering Toolbar | Added 4-dimensional filter engine (scope, category, media type, live search, reset) with view persistence. |
 | **2026-10-04** | Upgraded Screen Heartbeat Telemetry Engine | Upgraded to 20s continuous telemetry maintaining active `🟢 Online` status across all hallway displays. |
 | **2026-10-04** | Generated Presentation Draft & Synced All Documentation | Created 27-slide standalone presentation draft ([`Docs/PRESENTATION_DRAFT.md`](file:///d:/Projects/CampusCast/Docs/PRESENTATION_DRAFT.md)) and synchronized architecture, user guide, and phase plan docs. |
+| **2026-10-05** | Configured Shared Package Direct TypeScript Source Exports | Updated `packages/shared/package.json` entry points to `./src/index.ts` to allow Next.js SWC `transpilePackages` to transpile shared models in memory on Vercel edge builds without pre-compiled `dist/`. |
+| **2026-10-05** | Deployed Firestore Security Rules to Production | Released `firestore.rules` (deny-all client write policy) to live Firebase project `campuscast-mitece`. |
+| **2026-10-05** | Completed Production Deployment on Vercel | Successfully deployed both `campuscast-display` ([`https://campus-cast-display.vercel.app`](https://campus-cast-display.vercel.app)) and `campuscast-admin` ([`https://campus-cast-admin.vercel.app`](https://campus-cast-admin.vercel.app)) with live Firestore connectivity. |
+| **2026-10-24** | Adopted Vercel Serverless Route Handlers & Twilio Sandbox Pipeline | Formulated zero-cost backend architecture moving webhook ingestion and 60s lifecycle cron from Firebase Blaze to Vercel Route Handlers (`/api/webhook/twilio`, `/api/scheduler`) and Twilio WhatsApp Sandbox for academic evaluation testing. |
 
 

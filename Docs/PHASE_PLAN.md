@@ -61,3 +61,20 @@ Phased development roadmap, completed features, and verification status for Camp
 - [x] Notice Lifecycle action controls (instant Activate, Expire, Delete, and Approve).
 - [x] Production build validation (`npm run build`) and Firestore seed script (`npm run seed:notices`).
 - [x] Comprehensive 27-slide PPT presentation draft ([`Docs/PRESENTATION_DRAFT.md`](file:///d:/Projects/CampusCast/Docs/PRESENTATION_DRAFT.md)).
+
+---
+
+## Phase 7 — Production Deployment & Cloud Infrastructure [COMPLETED]
+- [x] Vercel Edge Deployment: Display Kiosk ([`https://campus-cast-display.vercel.app`](https://campus-cast-display.vercel.app)) live with responsive corridor browser layouts.
+- [x] Vercel Edge Deployment: Admin Command Center ([`https://campus-cast-admin.vercel.app`](https://campus-cast-admin.vercel.app)) live with 8 operational modules.
+- [x] Monorepo Shared Package Optimization: Configured `@campuscast/shared` direct TypeScript source exports and Next.js SWC transpilation for zero-config CI/CD builds.
+- [x] Cloud Security Baseline: Deployed and verified production `firestore.rules` on `campuscast-mitece` enforcing serverless-only database writes.
+- [x] Hardware Runbook Validation: Verified live corridor display routes (`/display/ece`, `/display/cse`, `/display/aiml`, etc.) and all-campus telemetry.
+
+---
+
+## Phase 8 — Zero-Cost Serverless Ingestion & Twilio Sandbox Pipeline [IN PROGRESS]
+- [ ] Vercel Serverless Webhook Handler: Implement `admin/src/app/api/webhook/twilio/route.ts` with phone auth, tag parsing, and Firestore write integration.
+- [ ] Vercel Automated Lifecycle Scheduler: Implement `admin/src/app/api/scheduler/route.ts` and configure `admin/vercel.json` 60-second cron job.
+- [ ] Twilio WhatsApp Sandbox Gateway: Configure public Twilio sandbox endpoint to forward inbound mobile notices to the Vercel handler.
+- [ ] Live Mobile-to-TV Verification: Perform end-to-end publish test from mobile phone WhatsApp to physical display screen with automated confirmation reply.

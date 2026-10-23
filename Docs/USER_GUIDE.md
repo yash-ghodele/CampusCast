@@ -51,7 +51,7 @@
 |                            CAMPUSCAST PLATFORM ENGINE                             |
 +--------------------------+------------------------------+-------------------------+
 |    WHATSAPP PUBLISHER    |     ADMIN COMMAND CENTER     |   SMART TV DISPLAYS     |
-|  (Faculty Mobile Phone)  |  (Web Portal - Port 3001)    | (Hallways - Port 3000)  |
+|  (Faculty Mobile Phone)  | (campus-cast-admin.vercel)   | (campus-cast-display)   |
 |  * WhatsApp Cloud API    |  * Kanban Notice Board       | * ECE Department        |
 |  * Instant Verification  |  * Screen Wall Telemetry     | * CSE Department        |
 |  * Automated Formatter   |  * Emergency Override PIN    | * AIML / MECH / CIVIL   |

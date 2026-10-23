@@ -29,20 +29,20 @@ sequenceDiagram
     participant Display as Smart TV Display App (display/)
     participant Admin as Admin Command Center (admin/)
 
-    Faculty->>Meta: Send WhatsApp message (e.g. "#urgent #exam ECE: Midterm exam on Monday")
+    Faculty->>Meta: Send WhatsApp message (e.g. '#urgent #exam ECE: Midterm exam on Monday')
     Meta->>Webhook: Inbound Webhook POST (signed with X-Hub-Signature-256)
     
     rect rgb(20, 30, 50)
-        Note over Webhook: 1. HMAC SHA-256 Signature Verification<br/>2. Phone Auth Lookup in `users` collection<br/>3. Parse Tags (#urgent, #exam, #schedule, DEPT:)
+        Note over Webhook: 1. HMAC SHA-256 Signature Verification<br/>2. Phone Auth Lookup in 'users' collection<br/>3. Parse Tags (#urgent, #exam, #schedule, DEPT:)
     end
 
     alt Sender is Unauthorized / Suspended
-        Webhook->>DB: Add document to `audit_log` (type: unauthorized_attempt)
+        Webhook->>DB: Add document to audit_log (type: unauthorized_attempt)
         Note over Webhook: Silent Drop (No WhatsApp reply sent to prevent probing)
     else Sender is Authorized & Active
-        Webhook->>DB: Create Notice doc in `notices` (status: active/scheduled)
-        Webhook->>DB: Add document to `audit_log` (type: publish)
-        Webhook-->>Meta: Outbound POST to Graph API ("✅ Posted to ECE")
+        Webhook->>DB: Create Notice doc in notices (status: active/scheduled)
+        Webhook->>DB: Add document to audit_log (type: publish)
+        Webhook-->>Meta: Outbound POST to Graph API ('✅ Posted to ECE')
         Meta-->>Faculty: Deliver WhatsApp Confirmation Reply
     end
 
@@ -52,11 +52,11 @@ sequenceDiagram
     end
 
     loop Every 1 Minute Cron Ticker
-        Cron->>DB: Promote scheduled notices (scheduledAt <= now) -> active
-        Cron->>DB: Expire old active notices (expiresAt <= now) -> expired
+        Cron->>DB: Promote scheduled notices where scheduledAt is reached to active
+        Cron->>DB: Expire old active notices where expiresAt has elapsed to expired
     end
 
-    Admin->>DB: Read Roster, Screen telemetry, Kanban board, & Audit logs
+    Admin->>DB: Read Roster, Screen telemetry, Kanban board, and Audit logs
 ```
 
 ### 2.2 Admin Emergency Alert Override Sequence
@@ -69,13 +69,13 @@ sequenceDiagram
     participant DB as Cloud Firestore (NoSQL)
     participant Display as Smart TV Display App (display/)
 
-    AdminUser->>CommandApp: Click "Launch Emergency Broadcast"
+    AdminUser->>CommandApp: Click 'Launch Emergency Broadcast'
     CommandApp->>AdminUser: Prompt for Security PIN Confirmation (master PIN: 1234)
-    AdminUser->>CommandApp: Submit Security PIN & Target Scope (e.g., "ALL CAMPUS")
-    CommandApp->>DB: Create Emergency Notice (`priority: urgent`, `category: emergency`, `status: active`)
-    CommandApp->>DB: Write `audit_log` entry (type: emergency_broadcast)
-    DB-->>Display: Trigger Firestore `onSnapshot` streaming listener
-    Display->>Display: Transform screen to Mode 3 Emergency Override (Full-screen red #DC2626 + Pulsing Alert)
+    AdminUser->>CommandApp: Submit Security PIN and Target Scope (e.g., 'ALL CAMPUS')
+    CommandApp->>DB: Create Emergency Notice (priority: urgent, category: emergency, status: active)
+    CommandApp->>DB: Write audit_log entry (type: emergency_broadcast)
+    DB-->>Display: Trigger Firestore onSnapshot streaming listener
+    Display->>Display: Transform screen to Mode 3 Emergency Override (Full-screen red alert and Pulsing Alert)
 ```
 
 ---
@@ -112,19 +112,19 @@ The Display App runs on Smart TV screens in campus corridors with **Poppins** ty
 
 ```mermaid
 flowchart TD
-    Start([Smart TV Browser Boots]) --> InitRoute[Resolve Route e.g. /display/ece]
-    InitRoute --> RegHeartbeat[Start Screen Heartbeat Ping every 30s to /screenHeartbeat]
-    RegHeartbeat --> AttachFirestore[Attach Firestore onSnapshot Listener for active notices]
+    Start(["Smart TV Browser Boots"]) --> InitRoute["Resolve Route e.g. /display/ece"]
+    InitRoute --> RegHeartbeat["Start Screen Heartbeat Ping every 30s to /screenHeartbeat"]
+    RegHeartbeat --> AttachFirestore["Attach Firestore onSnapshot Listener for active notices"]
     
-    AttachFirestore --> CheckUrgent{Contains priority == urgent or category == emergency?}
+    AttachFirestore --> CheckUrgent{"Contains priority == urgent or category == emergency?"}
     
-    CheckUrgent -- Yes --> Mode3[Mode 3: Emergency Override View - Full Screen Red Alert #DC2626]
-    CheckUrgent -- No --> CheckMode{Select Active Display Mode}
+    CheckUrgent -- Yes --> Mode3["Mode 3: Emergency Override View - Full Screen Red Alert #DC2626"]
+    CheckUrgent -- No --> CheckMode{"Select Active Display Mode"}
     
-    CheckMode -- Mode 1 --> Mode1[Mode 1: Hero Notice View - 80% Screen Footprint + QR Code]
-    CheckMode -- Mode 5 --> Mode5[Mode 5: Split Screen View - Event Poster Left + Notice Feed Right]
+    CheckMode -- Mode 1 --> Mode1["Mode 1: Hero Notice View - 80% Screen Footprint + QR Code"]
+    CheckMode -- Mode 5 --> Mode5["Mode 5: Split Screen View - Event Poster Left + Notice Feed Right"]
     
-    Mode1 --> AddTicker[Render Mode 2: Bottom News Ticker Marquee Bar - 44px]
+    Mode1 --> AddTicker["Render Mode 2: Bottom News Ticker Marquee Bar - 44px"]
     Mode5 --> AddTicker
 ```
 
@@ -162,19 +162,19 @@ The Admin Portal is architected with **8 dedicated standalone Next.js App Router
 
 ```mermaid
 flowchart TD
-    AdminLogin([Admin Opens Portal at :3001]) --> NavRoutes[Standalone App Router Routes]
+    AdminLogin(["Admin Opens Portal at :3001"]) --> NavRoutes["Standalone App Router Routes"]
     
-    NavRoutes --> P1[1. / : Dashboard Metric Cards, Live Screen Map Grid, Recent Activity]
-    NavRoutes --> P2[2. /notices : Kanban Board, In-Place Editor, Multi-Filter Toolbar, Wizard]
-    NavRoutes --> P3[3. /displays : Display Control Screen Wall Grid & Emergency Force Broadcast]
-    NavRoutes --> P4[4. /departments : Department Scope Theme Mappings & TV Launcher Links]
-    NavRoutes --> P5[5. /users : Faculty Roster, WhatsApp Phone Auth & Role Hierarchy]
-    NavRoutes --> P6[6. /analytics : Notice Category Breakdowns & Top Faculty Contributors]
-    NavRoutes --> P7[7. /audit : Searchable Security & Event Compliance Ledger]
-    NavRoutes --> P8[8. /settings : Auto-Rotation Durations, Heartbeat Timeouts & Master PIN]
+    NavRoutes --> P1["1. / : Dashboard Metric Cards, Live Screen Map Grid, Recent Activity"]
+    NavRoutes --> P2["2. /notices : Kanban Board, In-Place Editor, Multi-Filter Toolbar, Wizard"]
+    NavRoutes --> P3["3. /displays : Display Control Screen Wall Grid & Emergency Force Broadcast"]
+    NavRoutes --> P4["4. /departments : Department Scope Theme Mappings & TV Launcher Links"]
+    NavRoutes --> P5["5. /users : Faculty Roster, WhatsApp Phone Auth & Role Hierarchy"]
+    NavRoutes --> P6["6. /analytics : Notice Category Breakdowns & Top Faculty Contributors"]
+    NavRoutes --> P7["7. /audit : Searchable Security & Event Compliance Ledger"]
+    NavRoutes --> P8["8. /settings : Auto-Rotation Durations, Heartbeat Timeouts & Master PIN"]
     
-    P2 --> WriteFS[Write to Firestore -> Instant TV Display Broadcast across all ports in <1s]
-    P3 --> EmergencyPIN[PIN Authorization 1234 -> Override All TVs]
+    P2 --> WriteFS["Write to Firestore: Instant TV Display Broadcast across all ports in sub-second latency"]
+    P3 --> EmergencyPIN["PIN Authorization 1234: Override All TVs"]
 ```
 
 #### Exhaustive Module Specs:

@@ -12,55 +12,56 @@ This document details the system architecture, sequence flows, infrastructure la
 sequenceDiagram
     autonumber
     actor Faculty as Authorized Faculty Member (WhatsApp)
-    participant Meta as Meta WhatsApp Cloud API
-    participant Webhook as Cloud Function (whatsappWebhook)
+    participant Gateway as WhatsApp Gateway (Twilio / Meta API)
+    participant Webhook as Serverless Webhook (Vercel / Firebase)
     participant DB as Cloud Firestore (NoSQL)
-    participant Cron as Cloud Function (scheduledNoticeManager)
-    participant Display as Display App (display/)
+    participant Cron as 1-Min Lifecycle Cron (Vercel / Cloud Scheduler)
+    participant Display as Smart TV Display Kiosks (display/)
     participant Admin as Admin Command Center (admin/)
 
-    Faculty->>Meta: Send WhatsApp message (e.g. "#urgent #exam ECE: Midterm exam on Monday")
-    Meta->>Webhook: Inbound Webhook POST (signed with X-Hub-Signature-256)
+    Faculty->>Gateway: Send WhatsApp message (e.g. '#urgent #exam ECE: Midterm exam on Monday')
+    Gateway->>Webhook: Inbound Webhook POST (Twilio form-data / Meta signed JSON)
     
     rect rgb(20, 30, 50)
-        Note over Webhook: 1. HMAC SHA-256 Signature Verification<br/>2. Phone Auth Lookup in `users`<br/>3. Parse Tags (#urgent, #exam, #schedule, DEPT:)
+        Note over Webhook: 1. Gateway Signature Verification<br/>2. Phone Auth Lookup in 'users' collection<br/>3. Parse Tags (#urgent, #exam, #schedule, DEPT:)
     end
 
     alt Sender is Unauthorized
-        Webhook->>DB: Add document to `audit_log` (type: unauthorized_attempt)
-        Note over Webhook: Silent Drop (No WhatsApp reply sent)
+        Webhook->>DB: Add document to audit_log (type: unauthorized_attempt)
+        Note over Webhook: Silent Drop (No reply sent to prevent phone probing)
     else Sender is Authorized
-        Webhook->>DB: Add document to `notices` (status: active/scheduled)
-        Webhook->>DB: Add document to `audit_log` (type: publish)
-        Webhook-->>Meta: Outbound POST to Graph API ("✅ Posted to ECE")
-        Meta-->>Faculty: Deliver WhatsApp Confirmation Reply
+        Webhook->>DB: Add document to notices (status: active/scheduled)
+        Webhook->>DB: Add document to audit_log (type: publish)
+        Webhook-->>Gateway: Immediate TwiML or Graph confirmation ('✅ Posted to ECE')
+        Gateway-->>Faculty: Deliver WhatsApp Confirmation Reply
     end
 
     loop Firestore Realtime Stream (onSnapshot)
-        DB-->>Display: Push active notice collection updates
+        DB-->>Display: Push active notice updates (sub-second latency)
         Display->>Display: Render Mode 1 Hero notice card or Mode 3 Emergency Override
     end
 
     loop Every 1 Minute Cron Ticker
-        Cron->>DB: Promote scheduled notices (scheduledAt <= now) -> active
-        Cron->>DB: Expire old active notices (expiresAt <= now) -> expired
+        Cron->>DB: Promote scheduled notices where scheduled time is reached to active
+        Cron->>DB: Expire old active notices where expiration time has elapsed to expired
     end
 
-    Admin->>DB: Read Roster, Screen telemetry, Notice history, & Audit logs
+    Admin->>DB: Read Roster, Screen telemetry, Notice history, and Audit logs
 ```
 
 ---
 
-## 2. Infrastructure Layer Mapping (Zero External Hardware Model)
+## 2. Infrastructure Layer Mapping (Zero External Hardware & Zero Cloud Cost Model)
 
 | Layer | Technology | Operational Function |
 |---|---|---|
-| **Messaging Ingestion** | Meta WhatsApp Business Cloud API | Webhook payload delivery; outbound confirmation replies. |
-| **Serverless Compute** | Firebase Cloud Functions (v2 Node.js) | HMAC SHA-256 validation, phone auth lookup, tag parsing, DB writes. |
-| **Billing Plan** | Firebase Blaze Plan (Pay-as-you-go) | Unlocks outbound HTTPS calls to Meta Graph API (`graph.facebook.com`). |
+| **Messaging Ingestion** | Twilio WhatsApp Sandbox / Meta Cloud API | Webhook payload delivery; instant TwiML/outbound confirmation replies. Twilio Sandbox enables instant zero-verification live texting for evaluation reviews. |
+| **Serverless Compute** | Vercel Serverless Route Handlers / Firebase Cloud Functions | HMAC/token validation, phone auth lookup, tag parsing, DB writes. Vercel handlers provide 100% free outbound HTTPS without Blaze plan requirements. |
+| **Notice Lifecycle Scheduler** | Vercel Cron Jobs (`vercel.json`) / Cloud Scheduler | 60-second automated ticker to transition scheduled notices and retire expired notices. |
+| **Billing / Cost Model** | 100% Free Tier (Vercel Hobby + Twilio Sandbox + Firebase Spark) | Complete end-to-end operation at zero monetary cost. |
 | **Database** | Cloud Firestore (NoSQL) | Notice document storage with native `onSnapshot` streaming listeners. |
-| **Frontend Hosting** | Cloudflare Pages | Hosts Next.js 14 display kiosk ([`display/`](file:///d:/Projects/CampusCast/display)) & admin portal ([`admin/`](file:///d:/Projects/CampusCast/admin)). |
-| **Display Client** | Smart TV Built-in Web Browser | Direct browser access (`http://<ip>:3000/display?dept=ECE`). **No Pi or Mini-PC required.** |
+| **Frontend Hosting** | Vercel Edge / Cloudflare Pages | Hosts Next.js 14 display kiosk ([https://campus-cast-display.vercel.app](https://campus-cast-display.vercel.app)) & admin portal ([https://campus-cast-admin.vercel.app](https://campus-cast-admin.vercel.app)). |
+| **Display Client** | Smart TV Built-in Web Browser | Direct browser access (`https://campus-cast-display.vercel.app/display/ece` or local `http://<ip>:3000/display/ece`). **No Pi or Mini-PC required.** |
 
 ---
 
