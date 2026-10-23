@@ -486,6 +486,35 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* ZERO-COST SERVERLESS WHATSAPP PIPELINE BANNER */}
+          <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] text-white p-5 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-md border border-slate-700/60">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center shrink-0 text-[#2563EB]">
+                <Radio className="w-6 h-6 text-[#60A5FA]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base font-black tracking-tight">Zero-Cost Ingestion & Cron Gateway</span>
+                  <span className="bg-[#22C55E]/15 text-[#22C55E] text-[10px] font-bold px-2 py-0.5 rounded border border-[#22C55E]/30">
+                    ONLINE & ACTIVE
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-1">
+                  Inbound Webhook: <code className="bg-black/40 px-1.5 py-0.5 rounded font-mono text-blue-300">/api/webhook/twilio</code> | Twilio Sandbox Hotline: <strong className="text-white">+1 415 523 8886</strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <Link
+                href="/settings"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors shadow-sm"
+              >
+                Sandbox Configuration →
+              </Link>
+            </div>
+          </div>
+
           {/* MESSAGES OVER TIME ANALYTICS CHART */}
           <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 space-y-4 shadow-sm">
             <div className="flex items-center justify-between">

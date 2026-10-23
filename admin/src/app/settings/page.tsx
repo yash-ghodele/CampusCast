@@ -471,6 +471,64 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            {/* SECTION 4: ZERO-COST SERVERLESS WHATSAPP & CRON GATEWAY */}
+            <div className="bg-white border border-[#E5E7EB] rounded-2xl p-6 space-y-4 shadow-sm">
+              <div className="flex items-center gap-3 pb-3 border-b border-[#E5E7EB]">
+                <Radio className="w-5 h-5 text-[#2563EB]" />
+                <div>
+                  <h3 className="text-base font-bold text-[#111111]">Zero-Cost Serverless Webhook & Lifecycle Cron</h3>
+                  <p className="text-xs text-[#64748B]">Bypasses Firebase Blaze requirements via Vercel Route Handlers & Twilio WhatsApp Sandbox.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div className="p-4 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B] font-semibold">Twilio WhatsApp Sandbox Webhook:</span>
+                    <span className="inline-block px-2 py-0.5 rounded bg-emerald-100 text-[#22C55E] text-[10px] font-bold">
+                      ACTIVE ROUTE
+                    </span>
+                  </div>
+                  <div className="text-xs font-mono font-bold text-[#2563EB] break-all bg-white p-2.5 rounded-lg border border-[#E2E8F0] select-all">
+                    https://campus-cast-admin.vercel.app/api/webhook/twilio
+                  </div>
+                  <div className="text-[11px] text-[#64748B]">
+                    Sandbox Hotline: <strong className="text-[#111111]">+1 415 523 8886</strong>
+                  </div>
+                  <div className="text-[10px] text-[#64748B]">
+                    Local Endpoint: <code className="bg-slate-200 px-1 py-0.5 rounded">http://localhost:3001/api/webhook/twilio</code>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B] font-semibold">Notice Lifecycle Scheduler (Cron):</span>
+                    <span className="inline-block px-2 py-0.5 rounded bg-emerald-100 text-[#22C55E] text-[10px] font-bold">
+                      VERCEL CRON
+                    </span>
+                  </div>
+                  <div className="text-xs font-mono font-bold text-[#2563EB] break-all bg-white p-2.5 rounded-lg border border-[#E2E8F0] select-all">
+                    https://campus-cast-admin.vercel.app/api/scheduler
+                  </div>
+                  <div className="text-[11px] text-[#64748B]">
+                    Schedule: <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono font-bold text-[#111111]">* * * * *</code> (Every 60 Seconds)
+                  </div>
+                  <div className="text-[10px] text-[#64748B]">
+                    Local Endpoint: <code className="bg-slate-200 px-1 py-0.5 rounded">http://localhost:3001/api/scheduler</code>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-blue-50/50 border border-blue-200/60 rounded-xl space-y-2 text-xs">
+                <span className="font-bold text-[#2563EB]">Twilio WhatsApp Sandbox Setup Guide:</span>
+                <ol className="list-decimal pl-4 space-y-1 text-[#475569] text-[11px]">
+                  <li>Open your Twilio Console $\rightarrow$ Messaging $\rightarrow$ Try it out $\rightarrow$ Send a WhatsApp message.</li>
+                  <li>In Sandbox Settings, set <strong>WHEN A MESSAGE COMES IN</strong> to <code className="bg-white px-1.5 py-0.5 rounded border border-blue-200 text-[#2563EB] font-bold">https://campus-cast-admin.vercel.app/api/webhook/twilio</code> (Method: <strong>POST</strong>).</li>
+                  <li>Evaluators text <code className="bg-white px-1.5 py-0.5 rounded border border-blue-200 text-[#111111] font-bold">join &lt;sandbox-code&gt;</code> to <strong className="text-[#111111]">+1 415 523 8886</strong> to begin broadcasting live notices to hallway TVs!</li>
+                </ol>
+              </div>
+            </div>
+
             {/* SAVE BUTTON */}
             <div className="flex justify-end pt-2">
               <button

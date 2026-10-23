@@ -600,6 +600,13 @@ export default function NoticesPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* WhatsApp Ingestion Badge */}
+              <div className="hidden lg:flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl text-xs text-emerald-800">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-bold">WhatsApp Ingestion:</span>
+                <span className="font-mono text-[11px] font-bold text-emerald-900">+1 415 523 8886</span>
+              </div>
+
               <div className="bg-[#F8FAFC] border border-[#E5E7EB] p-1 rounded-xl flex gap-1 text-xs font-bold">
                 <button
                   onClick={() => setNoticeViewMode('kanban')}
@@ -784,7 +791,7 @@ export default function NoticesPage() {
                             {n.scheduledAt ? new Date(n.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Future'}
                           </span>
                         </div>
-                        <h4 className="text-sm font-bold text-[#111111]">{n.title}</h4>
+                        <h4 className="text-sm font-bold text-[#111111]">{n.title || n.content}</h4>
                         <p className="text-xs text-[#475569] line-clamp-2">{n.content}</p>
                         <div className="pt-2 border-t border-[#E5E7EB] flex items-center justify-between">
                           <button
@@ -844,7 +851,7 @@ export default function NoticesPage() {
                             {n.category}
                           </span>
                         </div>
-                        <h4 className="text-sm font-bold text-[#111111]">{n.title}</h4>
+                        <h4 className="text-sm font-bold text-[#111111]">{n.title || n.content}</h4>
                         <p className="text-xs text-[#475569] line-clamp-2">{n.content}</p>
                         <div className="pt-2 border-t border-[#E5E7EB] flex items-center justify-between">
                           <button
@@ -902,7 +909,7 @@ export default function NoticesPage() {
                           </span>
                           <span className="text-[10px] text-[#64748B]">Archived</span>
                         </div>
-                        <h4 className="text-sm font-semibold text-[#64748B]">{n.title}</h4>
+                        <h4 className="text-sm font-semibold text-[#64748B]">{n.title || n.content}</h4>
                         <div className="pt-2 border-t border-[#E5E7EB] flex items-center justify-between">
                           <button
                             onClick={() => approveNotice(n.id)}
@@ -956,7 +963,7 @@ export default function NoticesPage() {
                     filteredNotices.map((n) => (
                       <tr key={n.id} className="hover:bg-[#F8FAFC] transition-colors">
                         <td className="px-6 py-4">
-                          <div className="font-bold text-[#111111]">{n.title}</div>
+                          <div className="font-bold text-[#111111]">{n.title || n.content}</div>
                           <div className="text-[11px] text-[#2563EB] font-semibold">{n.departmentId} Department</div>
                         </td>
                         <td className="px-6 py-4 capitalize font-semibold text-[#475569]">{n.category}</td>
