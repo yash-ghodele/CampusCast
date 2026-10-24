@@ -113,9 +113,10 @@ async function verifyHttpRoutes() {
   for (const item of testUrls) {
     try {
       const res = await fetch(item.url);
-      const isOk = res.status >= 200 && res.status < 400;
+      const isProtectedEndpoint = item.url.includes('/api/scheduler');
+      const isOk = (res.status >= 200 && res.status < 400) || (isProtectedEndpoint && res.status === 401);
       if (isOk) {
-        console.log(`[PASS] ${item.name} -> HTTP ${res.status} (${item.url})`);
+        console.log(`[PASS] ${item.name} -> HTTP ${res.status} ${isProtectedEndpoint && res.status === 401 ? '(Auth Guarded) ' : ''}(${item.url})`);
         passed++;
       } else {
         console.error(`[FAIL] ${item.name} -> HTTP ${res.status} (${item.url})`);
