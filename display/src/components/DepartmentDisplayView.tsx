@@ -1,6 +1,10 @@
 /**
- * @file apps/display/src/components/DepartmentDisplayView.tsx
- * @description Core Department Fullscreen Live Notice Display Surface — Brand Kit v2.
+ * @file display/src/components/DepartmentDisplayView.tsx
+ * @description Core Department Fullscreen Live Notice Display Surface for Corridor Smart TVs.
+ * 
+ * Orchestrates multi-transport real-time state synchronization (Cloud Firestore snapshots,
+ * BroadcastChannel inter-tab events, and LocalStorage cache), automatic carousel cycling,
+ * screen heartbeat telemetry, layout switching (Hero, Split, Adaptive), and emergency security override preemption.
  */
 
 'use client';
@@ -29,7 +33,7 @@ export const DepartmentDisplayView: React.FC<DepartmentDisplayViewProps> = ({ de
   const [displayMode, setDisplayMode] = useState<string>('auto');
   const [lastSyncSeconds, setLastSyncSeconds] = useState<number>(0);
 
-  // Hook 1: Real-time Firestore, BroadcastChannel & LocalStorage notice synchronization
+  // Hook 1: Multi-transport synchronization pipeline (Cloud Firestore, BroadcastChannel, LocalStorage)
   useEffect(() => {
     const syncNotices = (noticeList: Notice[]) => {
       const activeDeptNotices = noticeList.filter(
@@ -111,7 +115,7 @@ export const DepartmentDisplayView: React.FC<DepartmentDisplayViewProps> = ({ de
     return () => clearInterval(interval);
   }, [notices.length]);
 
-  // Hook 4: Screen Heartbeat Telemetry
+  // Hook 4: Hardware screen heartbeat telemetry dispatcher (Cloud Firestore & inter-tab channel)
   useEffect(() => {
     const screenId = `${normalizedDept}-MAIN-DISPLAY`;
     const sendHeartbeat = () => {
@@ -137,7 +141,7 @@ export const DepartmentDisplayView: React.FC<DepartmentDisplayViewProps> = ({ de
     return () => clearInterval(interval);
   }, [normalizedDept]);
 
-  // Emergency Override Check
+  // Evaluation: Preemptive emergency broadcast override
   const urgentNotice = notices.find(
     (n) => n.priority === 'urgent' || n.category === 'emergency'
   );

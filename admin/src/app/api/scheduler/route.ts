@@ -2,14 +2,11 @@
  * @file admin/src/app/api/scheduler/route.ts
  * @description Automated Notice Lifecycle Scheduler Route Handler.
  * 
- * ZERO-COST SERVERLESS ARCHITECTURE:
- * Replaces GCP Cloud Scheduler & Firebase Cloud Functions with Vercel Cron.
- * Runs on a 1-minute automated schedule (`* * * * *` in admin/vercel.json).
+ * Provides automated notice state transitions:
+ * 1. Promotes notices from `status: 'scheduled'` to `status: 'active'` when `scheduledAt <= Date.now()`.
+ * 2. Retires notices from `status: 'active'` to `status: 'expired'` when `expiresAt <= Date.now()`.
  * 
- * WORKING MECHANISM:
- * 1. Promotes notices from `status: 'scheduled'` to `status: 'active'` when `scheduledAt <= now`.
- * 2. Retires notices from `status: 'active'` to `status: 'expired'` when `expiresAt <= now`.
- * Guarantees zero screen drift and deterministic server-side notice lifecycle states.
+ * Invoked periodically via Vercel Cron or administrative health-check probes.
  */
 
 import { NextRequest } from 'next/server';
@@ -26,12 +23,17 @@ import {
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
+/**
+ * Executes a deterministic notice lifecycle state synchronization batch against Cloud Firestore.
+ *
+ * @returns Execution statistics detailing timestamp, promoted notice count, and expired notice count
+ */
 async function processLifecycle() {
   const now = Date.now();
   let promotedCount = 0;
   let expiredCount = 0;
 
-  // STEP 1: Promote Scheduled Notices
+  // Process Scheduled Notices
   try {
     const scheduledQ = query(
       collection(db, 'notices'),
@@ -53,7 +55,7 @@ async function processLifecycle() {
     console.warn('[CampusCast Scheduler] Error querying scheduled notices:', err);
   }
 
-  // STEP 2: Expire Outdated Active Notices
+  // Process Expired Active Notices
   try {
     const expiredQ = query(
       collection(db, 'notices'),
@@ -84,8 +86,13 @@ async function processLifecycle() {
   };
 }
 
+/**
+ * Handles HTTP GET requests to trigger notice lifecycle evaluation.
+ *
+ * @param req - Incoming Next.js HTTP request
+ * @returns JSON response with lifecycle execution statistics
+ */
 export async function GET(req: NextRequest) {
-  // Optional Vercel Cron Secret validation
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret) {
     const authHeader = req.headers.get('authorization');
@@ -101,6 +108,12 @@ export async function GET(req: NextRequest) {
   });
 }
 
+/**
+ * Handles HTTP POST requests as an alias for scheduled webhook invocations.
+ *
+ * @param req - Incoming Next.js HTTP request
+ * @returns JSON response with lifecycle execution statistics
+ */
 export async function POST(req: NextRequest) {
   return GET(req);
 }

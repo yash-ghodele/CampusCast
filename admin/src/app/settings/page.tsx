@@ -1,8 +1,9 @@
 /**
- * @file apps/admin/src/app/settings/page.tsx
- * @description CampusCast Admin Command Center — Dedicated System Configuration View (`/settings`).
+ * @file admin/src/app/settings/page.tsx
+ * @description CampusCast Admin Command Center — System Settings & Gateway Configuration (`/settings`).
  * 
- * Standalone Page: Contains complete UI, configuration controls, and real-time state.
+ * Provides configuration interfaces for WhatsApp Cloud API & Twilio credentials,
+ * webhook endpoints, emergency PIN security policies, screen refresh intervals, and system maintenance.
  */
 
 'use client';

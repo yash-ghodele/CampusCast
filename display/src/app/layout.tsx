@@ -1,3 +1,8 @@
+/**
+ * @file display/src/app/layout.tsx
+ * @description Root HTML & Metadata Layout Shell for CampusCast Corridor Smart TV Kiosks.
+ */
+
 import './globals.css';
 import type { Metadata } from 'next';
 

@@ -1,6 +1,9 @@
 /**
  * @file scripts/seed-notices.cjs
- * @description Seeds Firestore with 4 realistic multi-media notices per department for verification testing.
+ * @description Cloud Firestore Database Seeding Script for Multi-Department Announcements.
+ * 
+ * Populates realistic multi-media test notices across all campus departments (ECE, CSE, AIML, MECH, CIVIL, EEE, and ALL)
+ * encompassing event posters, official PDF circulars, placement drives, exam schedules, and student achievements.
  */
 
 const { initializeApp } = require('firebase/app');

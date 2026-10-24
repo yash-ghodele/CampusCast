@@ -1,10 +1,9 @@
 /**
- * @file apps/display/src/components/Footer.tsx
- * @description Hallway Display Footer Component with Bottom Scrolling News Ticker.
+ * @file display/src/components/Footer.tsx
+ * @description Hallway Display Footer Component with Continuous Scrolling News Marquee.
  * 
- * NEED FOR THIS COMPONENT:
- * Implements Mode 2 (News Ticker) at the bottom of the screen, ensuring that secondary 
- * announcements and quick alerts remain continuously visible to passing students.
+ * Implements the Mode 2 News Ticker pinned to the bottom of corridor TV screens, ensuring secondary
+ * announcements, reminders, and broadcast tickers remain continuously visible to passing students.
  */
 
 'use client';

@@ -1,6 +1,14 @@
+/**
+ * @file packages/shared/src/parsing.test.ts
+ * @description Unit Test Suite for CampusCast WhatsApp Inbound Message Parser.
+ * 
+ * Verifies deterministic tag extraction (#urgent, #schedule), department code parsing,
+ * date-time normalization, and clean content extraction according to the specification.
+ */
+
 import { parseNoticeMessage } from './parsing';
 
-describe('parseNoticeMessage', () => {
+describe('parseNoticeMessage - Deterministic Lexical Parser Suite', () => {
   it('parses plain notice with department prefix', () => {
     const result = parseNoticeMessage('ECE: Microprocessor Lab cancelled today.');
     expect(result.departmentCode).toBe('ECE');

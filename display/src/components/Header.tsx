@@ -1,10 +1,9 @@
 /**
- * @file apps/display/src/components/Header.tsx
- * @description Hallway Display Header Component (90px height fixed bar) — Brand Kit v2 Light Theme.
+ * @file display/src/components/Header.tsx
+ * @description Fixed Hallway Display Header Component (90px height fixed bar).
  * 
- * NEED FOR THIS COMPONENT:
- * Renders CampusCast brand logo, department identity badge with department color theme,
- * live digital clock (12-hour AM/PM format with date), and real-time screen telemetry status layer.
+ * Renders the CampusCast brand logo, academic department identity badge with dynamic color theming,
+ * live digital clock (12-hour AM/PM format with date), and real-time screen telemetry status indicator.
  */
 
 'use client';

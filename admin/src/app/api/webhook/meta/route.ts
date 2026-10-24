@@ -2,12 +2,9 @@
  * @file admin/src/app/api/webhook/meta/route.ts
  * @description Inbound Meta WhatsApp Cloud API Webhook Route Handler (Dual-Gateway Architecture).
  * 
- * ZERO-COST SERVERLESS ARCHITECTURE:
- * Works side-by-side with the Twilio Sandbox route (`/api/webhook/twilio`).
- * Bypasses Firebase Blaze requirements by serving Meta webhooks directly on Vercel Serverless.
- * Supports:
+ * Provides native webhook handling for the official Meta WhatsApp Cloud API:
  * - GET: Webhook verification challenge handshake (`hub.challenge`)
- * - POST: Signed WhatsApp Business JSON payload processing & notice creation
+ * - POST: Signed WhatsApp Business JSON payload processing, authorization lookup, and notice ingestion
  */
 
 import { NextRequest } from 'next/server';
@@ -32,7 +29,11 @@ const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'campuscast_v
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || '';
 
 /**
- * Dispatches an outbound confirmation message to faculty WhatsApp via Meta Graph API if token is configured.
+ * Dispatches an outbound confirmation message to the faculty member via Meta Graph API.
+ *
+ * @param phoneNumberId - Meta WhatsApp business phone number ID
+ * @param toPhone - Recipient phone number in international E.164 format
+ * @param textMessage - Confirmation or error notification message content
  */
 async function sendMetaGraphReply(phoneNumberId: string, toPhone: string, textMessage: string) {
   if (!WHATSAPP_ACCESS_TOKEN || !phoneNumberId) {
@@ -62,7 +63,10 @@ async function sendMetaGraphReply(phoneNumberId: string, toPhone: string, textMe
 }
 
 /**
- * GET: Handles Meta Developer Portal Webhook Verification Handshake.
+ * Handles the Meta Developer Portal Webhook Verification Handshake.
+ *
+ * @param req - Incoming Next.js HTTP request with `hub.mode`, `hub.verify_token`, and `hub.challenge`
+ * @returns Plaintext response echoing `hub.challenge` on success, or HTTP 403 Forbidden
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -79,7 +83,10 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST: Ingests inbound Meta WhatsApp message payloads.
+ * Ingests inbound Meta WhatsApp Cloud API message payloads.
+ *
+ * @param req - Incoming Next.js HTTP request containing Meta WhatsApp JSON payload
+ * @returns HTTP 200 acknowledgment response to prevent retry cycles
  */
 export async function POST(req: NextRequest) {
   try {
@@ -107,7 +114,7 @@ export async function POST(req: NextRequest) {
 
           if (!senderPhone || !rawText.trim()) continue;
 
-          // STEP 1: Phone Authorization Lookup
+          // Stage 1: Phone Authorization Lookup
           const usersRef = collection(db, 'users');
           const userQ = query(usersRef, where('phone', '==', senderPhone));
           const userSnap = await getDocs(userQ);
@@ -134,7 +141,7 @@ export async function POST(req: NextRequest) {
 
           const userData = userDoc.data() as User;
 
-          // STEP 2: Tag & Scope Parsing
+          // Stage 2: Tag & Scope Parsing
           const parsed = parseNoticeMessage(rawText);
           let targetDeptCode = parsed.departmentCode;
 
@@ -161,7 +168,7 @@ export async function POST(req: NextRequest) {
           const cleanContent = parsed.content || 'Campus Announcement';
           const noticeTitle = cleanContent.length > 55 ? `${cleanContent.slice(0, 52)}...` : cleanContent;
 
-          // STEP 3: Write Notice Document
+          // Stage 3: Write Notice Document
           const docRef = await addDoc(collection(db, 'notices'), {
             departmentId: deptId,
             title: noticeTitle,
@@ -178,7 +185,7 @@ export async function POST(req: NextRequest) {
             expiresAt,
           });
 
-          // STEP 4: Write Audit Log
+          // Stage 4: Write Audit Log Ledger Entry
           await addDoc(collection(db, 'audit_log'), {
             type: 'publish',
             actorPhone: senderPhone,
@@ -193,7 +200,7 @@ export async function POST(req: NextRequest) {
             timestamp: now,
           });
 
-          // STEP 5: Confirmation Reply
+          // Stage 5: Dispatch Confirmation Reply
           const feedback = isScheduled
             ? `⏳ Notice scheduled for ${new Date(parsed.scheduledAt!).toLocaleString()} (${deptId})!`
             : `✅ Notice posted to ${deptId}! Displaying live on corridor Smart TVs.`;

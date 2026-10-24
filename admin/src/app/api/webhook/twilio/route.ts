@@ -2,12 +2,10 @@
  * @file admin/src/app/api/webhook/twilio/route.ts
  * @description Inbound Twilio WhatsApp Webhook Route Handler for CampusCast.
  * 
- * ZERO-COST SERVERLESS ARCHITECTURE:
- * Replaces paid Firebase Cloud Functions with Vercel Serverless Route Handler.
- * Bypasses Firebase Blaze pay-as-you-go requirement and provides unrestricted outbound HTTPS.
- * Handles Twilio WhatsApp Sandbox payloads (x-www-form-urlencoded), performs faculty phone
- * authorization against Firestore `users`, deterministically parses tags via @campuscast/shared,
- * writes notice documents to Firestore `notices`, logs to `audit_log`, and returns instant TwiML XML.
+ * Handles Twilio WhatsApp Sandbox webhook payloads (form-urlencoded and JSON),
+ * performs sender phone verification against the authorized faculty roster in Firestore `users`,
+ * executes deterministic lexical parsing via `@campuscast/shared`, writes notice documents to `notices`,
+ * records immutable audit events in `audit_log`, and responds with instant TwiML XML confirmation.
  */
 
 import { NextRequest } from 'next/server';
@@ -30,7 +28,9 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 /**
- * Health check & status inspector for browser/monitoring pings.
+ * Health-check inspection endpoint for uptime monitoring and gateway diagnostics.
+ *
+ * @returns JSON diagnostic information outlining service status and supported payload formats
  */
 export async function GET() {
   return Response.json({
@@ -44,7 +44,20 @@ export async function GET() {
 }
 
 /**
- * Inbound webhook processor for Twilio WhatsApp Sandbox messages.
+ * Inbound webhook processor for Twilio WhatsApp messages.
+ * 
+ * Executes an 8-stage pipeline:
+ * 1. Payload normalization (extract sender phone, body, and MMS attachment URLs).
+ * 2. Faculty phone authorization lookup against Firestore `users` collection.
+ * 3. Rate limiting check (max 10 publications per minute per sender).
+ * 4. Deterministic tag and scope parsing (priority, schedule date, department prefix).
+ * 5. Department resolution and multi-department ambiguity enforcement.
+ * 6. MMS media attachment classification (image, document, PDF).
+ * 7. Firestore document write and audit log ledger entry creation.
+ * 8. Return instant TwiML XML acknowledgment for automated WhatsApp response.
+ *
+ * @param req - Incoming Next.js HTTP request containing Twilio webhook payload
+ * @returns TwiML XML Response containing confirmation text or silent drop
  */
 export async function POST(req: NextRequest) {
   try {
@@ -85,14 +98,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // STEP 1: Faculty Phone Authorization Check
+    // Stage 1: Faculty Phone Authorization Check
     const usersRef = collection(db, 'users');
     const userQ = query(usersRef, where('phone', '==', senderPhone));
     const userSnap = await getDocs(userQ);
 
     let userDoc = userSnap.docs.find((d) => (d.data() as User).status === 'active');
 
-    // Fallback: check without leading '+' in case phone is formatted as local
+    // Fallback lookup: check without leading '+' in case phone is stored in local format
     if (!userDoc && senderPhone.startsWith('+')) {
       const altPhone = senderPhone.substring(1);
       const altQ = query(usersRef, where('phone', '==', altPhone));
@@ -101,7 +114,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!userDoc) {
-      // SECURITY MANDATE: Silent drop for unauthorized senders to prevent phone enumeration
+      // Security enforcement: silent drop for unauthorized senders to prevent phone enumeration
       console.warn(`[CampusCast Webhook] Unauthorized publish attempt blocked: ${senderPhone}`);
       
       try {
@@ -115,7 +128,6 @@ export async function POST(req: NextRequest) {
         console.warn('Failed to record unauthorized audit entry:', logErr);
       }
 
-      // Return empty TwiML (no WhatsApp reply sent)
       return new Response(
         '<?xml version="1.0" encoding="UTF-8"?><Response></Response>',
         { status: 200, headers: { 'Content-Type': 'text/xml; charset=utf-8' } }
@@ -124,7 +136,7 @@ export async function POST(req: NextRequest) {
 
     const userData = userDoc.data() as User;
 
-    // STEP 2: Rate Limiting Check (Max 10 notices / min per sender)
+    // Stage 2: Rate Limiting Check (Max 10 notices / min per sender)
     try {
       const oneMinuteAgo = Date.now() - 60000;
       const auditRef = collection(db, 'audit_log');
@@ -141,13 +153,13 @@ export async function POST(req: NextRequest) {
         );
       }
     } catch (rateErr) {
-      // Non-fatal if index not yet created
+      // Non-fatal if index is compiling
     }
 
-    // STEP 3: Deterministic Tag & Message Parsing
+    // Stage 3: Deterministic Tag & Message Parsing
     const parsed = parseNoticeMessage(body);
 
-    // STEP 4: Department Scope & Ambiguity Resolution
+    // Stage 4: Department Scope & Ambiguity Resolution
     let targetDeptCode = parsed.departmentCode;
 
     if (!targetDeptCode) {
@@ -166,7 +178,7 @@ export async function POST(req: NextRequest) {
 
     const deptId = targetDeptCode.toUpperCase();
 
-    // STEP 5: Media Attachment Processing
+    // Stage 5: Media Attachment Processing
     let mediaUrl: string | null = mediaUrl0;
     let mediaType: 'image' | 'pdf' | null = null;
 
@@ -180,7 +192,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // STEP 6: Notice Document Construction & Write to Firestore
+    // Stage 6: Notice Document Construction & Write to Firestore
     const now = Date.now();
     const isScheduled = !!(parsed.scheduledAt && parsed.scheduledAt > now);
     const status: NoticeStatus = isScheduled ? 'scheduled' : 'active';
@@ -206,7 +218,7 @@ export async function POST(req: NextRequest) {
 
     const docRef = await addDoc(collection(db, 'notices'), noticePayload);
 
-    // STEP 7: Audit Log Ledger Recording
+    // Stage 7: Audit Log Ledger Recording
     try {
       await addDoc(collection(db, 'audit_log'), {
         type: 'publish',
@@ -226,7 +238,7 @@ export async function POST(req: NextRequest) {
       console.warn('Failed to write audit log entry:', auditErr);
     }
 
-    // STEP 8: Return Instant TwiML XML Response to Deliver WhatsApp Confirmation
+    // Stage 8: Instant TwiML XML Confirmation Response
     let feedback = `✅ Notice posted to ${deptId}! Displaying live on corridor Smart TVs.`;
     if (isScheduled && parsed.scheduledAt) {
       feedback = `⏳ Notice scheduled for ${new Date(parsed.scheduledAt).toLocaleString()} (${deptId})!`;

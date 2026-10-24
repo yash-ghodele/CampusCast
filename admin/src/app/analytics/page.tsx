@@ -1,8 +1,9 @@
 /**
- * @file apps/admin/src/app/analytics/page.tsx
- * @description CampusCast Admin Command Center — Dedicated Analytics View (`/analytics`).
+ * @file admin/src/app/analytics/page.tsx
+ * @description CampusCast Admin Command Center — Visual Telemetry & Analytics Dashboard (`/analytics`).
  * 
- * Standalone Page: Contains complete UI, category breakdown, department charts, and audience reach metrics.
+ * Aggregates announcement volume metrics, departmental broadcast distributions, category breakdowns,
+ * estimated student audience reach, and physical corridor TV uptime statistics.
  */
 
 'use client';

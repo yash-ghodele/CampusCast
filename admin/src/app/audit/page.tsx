@@ -1,8 +1,9 @@
 /**
- * @file apps/admin/src/app/audit/page.tsx
- * @description CampusCast Admin Command Center — Dedicated Security Audit Trail View (`/audit`).
+ * @file admin/src/app/audit/page.tsx
+ * @description CampusCast Admin Command Center — Security Audit Trail & Governance Ledger (`/audit`).
  * 
- * Standalone Page: Contains complete UI, immutable ledger table, event type filtering, and actor tracking.
+ * Provides an immutable event log tracking all notice publications, administrative approvals,
+ * manual modifications, emergency overrides, unauthorized publish attempts, and CSV export capabilities.
  */
 
 'use client';

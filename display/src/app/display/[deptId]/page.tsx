@@ -1,6 +1,9 @@
 /**
- * @file apps/display/src/app/display/[deptId]/page.tsx
- * @description Department Fullscreen Live Notice Display Client (`/display/[deptId]`).
+ * @file display/src/app/display/[deptId]/page.tsx
+ * @description Dynamic Department Smart TV Display Client Route (`/display/[deptId]`).
+ * 
+ * Extracts dynamic route parameters (e.g. 'ece', 'cse', 'aiml', 'all') and binds the terminal
+ * to the corresponding departmental notice stream.
  */
 
 'use client';

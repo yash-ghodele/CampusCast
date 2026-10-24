@@ -1,6 +1,9 @@
 /**
  * @file scripts/seed-users.cjs
- * @description Seeds Firestore with initial authorized faculty members and administrators.
+ * @description Cloud Firestore Database Seeding Script for Authorized Faculty Roster.
+ * 
+ * Populates test faculty accounts with valid international phone numbers (+91),
+ * departmental bindings, and administrative privilege roles for end-to-end webhook verification.
  */
 
 const { initializeApp } = require('firebase/app');

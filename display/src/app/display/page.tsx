@@ -1,6 +1,9 @@
 /**
- * @file apps/display/src/app/display/page.tsx
- * @description General All-Campus Digital Signage Display Page (`/display`).
+ * @file display/src/app/display/page.tsx
+ * @description General Campus-Wide Digital Signage Display Route (`/display`).
+ * 
+ * Mounts the fullscreen DepartmentDisplayView with `deptCode="ALL"`, aggregating
+ * cross-department broadcasts across campus.
  */
 
 'use client';

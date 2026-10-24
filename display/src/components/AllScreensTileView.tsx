@@ -1,8 +1,9 @@
 /**
- * @file apps/display/src/components/AllScreensTileView.tsx
- * @description All Campus Screens Tile Matrix View — Brand Kit v2 Light Theme.
+ * @file display/src/components/AllScreensTileView.tsx
+ * @description All Campus Screens Tile Matrix Component for Central Command & Public Portal.
  * 
- * Displays all campus display screens in an interactive multi-screen tile grid with active notices.
+ * Renders an interactive 6-tile grid showcasing live corridor TV terminal states (ECE, CSE, AIML, MECH, CIVIL, EEE),
+ * auto-cycling active notices per tile, and providing direct navigation launchers to full-screen departmental views.
  */
 
 'use client';

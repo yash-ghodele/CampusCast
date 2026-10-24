@@ -1,8 +1,9 @@
 /**
- * @file apps/admin/src/app/users/page.tsx
- * @description CampusCast Admin Command Center — Dedicated Faculty Roster View (`/users`).
+ * @file admin/src/app/users/page.tsx
+ * @description CampusCast Admin Command Center — Authorized Faculty Roster & Access Control (`/users`).
  * 
- * Standalone Page: Contains complete UI, authorized faculty management, status toggles, and add faculty modal.
+ * Manages faculty user records, authorized phone numbers (E.164 format for WhatsApp webhook ingestion),
+ * departmental scopes, administrative privileges, and real-time activation toggles.
  */
 
 'use client';

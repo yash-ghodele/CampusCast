@@ -1,6 +1,6 @@
 /**
- * @file apps/display/src/app/not-found.tsx
- * @description Custom 404 Not Found Page for CampusCast Display App — Brand Kit v2 Light Theme.
+ * @file display/src/app/not-found.tsx
+ * @description Custom 404 Route Not Found Component for CampusCast Corridor Displays.
  */
 
 'use client';

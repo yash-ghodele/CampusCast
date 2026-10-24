@@ -1,9 +1,9 @@
 /**
- * @file apps/admin/src/app/page.tsx
- * @description CampusCast Admin Command Center — Dedicated Dashboard Overview View (`/`).
+ * @file admin/src/app/page.tsx
+ * @description CampusCast Admin Command Center — Executive Operations Dashboard (`/`).
  * 
- * Standalone Page: Contains complete UI, Metric stat cards, Messages Over Time, Live Screen Map,
- * Notice Creation Wizard, Emergency Overrides, and real-time Firestore sync.
+ * Provides real-time metrics, corridor screen status telemetry, recent publications feed,
+ * manual announcement publishing wizard, emergency security broadcast override, and Cloud Firestore synchronization.
  */
 
 'use client';

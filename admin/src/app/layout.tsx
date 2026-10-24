@@ -1,3 +1,8 @@
+/**
+ * @file admin/src/app/layout.tsx
+ * @description Root HTML & Metadata Layout Shell for CampusCast Admin Command Center.
+ */
+
 import './globals.css';
 import type { Metadata } from 'next';
 

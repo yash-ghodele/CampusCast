@@ -1,6 +1,9 @@
 /**
- * @file apps/admin/src/lib/firebase.ts
- * @description Cloud Firestore Client & Realtime Synchronization Client for Admin Command Center.
+ * @file admin/src/lib/firebase.ts
+ * @description Cloud Firestore Client & Real-time State Synchronization Service for Admin Command Center.
+ * 
+ * Provides typed data-access methods and real-time snapshot listeners for notices,
+ * faculty user authorization rosters, corridor display telemetry, and audit event logs.
  */
 
 import { initializeApp, getApps } from 'firebase/app';
@@ -10,10 +13,8 @@ import {
   doc,
   setDoc,
   deleteDoc,
-  updateDoc,
   onSnapshot,
   query,
-  orderBy,
 } from 'firebase/firestore';
 import { Notice, AuditLog, User } from '@campuscast/shared';
 
@@ -30,7 +31,10 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0
 export const db = getFirestore(app);
 
 /**
- * Saves or updates a notice document directly in Firestore.
+ * Persists or updates a notice document in Cloud Firestore.
+ *
+ * @param notice - Complete notice entity to write or merge
+ * @returns Promise that resolves once the Firestore write is committed
  */
 export async function saveNoticeToFirestore(notice: Notice): Promise<void> {
   try {
@@ -42,7 +46,10 @@ export async function saveNoticeToFirestore(notice: Notice): Promise<void> {
 }
 
 /**
- * Deletes a notice document from Firestore.
+ * Permanently removes a notice document from Cloud Firestore.
+ *
+ * @param noticeId - Unique Firestore document identifier of the target notice
+ * @returns Promise that resolves once the document is deleted
  */
 export async function deleteNoticeFromFirestore(noticeId: string): Promise<void> {
   try {
@@ -54,7 +61,10 @@ export async function deleteNoticeFromFirestore(noticeId: string): Promise<void>
 }
 
 /**
- * Subscribes to real-time updates for all notices in the system.
+ * Establishes a real-time snapshot subscription to all notices in Cloud Firestore.
+ *
+ * @param onUpdate - Callback invoked with the synchronized array of notices
+ * @returns Unsubscribe function to release the real-time listener
  */
 export function subscribeToAdminNotices(onUpdate: (notices: Notice[]) => void) {
   try {
@@ -81,7 +91,10 @@ export function subscribeToAdminNotices(onUpdate: (notices: Notice[]) => void) {
 }
 
 /**
- * Saves an audit event log entry to Firestore.
+ * Appends an immutable audit event entry to the Firestore `audit_log` collection.
+ *
+ * @param log - Audit log record documenting administrator or system action
+ * @returns Promise that resolves once the audit record is committed
  */
 export async function saveAuditToFirestore(log: AuditLog): Promise<void> {
   try {
@@ -93,7 +106,10 @@ export async function saveAuditToFirestore(log: AuditLog): Promise<void> {
 }
 
 /**
- * Subscribes to real-time telemetry updates for all screens from Firestore.
+ * Subscribes to real-time telemetry updates for all corridor screens in Cloud Firestore.
+ *
+ * @param onUpdate - Callback invoked with current screen telemetry status records
+ * @returns Unsubscribe function to detach the listener
  */
 export function subscribeToScreens(onUpdate: (screens: { id: string; departmentId: string; lastSeenAt: number }[]) => void) {
   try {
@@ -120,9 +136,12 @@ export function subscribeToScreens(onUpdate: (screens: { id: string; departmentI
 }
 
 /**
- * Pings active telemetry for screens in Firestore.
+ * Transmits active heartbeat telemetry pings for screens in Cloud Firestore.
+ *
+ * @param screenIds - Array of registered screen identifiers to update
+ * @returns Promise that resolves once heartbeats are recorded
  */
-export async function pingScreensInFirestore(screenIds: string[]) {
+export async function pingScreensInFirestore(screenIds: string[]): Promise<void> {
   try {
     const now = Date.now();
     for (const screenId of screenIds) {
@@ -136,7 +155,10 @@ export async function pingScreensInFirestore(screenIds: string[]) {
 }
 
 /**
- * Saves or updates a faculty user directly in Firestore.
+ * Creates or updates an authorized faculty member in the Firestore `users` collection.
+ *
+ * @param user - User profile object including phone number and assigned departments
+ * @returns Promise that resolves when write is complete
  */
 export async function saveUserToFirestore(user: User): Promise<void> {
   try {
@@ -148,7 +170,10 @@ export async function saveUserToFirestore(user: User): Promise<void> {
 }
 
 /**
- * Subscribes to real-time updates for authorized faculty users from Firestore.
+ * Subscribes to real-time changes in the authorized faculty user roster in Cloud Firestore.
+ *
+ * @param onUpdate - Callback receiving the latest array of authorized faculty users
+ * @returns Unsubscribe function to terminate the listener
  */
 export function subscribeToUsers(onUpdate: (users: User[]) => void) {
   try {
@@ -171,4 +196,3 @@ export function subscribeToUsers(onUpdate: (users: User[]) => void) {
     return () => {};
   }
 }
-

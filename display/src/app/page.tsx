@@ -1,11 +1,10 @@
 /**
- * @file apps/display/src/app/page.tsx
- * @description Signage Directory Landing Launcher Page (`/`) — Brand Kit v2 Specification.
+ * @file display/src/app/page.tsx
+ * @description Campus Directory & Digital Signage Portal Landing Page (`/`).
  * 
- * NEED FOR THIS PAGE:
- * Serves as the primary launcher directory for physical kiosk displays across campus corridors.
- * Matches the official Brand Kit v2 design with 3D Smart TV preview frame, live department filter search,
- * and high-impact visual hierarchy.
+ * Serves as the entry-point launcher directory for physical corridor displays and web viewers across campus.
+ * Features an interactive 3D Smart TV preview simulation, instantaneous department search filtering,
+ * live active notice counts, and direct launchers to all academic terminal routes.
  */
 
 'use client';

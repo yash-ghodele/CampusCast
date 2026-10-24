@@ -1,10 +1,10 @@
 /**
- * @file apps/display/src/components/AdaptiveSmartLayout.tsx
- * @description Intelligent Adaptive Multi-Block Signage Layout Component.
+ * @file display/src/components/AdaptiveSmartLayout.tsx
+ * @description Intelligent Adaptive Multi-Block Signage Layout Component for Corridor Smart TVs.
  * 
- * NEED FOR THIS COMPONENT:
- * Automatically analyzes incoming notices and arranges them into distinct semantic blocks 
- * based on media type (Image Posters, PDF Circulars, Event Timetables, and Text Bulletins).
+ * Semantically categorizes active announcements into distinct presentation blocks based on payload type:
+ * image posters, PDF document circulars, scheduled event timetables, and text bulletins,
+ * adapting split-screen column ratios to optimize hallway visibility.
  */
 
 'use client';

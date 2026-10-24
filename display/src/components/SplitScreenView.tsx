@@ -1,10 +1,9 @@
 /**
- * @file apps/display/src/components/SplitScreenView.tsx
- * @description Mode 5 (Split Screen View) Component for CampusCast.
+ * @file display/src/components/SplitScreenView.tsx
+ * @description Mode 5 Split-Screen Dual Column Component for Corridor Smart TVs.
  * 
- * NEED FOR THIS COMPONENT:
- * During events, webinars, or placement drives, renders event poster media on the left 
- * while maintaining a live announcement notice feed on the right half of the screen.
+ * Partitions the display terminal into a 7:5 ratio during symposiums, conferences, and placement drives,
+ * featuring event poster graphics on the left while streaming active announcements on the right.
  */
 
 'use client';

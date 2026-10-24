@@ -1,10 +1,10 @@
 /**
- * @file apps/display/src/components/NoticeCard.tsx
- * @description Hero & Standard Notice Presentation Component — Brand Kit v2 Light Theme.
+ * @file display/src/components/NoticeCard.tsx
+ * @description Notice Presentation Component for Corridor Smart TVs.
  * 
- * NEED FOR THIS COMPONENT:
- * Implements Mode 1 (Hero View) and standard notice cards with strong typography hierarchy,
- * category badges (EXAM, PLACEMENT, EVENT, URGENT), date/time chips, QR code snippets, and department themes.
+ * Renders both Mode 1 (Hero Featured View) and standard card layouts with high-contrast typography,
+ * academic category chips (EXAM, PLACEMENT, EVENT, URGENT), date-time metadata chips,
+ * attached media/PDF document handlers, and dynamic department color themes.
  */
 
 'use client';

@@ -1,48 +1,49 @@
 /**
- * @file packages/shared/src/parsing.ts
- * @description Inbound WhatsApp message parsing engine for CampusCast.
+ * @fileoverview Deterministic Inbound Message Parsing Engine for CampusCast.
  * 
- * NEED FOR THIS FILE:
- * Faculty members interact exclusively via plain WhatsApp text messages.
- * This parser deterministically extracts notice metadata (department code, priority level, 
- * scheduled date/time) without introducing complex or unpredictable AI dependencies.
- * Deterministic parsing guarantees high security, zero prompt injection risk, and low latency.
+ * Provides rule-based lexical analysis of plain-text WhatsApp payloads sent by faculty.
+ * Extracts operational notice metadata (department scoping, urgency priority, future
+ * publication timestamps, and category classifications) without external AI latency
+ * or non-deterministic behavior, guaranteeing prompt-injection immunity and sub-millisecond execution.
+ * 
+ * @module @campuscast/shared/parsing
+ * @package CampusCast Enterprise Digital Signage OS
  */
 
 import { NoticePriority, NoticeCategory, ParsedNoticeMessage } from './types';
 
 /**
- * Parses raw text received from a WhatsApp message payload into a structured `ParsedNoticeMessage`.
+ * Deterministically parses inbound WhatsApp message text into structured notice metadata.
  * 
- * WORKING MECHANISM:
- * 1. Checks for the `#urgent` tag anywhere in the string to set high-priority styling flags.
- * 2. Scans for `#schedule DD-MM-YYYY HH:mm` or `YYYY-MM-DD HH:mm` to extract future publication timestamps.
- * 3. Identifies explicit department prefixes (e.g., `ECE:` or `DEPT: ECE`) at the start of the text.
- * 4. Strips out all extracted tag tokens to leave clean, readable body text for hallway displays.
+ * Processing Pipeline:
+ * 1. Urgency Classification: Evaluates `#urgent` tag to assign emergency priority and theme flags.
+ * 2. Category Resolution: Identifies contextual tags (`#exam`, `#event`, `#placement`, `#achievement`).
+ * 3. Schedule Timestamp Parsing: Extracts `DD-MM-YYYY HH:mm` / `YYYY-MM-DD HH:mm` into UNIX epoch timestamps.
+ * 4. Department Scope Resolution: Detects `#dept` hashtags and `DEPT:` prefixes, assigning target display screens.
+ * 5. Content Sanitization: Strips control tokens to generate clean typography for hallway Smart TVs.
  * 
- * @param text Raw inbound message body from Meta WhatsApp Cloud API payload
- * @returns Structured ParsedNoticeMessage object containing metadata and clean content
+ * @param {string} text - Raw message string from the inbound WhatsApp webhook.
+ * @returns {ParsedNoticeMessage} Structured notice attributes and sanitized body copy.
  * 
  * @example
- * parseNoticeMessage("#urgent ECE: Project review shifted to 2 PM.")
- * // Returns: { departmentCode: "ECE", priority: "urgent", scheduledAt: null, content: "Project review shifted to 2 PM." }
+ * parseNoticeMessage("#urgent #ece ECE: DSP Laboratory power fluctuation detected.");
+ * // => { departmentCode: "ECE", priority: "urgent", category: "emergency", scheduledAt: null, content: "DSP Laboratory power fluctuation detected." }
  */
 export function parseNoticeMessage(text: string): ParsedNoticeMessage {
-  // Normalize whitespace and prepare working string buffer
   let content = text.trim();
   let priority: NoticePriority = 'normal';
   let category: NoticeCategory | undefined = undefined;
   let scheduledAt: number | null = null;
   let departmentCode: string | null = null;
 
-  // STEP 1: Urgent Tag Resolution (#urgent)
+  // 1. Resolve urgency priority (#urgent)
   if (/#urgent/i.test(content)) {
     priority = 'urgent';
     category = 'emergency';
     content = content.replace(/#urgent/gi, '').trim();
   }
 
-  // STEP 1.5: Category Tag Resolution (#exam, #event, #placement, #achievement)
+  // 2. Resolve notice category tags (#exam, #event, #placement, #achievement)
   if (/#exam/i.test(content)) {
     category = 'exam';
     content = content.replace(/#exam/gi, '').trim();
@@ -57,9 +58,7 @@ export function parseNoticeMessage(text: string): ParsedNoticeMessage {
     content = content.replace(/#achievement/gi, '').trim();
   }
 
-  // STEP 2: Scheduled Notice Timestamp Resolution (#schedule Date Time)
-  // Need: Enables automated future publishing (e.g. workshop reminders, start-of-day alerts).
-  // Working: Matches DD-MM-YYYY HH:mm or YYYY-MM-DD HH:mm formats. Converts to UTC/local UNIX timestamp in ms.
+  // 3. Resolve future publication schedule (#schedule Date Time)
   const scheduleRegex = /#schedule\s+(\d{2,4}[-/]\d{2}[-/]\d{2,4})\s+(\d{2}:\d{2})/i;
   const scheduleMatch = content.match(scheduleRegex);
 
@@ -71,12 +70,12 @@ export function parseNoticeMessage(text: string): ParsedNoticeMessage {
     let year: number, month: number, day: number;
 
     if (dateParts[0].length === 4) {
-      // Format: YYYY-MM-DD
+      // ISO 8601 Date Format: YYYY-MM-DD
       year = parseInt(dateParts[0], 10);
-      month = parseInt(dateParts[1], 10) - 1; // JS Date months are 0-indexed (Jan = 0)
+      month = parseInt(dateParts[1], 10) - 1; // 0-indexed month
       day = parseInt(dateParts[2], 10);
     } else {
-      // Format: DD-MM-YYYY
+      // European / Indian Date Format: DD-MM-YYYY
       day = parseInt(dateParts[0], 10);
       month = parseInt(dateParts[1], 10) - 1;
       year = parseInt(dateParts[2], 10);
@@ -89,12 +88,10 @@ export function parseNoticeMessage(text: string): ParsedNoticeMessage {
       scheduledAt = parsedDate.getTime();
     }
 
-    // Strip out the schedule tag construct from the body string
     content = content.replace(scheduleMatch[0], '').trim();
   }
 
-  // STEP 2.5: Department Hashtag Resolution (e.g., #ece, #cse, #aiml, #mech, #civil, #eee, #all)
-  // Need: Faculty and evaluators frequently use hashtags for department scoping (#ece) alongside #urgent.
+  // 4. Resolve department hashtag targeting (e.g., #ece, #cse, #all)
   const SYSTEM_TAGS = ['URGENT', 'EXAM', 'EVENT', 'PLACEMENT', 'ACHIEVEMENT', 'SCHEDULE'];
   const hashMatches = Array.from(content.matchAll(/(?:^|\s)#([A-Za-z0-9_\-]+)\b/g));
   for (const match of hashMatches) {
@@ -107,9 +104,7 @@ export function parseNoticeMessage(text: string): ParsedNoticeMessage {
     }
   }
 
-  // STEP 3: Department Prefix Resolution (e.g., "ECE:" or "DEPT: ECE")
-  // Need: Routes notice to the appropriate department's LCD screens when a faculty member has multi-dept access.
-  // Working: Regex matches leading "DEPT: CODE" or "CODE:" patterns. Normalizes extracted code to uppercase.
+  // 5. Resolve department prefix syntax (e.g., "ECE:" or "DEPT: ECE")
   const deptPrefixRegex = /^(?:DEPT:\s*([A-Z0-9_\-]+)|([A-Z0-9_\-]+):)/i;
   const deptMatch = content.match(deptPrefixRegex);
 
@@ -121,7 +116,6 @@ export function parseNoticeMessage(text: string): ParsedNoticeMessage {
     content = content.replace(deptPrefixRegex, '').trim();
   }
 
-  // Return final parsed notice metadata object
   return {
     departmentCode,
     priority,

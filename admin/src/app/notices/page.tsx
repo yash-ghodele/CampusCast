@@ -1,8 +1,9 @@
 /**
- * @file apps/admin/src/app/notices/page.tsx
- * @description CampusCast Admin Command Center — Dedicated Notice Management View (`/notices`).
+ * @file admin/src/app/notices/page.tsx
+ * @description CampusCast Admin Command Center — Notice Lifecycle & Content Management Console (`/notices`).
  * 
- * Standalone Page: Contains complete UI, Kanban board, Notice Creation Wizard, and Firestore live sync.
+ * Provides interactive notice curation across Scheduled, Active, and Expired states,
+ * supporting multi-channel department filtering, live preview, rich media attachments, and emergency overrides.
  */
 
 'use client';

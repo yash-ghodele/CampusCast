@@ -1,11 +1,13 @@
 /**
- * @file packages/shared/src/types.ts
- * @description Core domain type definitions for the CampusCast platform.
+ * @fileoverview CampusCast Core Domain Type System & Interface Specifications.
  * 
- * NEED FOR THIS FILE:
- * Maintains a single source of truth for domain shapes shared between backend 
- * Cloud Functions and frontend web applications (Display Kiosks & Admin Portal).
- * Centralizing types prevents API interface drift and guarantees type safety.
+ * Defines the unified data shapes and runtime contracts shared between the
+ * Admin Management Portal, Digital Hallway Display Clients, and Serverless Ingestion
+ * Webhooks. Centralizing domain models guarantees end-to-end type safety and prevents
+ * schema drift across the distributed signage network.
+ * 
+ * @module @campuscast/shared/types
+ * @package CampusCast Enterprise Digital Signage OS
  */
 
 /** Brand Kit v2 Color Tokens */

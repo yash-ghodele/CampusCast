@@ -1,10 +1,9 @@
 /**
- * @file apps/display/src/components/EmergencyOverrideView.tsx
- * @description Mode 3 (Emergency Override View) Component for CampusCast.
+ * @file display/src/components/EmergencyOverrideView.tsx
+ * @description Mode 3 Emergency Security Broadcast Override Component for Corridor Smart TVs.
  * 
- * NEED FOR THIS COMPONENT:
- * When priority == 'urgent', transforms the entire Smart TV screen into a high-visibility 
- * emergency alert display with full-width red background and pulsing border.
+ * Preempts normal rotation carousels when an announcement is flagged with `priority: 'urgent'` or `category: 'emergency'`,
+ * rendering a high-contrast full-bleed crimson alert screen with high-decibel visual pulses and security origin attribution.
  */
 
 'use client';

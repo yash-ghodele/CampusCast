@@ -1,6 +1,6 @@
 /**
- * @file apps/admin/src/app/not-found.tsx
- * @description Custom 404 Not Found Page for CampusCast Admin Command Center — Brand Kit v2 Light Theme.
+ * @file admin/src/app/not-found.tsx
+ * @description Custom 404 Route Not Found Component for CampusCast Admin Command Center.
  */
 
 'use client';
