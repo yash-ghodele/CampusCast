@@ -22,6 +22,8 @@ import {
   maskPhoneNumber,
   User,
   NoticeStatus,
+  MediaType,
+  detectMediaType,
 } from '@campuscast/shared';
 
 export const dynamic = 'force-dynamic';
@@ -154,11 +156,26 @@ export async function POST(req: NextRequest) {
         const phoneNumberId = metadata.phone_number_id;
 
         for (const message of messages) {
-          if (message.type !== 'text') continue;
+          let rawTextBody = '';
+          let mediaUrl: string | null = null;
+          let mediaType: MediaType | null = null;
+
+          if (message.type === 'text') {
+            rawTextBody = message.text?.body || '';
+          } else if (message.type === 'image') {
+            rawTextBody = message.image?.caption || 'Campus Poster Announcement';
+            mediaType = 'image';
+            mediaUrl = message.image?.link || message.image?.url || null;
+          } else if (message.type === 'document') {
+            rawTextBody = message.document?.caption || message.document?.filename || 'Official Circular Document';
+            mediaType = 'pdf';
+            mediaUrl = message.document?.link || message.document?.url || null;
+          } else {
+            continue;
+          }
 
           const rawSender = message.from || '';
           const senderPhone = rawSender.startsWith('+') ? rawSender : `+${rawSender}`;
-          const rawTextBody = message.text?.body || '';
 
           if (!senderPhone || !rawTextBody.trim()) continue;
 
@@ -213,16 +230,16 @@ export async function POST(req: NextRequest) {
           const isScheduled = !!(parsed.scheduledAt && parsed.scheduledAt > now);
           const status: NoticeStatus = isScheduled ? 'scheduled' : 'active';
           const expiresAt = (parsed.scheduledAt || now) + (7 * 24 * 60 * 60 * 1000);
-          const cleanContent = parsed.content || 'Campus Announcement';
+          const cleanContent = parsed.content || (mediaType === 'image' ? 'Attached Poster Announcement' : 'Campus Announcement');
           const noticeTitle = cleanContent.length > 55 ? `${cleanContent.slice(0, 52)}...` : cleanContent;
 
-          // Stage 3: Write Notice Document
+          // Stage 3: Write Notice Document with Multimedia Support
           const docRef = await addDoc(collection(db, 'notices'), {
             departmentId: deptId,
             title: noticeTitle,
             content: cleanContent,
-            mediaUrl: null,
-            mediaType: null,
+            mediaUrl,
+            mediaType,
             priority: parsed.priority,
             category: parsed.category || 'general',
             status,
