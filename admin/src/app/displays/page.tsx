@@ -19,6 +19,7 @@ import {
   DEPARTMENT_THEMES,
   formatHeartbeatTimestamp,
   formatDurationHHMMSS,
+  getDisplayUrl,
 } from '@campuscast/shared';
 import {
   LayoutDashboard,
@@ -51,18 +52,6 @@ const REGISTERED_SCREENS: Screen[] = [
   { id: 'CIVIL-DEPT-DISPLAY', departmentId: 'CIVIL',label: 'Civil Dept Corridor',            lastSeenAt: Date.now() },
   { id: 'EEE-POWER-DISPLAY',  departmentId: 'EEE',  label: 'EEE Power Lab Screen',          lastSeenAt: Date.now() },
 ];
-
-/**
- * Resolves the fully qualified corridor display URL based on runtime environment.
- * 
- * @param departmentId - Target department identifier (e.g. 'ECE', 'CSE', 'ALL')
- * @returns Fully qualified hallway display URL string
- */
-function getDisplayUrl(departmentId: string): string {
-  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const base = isLocal ? 'http://localhost:3000' : 'https://campus-cast-display.vercel.app';
-  return `${base}/display/${departmentId.toLowerCase()}`;
-}
 
 export default function DisplaysPage() {
   const [screens, setScreens] = useState<Screen[]>(REGISTERED_SCREENS);

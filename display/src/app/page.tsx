@@ -168,14 +168,24 @@ export default function DisplayIndexPage() {
           </div>
         </Link>
 
-        <Link
-          href="/display"
-          className="flex items-center gap-2 text-xs font-bold text-[#2563EB] bg-white hover:bg-blue-50/80 px-4 py-2.5 rounded-full border border-blue-100 shadow-sm transition-all hover:scale-105"
-        >
-          <Tv className="w-4 h-4 text-[#2563EB]" />
-          <span>Smart TV Browser Kiosk Launcher</span>
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+        <div className="flex items-center gap-3">
+          <a
+            href="https://campus-cast-admin.vercel.app"
+            target="_blank"
+            rel="noreferrer"
+            className="hidden sm:inline-flex items-center gap-2 text-xs font-bold text-[#475569] hover:text-[#111111] bg-white hover:bg-slate-50 px-4 py-2.5 rounded-full border border-[#E2E8F0] shadow-sm transition-all"
+          >
+            <span>Admin Command Center</span>
+          </a>
+          <Link
+            href="/display"
+            className="flex items-center gap-2 text-xs font-bold text-[#2563EB] bg-white hover:bg-blue-50/80 px-4 py-2.5 rounded-full border border-blue-100 shadow-sm transition-all hover:scale-105"
+          >
+            <Tv className="w-4 h-4 text-[#2563EB]" />
+            <span>Smart TV Kiosk</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
       </header>
 
       {/* HERO SECTION WITH SPLIT MOCKUP */}
@@ -398,12 +408,23 @@ export default function DisplayIndexPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="max-w-7xl w-full mx-auto px-6 py-6 border-t border-[#E2E8F0] flex items-center justify-between text-xs text-[#64748B] font-medium z-10">
+      <footer className="max-w-7xl w-full mx-auto px-6 py-6 border-t border-[#E2E8F0] flex items-center justify-between text-xs text-[#64748B] font-medium z-10 flex-wrap gap-4">
         <div className="flex items-center gap-2">
           <Shield className="w-4 h-4 text-[#22C55E]" />
           <span>Zero-Hardware Smart TV Model • Firebase Firestore Realtime Stream</span>
         </div>
-        <span>CampusCast © 2026 — All Rights Reserved</span>
+        <div className="flex items-center gap-4">
+          <a
+            href="https://campus-cast-admin.vercel.app"
+            target="_blank"
+            rel="noreferrer"
+            className="font-bold text-[#2563EB] hover:underline"
+          >
+            Admin Portal ↗
+          </a>
+          <span>•</span>
+          <span>CampusCast © 2026 — All Rights Reserved</span>
+        </div>
       </footer>
     </div>
   );

@@ -88,10 +88,23 @@ async function verifyHttpRoutes() {
 
     // Prod Admin
     { name: 'Admin Dashboard (Prod Vercel)', url: 'https://campus-cast-admin.vercel.app/' },
+    { name: 'Admin Notices (Prod Vercel)', url: 'https://campus-cast-admin.vercel.app/notices' },
+    { name: 'Admin Screens Wall (Prod Vercel)', url: 'https://campus-cast-admin.vercel.app/displays' },
+    { name: 'Admin Departments (Prod Vercel)', url: 'https://campus-cast-admin.vercel.app/departments' },
+    { name: 'Admin Users (Prod Vercel)', url: 'https://campus-cast-admin.vercel.app/users' },
+    { name: 'Admin Analytics (Prod Vercel)', url: 'https://campus-cast-admin.vercel.app/analytics' },
+    { name: 'Admin Audit Logs (Prod Vercel)', url: 'https://campus-cast-admin.vercel.app/audit' },
+    { name: 'Admin Settings (Prod Vercel)', url: 'https://campus-cast-admin.vercel.app/settings' },
     { name: 'Admin Twilio Webhook (Prod Vercel)', url: 'https://campus-cast-admin.vercel.app/api/webhook/twilio' },
+    { name: 'Admin Scheduler (Prod Vercel)', url: 'https://campus-cast-admin.vercel.app/api/scheduler' },
 
     // Prod Display
+    { name: 'Display Matrix Landing (Prod Vercel)', url: 'https://campus-cast-display.vercel.app/' },
+    { name: 'Display General All-Campus (Prod Vercel)', url: 'https://campus-cast-display.vercel.app/display' },
+    { name: 'Display /display/all (Prod Vercel)', url: 'https://campus-cast-display.vercel.app/display/all' },
     { name: 'Display ECE Kiosk (Prod Vercel)', url: 'https://campus-cast-display.vercel.app/display/ece' },
+    { name: 'Display CSE Kiosk (Prod Vercel)', url: 'https://campus-cast-display.vercel.app/display/cse' },
+    { name: 'Display AIML Kiosk (Prod Vercel)', url: 'https://campus-cast-display.vercel.app/display/aiml' },
   ];
 
   let passed = 0;

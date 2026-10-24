@@ -187,3 +187,28 @@ export interface ParsedNoticeMessage {
   scheduledAt: number | null; // Scheduled timestamp derived from `#schedule` date string
   content: string; // Cleaned body text with tags and prefixes stripped out
 }
+
+/**
+ * Canonical Production Cloud Deployment Endpoints for CampusCast.
+ */
+export const PRODUCTION_ENDPOINTS = {
+  ADMIN_PORTAL: 'https://campus-cast-admin.vercel.app',
+  DISPLAY_PORTAL: 'https://campus-cast-display.vercel.app',
+  TWILIO_WEBHOOK: 'https://campus-cast-admin.vercel.app/api/webhook/twilio',
+  META_WEBHOOK: 'https://campus-cast-admin.vercel.app/api/webhook/meta',
+  SCHEDULER_CRON: 'https://campus-cast-admin.vercel.app/api/scheduler',
+} as const;
+
+/**
+ * Resolves the fully qualified corridor display URL for production deployment.
+ * Defaults to the live cloud production URL `https://campus-cast-display.vercel.app`.
+ *
+ * @param departmentId - Target department identifier (e.g. 'ECE', 'CSE', 'ALL')
+ * @returns Fully qualified hallway display URL string
+ */
+export function getDisplayUrl(departmentId: string): string {
+  const base = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_DISPLAY_URL)
+    ? process.env.NEXT_PUBLIC_DISPLAY_URL
+    : PRODUCTION_ENDPOINTS.DISPLAY_PORTAL;
+  return `${base}/display/${departmentId.toLowerCase()}`;
+}

@@ -157,7 +157,7 @@ CampusCast utilizes a **deterministic, zero-prompt-injection parsing engine** to
 
 ## Part 2: Management Portal — Complete Tab & Page Breakdown
 
-The **Admin Command Center** (`http://localhost:3001`) provides campus administrators with full control over all communication channels.
+The **Admin Command Center** (Production: `https://campus-cast-admin.vercel.app` | Local: `http://localhost:3001`) provides campus administrators with full control over all communication channels.
 
 ```
 +-----------------------------------------------------------------------------------+
@@ -365,7 +365,7 @@ System administration parameters:
 
 ## Part 3: Hallway Display App — Screen & Display Modes
 
-The **Hallway Display App** (`http://localhost:3000/display/[deptId]`) runs on Smart TVs mounted in hallway corridors.
+The **Hallway Display App** (Production: `https://campus-cast-display.vercel.app/display/[deptId]` | Local: `http://localhost:3000/display/[deptId]`) runs on Smart TVs mounted in hallway corridors.
 
 ```
 +-----------------------------------------------------------------------------------+
@@ -432,6 +432,7 @@ Fixed 90px top bar designed for high legibility at 15–20 feet viewing distance
 - **Layout:** 12-column grid layout:
   - *Left 7 Columns:* Full-height event poster / media display.
   - *Right 5 Columns:* Scrollable feed of recent textual department notices.
+- **Features:** Displays event flyer on left while live announcements scroll on the right.
 
 ---
 
@@ -486,7 +487,8 @@ Fixed bottom bar containing:
 ## Quick Technical Reference
 
 * **WhatsApp Hotline:** `+91 98765 43210`
-* **Display App URL:** `http://localhost:3000/display/ece`
-* **Admin Portal URL:** `http://localhost:3001`
+* **Display App (Production):** `https://campus-cast-display.vercel.app/display/ece`
+* **Admin Portal (Production):** `https://campus-cast-admin.vercel.app`
+* **Local Dev URLs:** Admin: `http://localhost:3001` | Display: `http://localhost:3000`
 * **Master Emergency PIN:** `1234`
 * **Brand Colors:** Ink Black (`#111111`), Brand Blue (`#2563EB`), Sky Blue (`#60A5FA`), Success Green (`#22C55E`), Alert Red (`#DC2626`).

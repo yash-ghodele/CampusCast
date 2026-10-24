@@ -487,7 +487,7 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-[#64748B] font-semibold">Twilio WhatsApp Sandbox Webhook:</span>
                     <span className="inline-block px-2 py-0.5 rounded bg-emerald-100 text-[#22C55E] text-[10px] font-bold">
-                      ACTIVE ROUTE
+                      PRODUCTION
                     </span>
                   </div>
                   <div className="text-xs font-mono font-bold text-[#2563EB] break-all bg-white p-2.5 rounded-lg border border-[#E2E8F0] select-all">
@@ -496,8 +496,20 @@ export default function SettingsPage() {
                   <div className="text-[11px] text-[#64748B]">
                     Sandbox Hotline: <strong className="text-[#111111]">+1 415 523 8886</strong>
                   </div>
-                  <div className="text-[10px] text-[#64748B]">
-                    Local Endpoint: <code className="bg-slate-200 px-1 py-0.5 rounded">http://localhost:3001/api/webhook/twilio</code>
+                </div>
+
+                <div className="p-4 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B] font-semibold">Meta WhatsApp Cloud API Webhook:</span>
+                    <span className="inline-block px-2 py-0.5 rounded bg-emerald-100 text-[#22C55E] text-[10px] font-bold">
+                      PRODUCTION
+                    </span>
+                  </div>
+                  <div className="text-xs font-mono font-bold text-[#2563EB] break-all bg-white p-2.5 rounded-lg border border-[#E2E8F0] select-all">
+                    https://campus-cast-admin.vercel.app/api/webhook/meta
+                  </div>
+                  <div className="text-[11px] text-[#64748B]">
+                    Verify Token: <strong className="text-[#111111]">campuscast_verify_token_123</strong>
                   </div>
                 </div>
 
@@ -512,10 +524,22 @@ export default function SettingsPage() {
                     https://campus-cast-admin.vercel.app/api/scheduler
                   </div>
                   <div className="text-[11px] text-[#64748B]">
-                    Schedule: <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono font-bold text-[#111111]">* * * * *</code> (Every 60 Seconds)
+                    Schedule: <code className="bg-slate-100 px-1.5 py-0.5 rounded font-mono font-bold text-[#111111]">0 0 * * *</code> (Daily Automated Lifecycle Check)
                   </div>
-                  <div className="text-[10px] text-[#64748B]">
-                    Local Endpoint: <code className="bg-slate-200 px-1 py-0.5 rounded">http://localhost:3001/api/scheduler</code>
+                </div>
+
+                <div className="p-4 bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B] font-semibold">Corridor Smart TV Display Portal:</span>
+                    <span className="inline-block px-2 py-0.5 rounded bg-emerald-100 text-[#22C55E] text-[10px] font-bold">
+                      LIVE DISPLAY
+                    </span>
+                  </div>
+                  <div className="text-xs font-mono font-bold text-[#2563EB] break-all bg-white p-2.5 rounded-lg border border-[#E2E8F0] select-all">
+                    https://campus-cast-display.vercel.app
+                  </div>
+                  <div className="text-[11px] text-[#64748B]">
+                    ECE Corridor URL: <strong className="text-[#111111]">https://campus-cast-display.vercel.app/display/ece</strong>
                   </div>
                 </div>
               </div>
