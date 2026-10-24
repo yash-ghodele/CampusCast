@@ -1,8 +1,9 @@
 /**
- * @file apps/admin/src/app/departments/page.tsx
- * @description CampusCast Admin Command Center — Dedicated Department Scope Themes View (`/departments`).
+ * @file admin/src/app/departments/page.tsx
+ * @description CampusCast Admin Command Center — Department Theming & Channel Configuration (`/departments`).
  * 
- * Standalone Page: Contains complete UI, department theme badges, active notices, and direct TV kiosk launchers.
+ * Manages academic department channel scopes, visual theme palettes (ECE, CSE, AIML, MECH, CIVIL, EEE),
+ * and provides direct launchers to each corridor's live Smart TV kiosk view.
  */
 
 'use client';
@@ -45,6 +46,18 @@ const REGISTERED_SCREENS: Screen[] = [
   { id: 'CIVIL-DEPT-DISPLAY', departmentId: 'CIVIL',label: 'Civil Dept Corridor',            lastSeenAt: null },
   { id: 'EEE-POWER-DISPLAY',  departmentId: 'EEE',  label: 'EEE Power Lab Screen',          lastSeenAt: null },
 ];
+
+/**
+ * Resolves the fully qualified corridor display URL based on runtime environment.
+ * 
+ * @param departmentId - Target department identifier (e.g. 'ECE', 'CSE', 'ALL')
+ * @returns Fully qualified hallway display URL string
+ */
+function getDisplayUrl(departmentId: string): string {
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const base = isLocal ? 'http://localhost:3000' : 'https://campus-cast-display.vercel.app';
+  return `${base}/display/${departmentId.toLowerCase()}`;
+}
 
 export default function DepartmentsPage() {
   const [screens, setScreens] = useState<Screen[]>(REGISTERED_SCREENS);
@@ -402,7 +415,7 @@ export default function DepartmentsPage() {
 
                   <div className="pt-4 border-t border-[#E5E7EB]">
                     <button
-                      onClick={() => window.open(`http://localhost:3000/display/${dept.toLowerCase()}`, '_blank')}
+                      onClick={() => window.open(getDisplayUrl(dept), '_blank')}
                       className="w-full bg-[#2563EB]/10 hover:bg-[#2563EB]/20 text-[#2563EB] py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />

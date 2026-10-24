@@ -1,8 +1,10 @@
 /**
- * @file apps/admin/src/app/displays/page.tsx
- * @description CampusCast Admin Command Center — Dedicated Display Control & Screen Wall View (`/displays`).
+ * @file admin/src/app/displays/page.tsx
+ * @description CampusCast Admin Command Center — Corridor Screen Wall & Telemetry Console (`/displays`).
  * 
- * Standalone Page: Contains complete UI, Screen Wall grid, telemetry, emergency override, and live display links.
+ * Provides centralized fleet monitoring for physical Smart TV display terminals across campus departments,
+ * tracking real-time heartbeat timestamps, resolution telemetry, department channel binding,
+ * and emergency broadcast override triggers.
  */
 
 'use client';
@@ -49,6 +51,18 @@ const REGISTERED_SCREENS: Screen[] = [
   { id: 'CIVIL-DEPT-DISPLAY', departmentId: 'CIVIL',label: 'Civil Dept Corridor',            lastSeenAt: Date.now() },
   { id: 'EEE-POWER-DISPLAY',  departmentId: 'EEE',  label: 'EEE Power Lab Screen',          lastSeenAt: Date.now() },
 ];
+
+/**
+ * Resolves the fully qualified corridor display URL based on runtime environment.
+ * 
+ * @param departmentId - Target department identifier (e.g. 'ECE', 'CSE', 'ALL')
+ * @returns Fully qualified hallway display URL string
+ */
+function getDisplayUrl(departmentId: string): string {
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const base = isLocal ? 'http://localhost:3000' : 'https://campus-cast-display.vercel.app';
+  return `${base}/display/${departmentId.toLowerCase()}`;
+}
 
 export default function DisplaysPage() {
   const [screens, setScreens] = useState<Screen[]>(REGISTERED_SCREENS);
@@ -440,7 +454,7 @@ export default function DisplaysPage() {
 
                   <div className="pt-4 border-t border-[#E5E7EB]">
                     <button
-                      onClick={() => window.open(`http://localhost:3000/display/${sc.departmentId.toLowerCase()}`, '_blank')}
+                      onClick={() => window.open(getDisplayUrl(sc.departmentId), '_blank')}
                       className="w-full bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#111111] py-2 rounded-xl text-xs font-bold border border-[#E5E7EB] flex items-center justify-center gap-1.5 transition-colors"
                     >
                       <Eye className="w-3.5 h-3.5 text-[#2563EB]" />
