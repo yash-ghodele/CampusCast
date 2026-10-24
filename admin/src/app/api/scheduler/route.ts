@@ -94,9 +94,24 @@ async function processLifecycle() {
  */
 export async function GET(req: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${cronSecret}`) {
+  const authHeader = req.headers.get('authorization');
+  const vercelCronHeader = req.headers.get('x-vercel-cron');
+
+  // Strict authorization in production mode
+  if (process.env.NODE_ENV === 'production') {
+    const isAuthorized =
+      (cronSecret && authHeader === `Bearer ${cronSecret}`) ||
+      vercelCronHeader === '1' ||
+      (cronSecret && req.headers.get('x-cron-secret') === cronSecret);
+
+    if (!isAuthorized) {
+      return Response.json(
+        { error: 'Unauthorized: Missing or invalid scheduler authorization' },
+        { status: 401 }
+      );
+    }
+  } else if (cronSecret) {
+    if (authHeader !== `Bearer ${cronSecret}` && req.headers.get('x-cron-secret') !== cronSecret) {
       return Response.json({ error: 'Unauthorized: Invalid cron secret' }, { status: 401 });
     }
   }

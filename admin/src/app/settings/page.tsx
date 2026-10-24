@@ -18,6 +18,7 @@ import {
   DEPARTMENT_THEMES,
   formatHeartbeatTimestamp,
   formatDurationHHMMSS,
+  DEFAULT_SECURITY_PIN,
 } from '@campuscast/shared';
 import {
   LayoutDashboard,
@@ -38,6 +39,7 @@ import {
   KeyRound,
   Clock,
   Zap,
+  RotateCcw,
 } from 'lucide-react';
 import {
   saveNoticeToFirestore,
@@ -54,6 +56,15 @@ const REGISTERED_SCREENS: Screen[] = [
   { id: 'EEE-POWER-DISPLAY',  departmentId: 'EEE',  label: 'EEE Power Lab Screen',          lastSeenAt: null },
 ];
 
+const DEFAULT_SYSTEM_SETTINGS = {
+  heartbeatInterval: '30',
+  screenTimeout: '120',
+  heroRotation: '12',
+  emergencyPin: DEFAULT_SECURITY_PIN,
+  institutionName: 'CampusCast Autonomous Engineering Institute',
+  campusHotline: '+1 415 523 8886',
+};
+
 export default function SettingsPage() {
   const [screens, setScreens] = useState<Screen[]>(REGISTERED_SCREENS);
   const [notices, setNotices] = useState<Notice[]>([]);
@@ -61,12 +72,15 @@ export default function SettingsPage() {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [sidebarLogoError, setSidebarLogoError] = useState(false);
 
-  // Configuration Form State
-  const [heartbeatInterval, setHeartbeatInterval] = useState('30');
-  const [screenTimeout, setScreenTimeout] = useState('120');
-  const [heroRotation, setHeroRotation] = useState('10');
-  const [emergencyPin, setEmergencyPin] = useState('1234');
+  // Configuration Form State (Loaded from localStorage with secure defaults)
+  const [heartbeatInterval, setHeartbeatInterval] = useState(DEFAULT_SYSTEM_SETTINGS.heartbeatInterval);
+  const [screenTimeout, setScreenTimeout] = useState(DEFAULT_SYSTEM_SETTINGS.screenTimeout);
+  const [heroRotation, setHeroRotation] = useState(DEFAULT_SYSTEM_SETTINGS.heroRotation);
+  const [emergencyPin, setEmergencyPin] = useState(DEFAULT_SYSTEM_SETTINGS.emergencyPin);
+  const [institutionName, setInstitutionName] = useState(DEFAULT_SYSTEM_SETTINGS.institutionName);
+  const [campusHotline, setCampusHotline] = useState(DEFAULT_SYSTEM_SETTINGS.campusHotline);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   // Emergency Modal State
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
@@ -77,6 +91,17 @@ export default function SettingsPage() {
   // Load persisted state & subscribe to Firestore
   useEffect(() => {
     try {
+      const storedSettings = localStorage.getItem('campuscast_settings');
+      if (storedSettings) {
+        const parsed = JSON.parse(storedSettings);
+        if (parsed.heartbeatInterval) setHeartbeatInterval(parsed.heartbeatInterval);
+        if (parsed.screenTimeout) setScreenTimeout(parsed.screenTimeout);
+        if (parsed.heroRotation) setHeroRotation(parsed.heroRotation);
+        if (parsed.emergencyPin) setEmergencyPin(parsed.emergencyPin);
+        if (parsed.institutionName) setInstitutionName(parsed.institutionName);
+        if (parsed.campusHotline) setCampusHotline(parsed.campusHotline);
+      }
+
       const storedNotices = localStorage.getItem('campuscast_notices');
       if (storedNotices) setNotices(JSON.parse(storedNotices));
 
@@ -135,16 +160,71 @@ export default function SettingsPage() {
     };
   }, []);
 
-  const handleSaveSettings = (e: React.FormEvent) => {
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
+    const settingsPayload = {
+      heartbeatInterval,
+      screenTimeout,
+      heroRotation,
+      emergencyPin,
+      institutionName,
+      campusHotline,
+      updatedAt: Date.now(),
+    };
+
+    try {
+      localStorage.setItem('campuscast_settings', JSON.stringify(settingsPayload));
+      if (typeof BroadcastChannel !== 'undefined') {
+        const ch = new BroadcastChannel('campuscast-settings-channel');
+        ch.postMessage(settingsPayload);
+        ch.close();
+      }
+    } catch (err) {
+      console.warn('Failed to persist settings to localStorage:', err);
+    }
+
+    // Record settings modification in audit log
+    try {
+      await saveAuditToFirestore({
+        id: `aud-${Date.now()}`,
+        type: 'edit',
+        actorPhone: 'Super Admin',
+        detail: { action: 'Updated system settings & security parameters' },
+        timestamp: Date.now(),
+      });
+    } catch (auditErr) {
+      console.warn('Failed to log settings update:', auditErr);
+    }
+
     setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+    setTimeout(() => setSaveSuccess(false), 3500);
+  };
+
+  const handleResetDefaults = () => {
+    setHeartbeatInterval(DEFAULT_SYSTEM_SETTINGS.heartbeatInterval);
+    setScreenTimeout(DEFAULT_SYSTEM_SETTINGS.screenTimeout);
+    setHeroRotation(DEFAULT_SYSTEM_SETTINGS.heroRotation);
+    setEmergencyPin(DEFAULT_SYSTEM_SETTINGS.emergencyPin);
+    setInstitutionName(DEFAULT_SYSTEM_SETTINGS.institutionName);
+    setCampusHotline(DEFAULT_SYSTEM_SETTINGS.campusHotline);
+
+    try {
+      localStorage.setItem('campuscast_settings', JSON.stringify(DEFAULT_SYSTEM_SETTINGS));
+      if (typeof BroadcastChannel !== 'undefined') {
+        const ch = new BroadcastChannel('campuscast-settings-channel');
+        ch.postMessage(DEFAULT_SYSTEM_SETTINGS);
+        ch.close();
+      }
+    } catch {}
+
+    setResetSuccess(true);
+    setTimeout(() => setResetSuccess(false), 3000);
   };
 
   const handleEmergencyBroadcastSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (modalPin !== '1234') {
-      alert('Invalid Security PIN! Please enter master PIN (1234).');
+    if (modalPin !== emergencyPin) {
+      alert('Invalid Security PIN! Please enter your configured master PIN.');
       return;
     }
 
@@ -371,7 +451,14 @@ export default function SettingsPage() {
           {saveSuccess && (
             <div className="p-4 bg-emerald-50 border border-[#22C55E]/30 rounded-2xl flex items-center gap-3 text-emerald-800 text-xs font-bold">
               <CheckCircle2 className="w-5 h-5 text-[#22C55E]" />
-              <span>Configuration settings updated and synchronized successfully!</span>
+              <span>Configuration settings updated and persisted successfully!</span>
+            </div>
+          )}
+
+          {resetSuccess && (
+            <div className="p-4 bg-blue-50 border border-blue-300 rounded-2xl flex items-center gap-3 text-blue-800 text-xs font-bold">
+              <RotateCcw className="w-5 h-5 text-[#2563EB]" />
+              <span>Settings restored to default production configuration.</span>
             </div>
           )}
 
@@ -459,16 +546,25 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="max-w-xs text-xs">
-                <label className="block text-[#111111] font-bold mb-1">Master Emergency PIN</label>
-                <input
-                  type="password"
-                  maxLength={4}
-                  value={emergencyPin}
-                  onChange={(e) => setEmergencyPin(e.target.value)}
-                  className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-3 py-2 text-center text-lg tracking-widest text-[#111111] font-mono font-bold"
-                />
-                <span className="text-[10px] text-[#64748B] mt-1 block">Master PIN code: 1234</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div className="max-w-xs">
+                  <label className="block text-[#111111] font-bold mb-1">Master Emergency PIN</label>
+                  <input
+                    type="password"
+                    maxLength={4}
+                    value={emergencyPin}
+                    onChange={(e) => setEmergencyPin(e.target.value)}
+                    className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-3 py-2 text-center text-lg tracking-widest text-[#111111] font-mono font-bold focus:border-[#2563EB] focus:outline-hidden"
+                  />
+                  <span className="text-[10px] text-[#64748B] mt-1 block">Default PIN: 9482. Save to apply changes.</span>
+                </div>
+
+                <div className="p-3 bg-red-50/60 border border-red-200/60 rounded-xl space-y-1">
+                  <span className="font-bold text-red-700">Security Recommendation:</span>
+                  <p className="text-[11px] text-red-900/80 leading-relaxed">
+                    Avoid simple codes like 1234 or 0000. This PIN restricts unauthorized activation of audible alarms and display overrides.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -554,8 +650,17 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* SAVE BUTTON */}
-            <div className="flex justify-end pt-2">
+            {/* ACTION BUTTONS */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={handleResetDefaults}
+                className="bg-white hover:bg-[#F8FAFC] text-[#64748B] hover:text-[#111111] border border-[#CBD5E1] px-5 py-3 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Reset to Defaults</span>
+              </button>
+
               <button
                 type="submit"
                 className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-6 py-3 rounded-xl text-xs font-bold flex items-center gap-2 shadow-md shadow-[#2563EB]/20 transition-all"
@@ -611,7 +716,7 @@ export default function SettingsPage() {
               </div>
 
               <div>
-                <label className="block text-red-600 font-bold mb-1">Enter Master Security PIN (1234)</label>
+                <label className="block text-red-600 font-bold mb-1">Enter Master Security PIN</label>
                 <input
                   type="password"
                   required

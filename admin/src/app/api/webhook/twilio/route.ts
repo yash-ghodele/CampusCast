@@ -9,6 +9,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import crypto from 'crypto';
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -20,12 +21,42 @@ import {
 import {
   parseNoticeMessage,
   detectMediaType,
+  maskPhoneNumber,
   User,
   NoticeStatus,
 } from '@campuscast/shared';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+
+/**
+ * Validates the inbound Twilio webhook request signature against the configured auth token.
+ *
+ * @param authToken - Twilio Auth Token from environment variables
+ * @param signature - Inbound `X-Twilio-Signature` HTTP header value
+ * @param url - Canonical target URL of the webhook request
+ * @param params - Dictionary of POST parameters received in the request body
+ * @returns Boolean flag indicating whether signature matches
+ */
+function verifyTwilioSignature(
+  authToken: string,
+  signature: string | null,
+  url: string,
+  params: Record<string, string>
+): boolean {
+  if (!signature || !authToken) return false;
+  const sortedKeys = Object.keys(params).sort();
+  let data = url;
+  for (const key of sortedKeys) {
+    data += key + params[key];
+  }
+  const hmac = crypto.createHmac('sha1', authToken).update(data, 'utf-8').digest('base64');
+  try {
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(hmac));
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Health-check inspection endpoint for uptime monitoring and gateway diagnostics.
@@ -47,14 +78,14 @@ export async function GET() {
  * Inbound webhook processor for Twilio WhatsApp messages.
  * 
  * Executes an 8-stage pipeline:
- * 1. Payload normalization (extract sender phone, body, and MMS attachment URLs).
- * 2. Faculty phone authorization lookup against Firestore `users` collection.
- * 3. Rate limiting check (max 10 publications per minute per sender).
- * 4. Deterministic tag and scope parsing (priority, schedule date, department prefix).
- * 5. Department resolution and multi-department ambiguity enforcement.
- * 6. MMS media attachment classification (image, document, PDF).
- * 7. Firestore document write and audit log ledger entry creation.
- * 8. Return instant TwiML XML acknowledgment for automated WhatsApp response.
+ * 1. HMAC webhook signature verification (prevents phone number spoofing).
+ * 2. Payload normalization (extract sender phone, body, and MMS attachment URLs).
+ * 3. Faculty phone authorization lookup against Firestore `users` collection.
+ * 4. Rate limiting check (max 10 publications per minute per sender).
+ * 5. Deterministic tag and scope parsing (priority, schedule date, department prefix).
+ * 6. Department resolution and multi-department ambiguity enforcement.
+ * 7. MMS media attachment classification (image, document, PDF).
+ * 8. Firestore document write, masked audit log ledger entry creation, and instant TwiML XML confirmation.
  *
  * @param req - Incoming Next.js HTTP request containing Twilio webhook payload
  * @returns TwiML XML Response containing confirmation text or silent drop
@@ -66,6 +97,7 @@ export async function POST(req: NextRequest) {
     let numMedia = 0;
     let mediaUrl0: string | null = null;
     let mediaContentType0: string | null = null;
+    const rawParams: Record<string, string> = {};
 
     const contentType = req.headers.get('content-type') || '';
 
@@ -76,6 +108,9 @@ export async function POST(req: NextRequest) {
       numMedia = parseInt(json.NumMedia || json.numMedia || '0', 10);
       mediaUrl0 = json.MediaUrl0 || json.mediaUrl0 || null;
       mediaContentType0 = json.MediaContentType0 || json.mediaContentType0 || null;
+      for (const [k, v] of Object.entries(json)) {
+        if (typeof v === 'string') rawParams[k] = v;
+      }
     } else {
       const formData = await req.formData();
       from = (formData.get('From') as string) || '';
@@ -83,6 +118,27 @@ export async function POST(req: NextRequest) {
       numMedia = parseInt((formData.get('NumMedia') as string) || '0', 10);
       mediaUrl0 = (formData.get('MediaUrl0') as string) || null;
       mediaContentType0 = (formData.get('MediaContentType0') as string) || null;
+      formData.forEach((value, key) => {
+        if (typeof value === 'string') rawParams[key] = value;
+      });
+    }
+
+    // Security Gate: Verify X-Twilio-Signature if TWILIO_AUTH_TOKEN is configured
+    const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
+    const twilioSignature = req.headers.get('x-twilio-signature');
+
+    if (twilioAuthToken) {
+      const reqUrl = req.url;
+      const isValid = verifyTwilioSignature(twilioAuthToken, twilioSignature, reqUrl, rawParams);
+      if (!isValid) {
+        console.warn(`[CampusCast Webhook] Blocked request with invalid X-Twilio-Signature.`);
+        return new Response(
+          '<?xml version="1.0" encoding="UTF-8"?><Response><Message>⚠️ Signature verification failed.</Message></Response>',
+          { status: 403, headers: { 'Content-Type': 'text/xml; charset=utf-8' } }
+        );
+      }
+    } else if (process.env.NODE_ENV === 'production') {
+      console.warn('[CampusCast Webhook] Warning: TWILIO_AUTH_TOKEN is not configured in production environment.');
     }
 
     // Normalize sender phone number (strip 'whatsapp:' prefix and ensure E.164 formatting)
@@ -115,12 +171,12 @@ export async function POST(req: NextRequest) {
 
     if (!userDoc) {
       // Security enforcement: silent drop for unauthorized senders to prevent phone enumeration
-      console.warn(`[CampusCast Webhook] Unauthorized publish attempt blocked: ${senderPhone}`);
+      console.warn(`[CampusCast Webhook] Unauthorized publish attempt blocked: ${maskPhoneNumber(senderPhone)}`);
       
       try {
         await addDoc(collection(db, 'audit_log'), {
           type: 'unauthorized_attempt',
-          actorPhone: senderPhone,
+          actorPhone: maskPhoneNumber(senderPhone),
           detail: { rawText: body, reason: 'Sender phone not in active faculty roster' },
           timestamp: Date.now(),
         });

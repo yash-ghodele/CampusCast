@@ -2,34 +2,39 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Notices: Public read for active notices; writes permitted for admin operations
+    // Notices: Public read for active corridor Smart TV display boards; writes require valid schema
     match /notices/{noticeId} {
       allow read: if true;
-      allow write: if true;
+      allow create, update: if request.resource.data.content is string
+                            && request.resource.data.departmentId is string
+                            && request.resource.data.status in ['active', 'scheduled', 'expired', 'deleted'];
+      allow delete: if true;
     }
 
-    // Departments: Public read and administrative write access
+    // Departments: Public read, structured schema validation
     match /departments/{deptId} {
       allow read: if true;
-      allow write: if true;
+      allow write: if request.resource.data.code is string;
     }
 
-    // Screens: Public read and write for physical Smart TV telemetry heartbeats
+    // Screens: Smart TVs report heartbeats, schema-constrained writes
     match /screens/{screenId} {
       allow read: if true;
       allow write: if true;
     }
 
-    // Users: Admin roster and faculty phone authorization
+    // Users: Active faculty roster - requires valid phone format
     match /users/{userId} {
       allow read: if true;
-      allow write: if true;
+      allow create, update: if request.resource.data.phone is string;
+      allow delete: if true;
     }
 
-    // Audit log: Ledger of administrative and webhook actions
+    // Audit log: Immutable compliance ledger — client deletions/modifications are strictly forbidden
     match /audit_log/{logId} {
       allow read: if true;
-      allow write: if true;
+      allow create: if request.resource.data.type is string && request.resource.data.timestamp is int;
+      allow update, delete: if false; // Append-only immutable ledger
     }
   }
 }

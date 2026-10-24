@@ -21,6 +21,9 @@ import {
   formatHeartbeatTimestamp,
   formatDurationHHMMSS,
   detectMediaType,
+  isWhatsAppNotice,
+  maskPhoneNumber,
+  getSafeUrl,
 } from '@campuscast/shared';
 import {
   LayoutDashboard,
@@ -52,6 +55,7 @@ import {
   SlidersHorizontal,
   Image as ImageIcon,
   Pencil,
+  MessageSquare,
 } from 'lucide-react';
 import {
   saveNoticeToFirestore,
@@ -61,6 +65,7 @@ import {
   subscribeToScreens,
   pingScreensInFirestore,
 } from '@/lib/firebase';
+import { verifyMasterSecurityPin } from '@/lib/security';
 
 const REGISTERED_SCREENS: Screen[] = [
   { id: 'ECE-MAIN-DISPLAY',   departmentId: 'ECE',  label: 'ECE Corridor Smart TV',        lastSeenAt: Date.now() },
@@ -97,6 +102,7 @@ export default function NoticesPage() {
   const [editStatus, setEditStatus] = useState<NoticeStatus>('active');
   const [editEventDate, setEditEventDate] = useState('');
   const [editEventTime, setEditEventTime] = useState('');
+  const [editAuthorName, setEditAuthorName] = useState('');
 
   // WIZARD MODAL STATE
   const [showWizard, setShowWizard] = useState(false);
@@ -253,6 +259,7 @@ export default function NoticesPage() {
     setEditStatus(notice.status || 'active');
     setEditEventDate(notice.eventDate || '');
     setEditEventTime(notice.eventTime || '');
+    setEditAuthorName(notice.authorName || (isWhatsAppNotice(notice) ? notice.createdBy : ''));
     setShowEditModal(true);
   };
 
@@ -264,6 +271,7 @@ export default function NoticesPage() {
     if (!existing) return;
 
     const detected = editMediaUrl ? detectMediaType(editMediaUrl) : null;
+    const safeUrl = editMediaUrl ? getSafeUrl(editMediaUrl) : null;
 
     const updatedNotice: Notice = {
       ...existing,
@@ -271,7 +279,8 @@ export default function NoticesPage() {
       category: editCategory,
       departmentId: editDept,
       content: editContent,
-      mediaUrl: editMediaUrl || null,
+      authorName: editAuthorName || existing.authorName,
+      mediaUrl: safeUrl,
       mediaType: detected,
       priority: editPriority,
       status: editStatus,
@@ -287,7 +296,13 @@ export default function NoticesPage() {
       id: `aud-${Date.now()}`,
       type: 'edit',
       actorPhone: 'Admin Command Center',
-      detail: { dept: editDept, title: editTitle, id: editingNoticeId },
+      detail: {
+        dept: editDept,
+        title: editTitle,
+        id: editingNoticeId,
+        wasWhatsApp: isWhatsAppNotice(existing),
+        authorName: editAuthorName,
+      },
       timestamp: Date.now(),
     };
     const updatedAudit = [editLog, ...auditLogs];
@@ -325,8 +340,8 @@ export default function NoticesPage() {
 
   const handleEmergencyBroadcastSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (modalPin !== '1234') {
-      alert('Invalid Security PIN! Please enter master PIN (1234).');
+    if (!verifyMasterSecurityPin(modalPin)) {
+      alert('Invalid Security PIN! Please enter your configured master PIN.');
       return;
     }
 
@@ -386,11 +401,13 @@ export default function NoticesPage() {
       if (n.category !== selectedCategoryFilter) return false;
     }
 
-    // 3. Media Type filter
+    // 3. Media Type & WhatsApp Source filter
     if (selectedMediaFilter !== 'ALL_MEDIA') {
       const isPdf = n.mediaType === 'pdf' || (n.mediaUrl && n.mediaUrl.toLowerCase().includes('.pdf'));
       const isImg = n.mediaType === 'image' || (n.mediaUrl && !n.mediaUrl.toLowerCase().includes('.pdf'));
+      const isWa = isWhatsAppNotice(n);
 
+      if (selectedMediaFilter === 'whatsapp' && !isWa) return false;
       if (selectedMediaFilter === 'pdf' && !isPdf) return false;
       if (selectedMediaFilter === 'image' && (!isImg || isPdf)) return false;
       if (selectedMediaFilter === 'text' && (n.mediaUrl || n.mediaType)) return false;
@@ -675,10 +692,11 @@ export default function NoticesPage() {
                     onChange={(e) => setSelectedMediaFilter(e.target.value)}
                     className="bg-transparent text-xs font-bold text-[#111111] focus:outline-none cursor-pointer"
                   >
-                    <option value="ALL_MEDIA">All Media</option>
-                    <option value="image">With Image</option>
-                    <option value="pdf">With PDF</option>
-                    <option value="text">Text Only</option>
+                    <option value="ALL_MEDIA">All Media & Sources</option>
+                    <option value="whatsapp">📱 WhatsApp Submissions</option>
+                    <option value="image">With Image Poster</option>
+                    <option value="pdf">With PDF Circular</option>
+                    <option value="text">Text Bulletin Only</option>
                   </select>
                 </div>
 
@@ -792,6 +810,12 @@ export default function NoticesPage() {
                             {n.scheduledAt ? new Date(n.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Future'}
                           </span>
                         </div>
+                        {isWhatsAppNotice(n) && (
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                            <MessageSquare className="w-3 h-3 text-emerald-600" />
+                            <span>WhatsApp: {n.authorName || maskPhoneNumber(n.createdBy)}</span>
+                          </div>
+                        )}
                         <h4 className="text-sm font-bold text-[#111111]">{n.title || n.content}</h4>
                         <p className="text-xs text-[#475569] line-clamp-2">{n.content}</p>
                         <div className="pt-2 border-t border-[#E5E7EB] flex items-center justify-between">
@@ -852,6 +876,12 @@ export default function NoticesPage() {
                             {n.category}
                           </span>
                         </div>
+                        {isWhatsAppNotice(n) && (
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                            <MessageSquare className="w-3 h-3 text-emerald-600" />
+                            <span>WhatsApp: {n.authorName || maskPhoneNumber(n.createdBy)}</span>
+                          </div>
+                        )}
                         <h4 className="text-sm font-bold text-[#111111]">{n.title || n.content}</h4>
                         <p className="text-xs text-[#475569] line-clamp-2">{n.content}</p>
                         <div className="pt-2 border-t border-[#E5E7EB] flex items-center justify-between">
@@ -964,7 +994,15 @@ export default function NoticesPage() {
                     filteredNotices.map((n) => (
                       <tr key={n.id} className="hover:bg-[#F8FAFC] transition-colors">
                         <td className="px-6 py-4">
-                          <div className="font-bold text-[#111111]">{n.title || n.content}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-[#111111]">{n.title || n.content}</span>
+                            {isWhatsAppNotice(n) && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                                <MessageSquare className="w-2.5 h-2.5" />
+                                <span>WhatsApp</span>
+                              </span>
+                            )}
+                          </div>
                           <div className="text-[11px] text-[#2563EB] font-semibold">{n.departmentId} Department</div>
                         </td>
                         <td className="px-6 py-4 capitalize font-semibold text-[#475569]">{n.category}</td>
@@ -981,7 +1019,12 @@ export default function NoticesPage() {
                             {n.status}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-[#64748B]">{n.createdBy}</td>
+                        <td className="px-6 py-4 text-[#64748B]">
+                          <div className="font-medium text-[#111111]">{n.authorName || (isWhatsAppNotice(n) ? maskPhoneNumber(n.createdBy) : n.createdBy)}</div>
+                          {n.authorName && isWhatsAppNotice(n) && (
+                            <div className="text-[10px] text-[#94A3B8] font-mono">{maskPhoneNumber(n.createdBy)}</div>
+                          )}
+                        </td>
                         <td className="px-6 py-4 space-x-2">
                           <button
                             onClick={() => openEditModal(n)}
@@ -1314,7 +1357,7 @@ export default function NoticesPage() {
               </div>
 
               <div>
-                <label className="block text-red-600 font-bold mb-1">Enter Master Security PIN (1234)</label>
+                <label className="block text-red-600 font-bold mb-1">Enter Master Security PIN</label>
                 <input
                   type="password"
                   required
@@ -1347,26 +1390,59 @@ export default function NoticesPage() {
       )}
 
       {/* EDIT NOTICE MODAL */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
-          <div className="bg-white border border-[#E5E7EB] rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl my-8">
-            <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
-              <div className="flex items-center gap-2">
-                <Pencil className="w-5 h-5 text-[#2563EB]" />
-                <h3 className="text-xl font-bold text-[#111111]">Edit Campus Notice</h3>
-              </div>
-              <button
-                onClick={() => {
-                  setShowEditModal(false);
-                  setEditingNoticeId(null);
-                }}
-                className="text-[#64748B] hover:text-[#111111] text-xs font-bold"
-              >
-                ✕ Close
-              </button>
-            </div>
+      {showEditModal && (() => {
+        const editingNotice = notices.find((n) => n.id === editingNoticeId);
+        const wasWhatsApp = editingNotice ? isWhatsAppNotice(editingNotice) : false;
 
-            <form onSubmit={handleSaveEditedNotice} className="space-y-3.5 text-xs">
+        return (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+            <div className="bg-white border border-[#E5E7EB] rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl my-8">
+              <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+                <div className="flex items-center gap-2">
+                  <Pencil className="w-5 h-5 text-[#2563EB]" />
+                  <h3 className="text-xl font-bold text-[#111111]">
+                    {wasWhatsApp ? 'Edit WhatsApp Notice' : 'Edit Campus Notice'}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingNoticeId(null);
+                  }}
+                  className="text-[#64748B] hover:text-[#111111] text-xs font-bold"
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              {wasWhatsApp && editingNotice && (
+                <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <MessageSquare className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col text-xs">
+                    <span className="font-bold text-emerald-900">
+                      Ingested via WhatsApp Hotline ({maskPhoneNumber(editingNotice.createdBy)})
+                    </span>
+                    <span className="text-emerald-700 text-[11px] mt-0.5 leading-relaxed">
+                      You can modify the headline, update department routing, enrich body text, adjust broadcast priority, or attach official circular media.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveEditedNotice} className="space-y-3.5 text-xs">
+                {/* Author Attribution */}
+                <div>
+                  <label className="block text-[#111111] font-bold mb-1">Author / Faculty Attribution</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Dr. R. Sharma (HOD ECE) or Department Office"
+                    value={editAuthorName}
+                    onChange={(e) => setEditAuthorName(e.target.value)}
+                    className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[#111111] font-medium"
+                  />
+                </div>
               {/* Target Dept & Category */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -1528,7 +1604,7 @@ export default function NoticesPage() {
             </form>
           </div>
         </div>
-      )}
+      ); })()}
     </div>
   );
 }

@@ -156,6 +156,7 @@ export interface Notice {
   priority: NoticePriority; // 'urgent' triggers red alert styling and glow animation
   status: NoticeStatus; // 'active' notices are rendered live by display clients
   createdBy: string; // Publisher E.164 phone number or admin identity
+  authorName?: string; // Author full name (e.g. from faculty user record)
   createdAt: number; // Creation UNIX timestamp in ms
   scheduledAt: number | null; // Future UNIX timestamp when notice should promote to active
   expiresAt: number | null; // UNIX timestamp when notice should demote to expired
@@ -212,3 +213,59 @@ export function getDisplayUrl(departmentId: string): string {
     : PRODUCTION_ENDPOINTS.DISPLAY_PORTAL;
   return `${base}/display/${departmentId.toLowerCase()}`;
 }
+
+/**
+ * Validates and returns a safe HTTP/HTTPS URL, neutralizing javascript:, data:, or vbscript: XSS vectors.
+ *
+ * @param url - Potential URL string to sanitize
+ * @returns Safe URL string or '#' fallback if invalid or unsafe
+ */
+export function getSafeUrl(url?: string | null): string {
+  if (!url) return '#';
+  const trimmed = url.trim();
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      return trimmed;
+    }
+  } catch {
+    if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+      return trimmed;
+    }
+  }
+  return '#';
+}
+
+/**
+ * Masks international phone numbers to prevent plaintext PII leakage in logs and UI displays.
+ *
+ * @param phone - Raw phone number string in E.164 format
+ * @returns Masked phone string, e.g. "+91 98*** **210"
+ */
+export function maskPhoneNumber(phone?: string | null): string {
+  if (!phone) return 'Unknown';
+  const clean = phone.trim();
+  if (clean.length < 8) return '***';
+  return `${clean.slice(0, 5)}****${clean.slice(-3)}`;
+}
+
+/**
+ * Determines whether a notice was ingested automatically via WhatsApp gateways.
+ *
+ * @param notice - Notice document to inspect
+ * @returns Boolean flag indicating if notice originated from WhatsApp
+ */
+export function isWhatsAppNotice(notice: Notice): boolean {
+  if (!notice) return false;
+  const creator = (notice.createdBy || '').trim();
+  return (
+    creator.startsWith('+') ||
+    /^\+?\d{10,15}$/.test(creator.replace(/[\s-]/g, '')) ||
+    (notice.authorName !== undefined && notice.authorName !== 'Admin Command Center' && notice.authorName !== 'Principal Office & Campus Security')
+  );
+}
+
+/**
+ * Default secure master emergency PIN code.
+ */
+export const DEFAULT_SECURITY_PIN = '9482';

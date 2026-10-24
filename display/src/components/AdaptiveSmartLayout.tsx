@@ -10,7 +10,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Notice, DEPARTMENT_THEMES } from '@campuscast/shared';
+import { Notice, DEPARTMENT_THEMES, getSafeUrl } from '@campuscast/shared';
 import { NoticeCard } from './NoticeCard';
 import {
   Sparkles,
@@ -197,9 +197,9 @@ export const AdaptiveSmartLayout: React.FC<AdaptiveSmartLayoutProps> = ({
                   </div>
 
                   <a
-                    href={pdfNotice.mediaUrl || '#'}
+                    href={getSafeUrl(pdfNotice.mediaUrl)}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="shrink-0 p-2 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold text-[11px] flex items-center gap-1 border border-amber-200"
                   >
                     <QrCode className="w-3.5 h-3.5" />

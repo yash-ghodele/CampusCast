@@ -8,6 +8,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import crypto from 'crypto';
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -18,6 +19,7 @@ import {
 } from 'firebase/firestore';
 import {
   parseNoticeMessage,
+  maskPhoneNumber,
   User,
   NoticeStatus,
 } from '@campuscast/shared';
@@ -27,6 +29,33 @@ export const runtime = 'nodejs';
 
 const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'campuscast_verify_token_123';
 const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || '';
+const META_APP_SECRET = process.env.META_APP_SECRET || process.env.WHATSAPP_APP_SECRET || '';
+
+/**
+ * Validates Meta WhatsApp Cloud API HMAC-SHA256 signature against the app secret.
+ *
+ * @param appSecret - Meta App Secret from environment variables
+ * @param headerSignature - Inbound `X-Hub-Signature-256` HTTP header value
+ * @param rawPayload - Raw text body of the incoming webhook request
+ * @returns Boolean flag indicating whether signature matches
+ */
+function verifyMetaSignature(
+  appSecret: string,
+  headerSignature: string | null,
+  rawPayload: string
+): boolean {
+  if (!headerSignature || !appSecret) return false;
+  const parts = headerSignature.split('=');
+  if (parts.length !== 2 || parts[0] !== 'sha256') return false;
+  const expectedHash = parts[1];
+
+  const hmac = crypto.createHmac('sha256', appSecret).update(rawPayload, 'utf-8').digest('hex');
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expectedHash, 'hex'), Buffer.from(hmac, 'hex'));
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Dispatches an outbound confirmation message to the faculty member via Meta Graph API.
@@ -37,7 +66,7 @@ const WHATSAPP_ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN || '';
  */
 async function sendMetaGraphReply(phoneNumberId: string, toPhone: string, textMessage: string) {
   if (!WHATSAPP_ACCESS_TOKEN || !phoneNumberId) {
-    console.log(`[Meta Reply Simulation] To: ${toPhone} -> ${textMessage}`);
+    console.log(`[Meta Reply Simulation] To: ${maskPhoneNumber(toPhone)} -> ${textMessage}`);
     return;
   }
 
@@ -90,7 +119,26 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const rawText = await req.text();
+
+    // Security Gate: Verify X-Hub-Signature-256 HMAC if META_APP_SECRET is configured
+    if (META_APP_SECRET) {
+      const signatureHeader = req.headers.get('x-hub-signature-256');
+      const isValid = verifyMetaSignature(META_APP_SECRET, signatureHeader, rawText);
+      if (!isValid) {
+        console.warn('[CampusCast Meta Webhook] Blocked request with invalid X-Hub-Signature-256.');
+        return new Response('Forbidden: Invalid signature', { status: 403 });
+      }
+    } else if (process.env.NODE_ENV === 'production') {
+      console.warn('[CampusCast Meta Webhook] Warning: META_APP_SECRET is not configured in production environment.');
+    }
+
+    let body: any = null;
+    try {
+      body = JSON.parse(rawText);
+    } catch {
+      return new Response('Invalid JSON', { status: 400 });
+    }
 
     if (!body || body.object !== 'whatsapp_business_account') {
       return new Response('EVENT_RECEIVED', { status: 200 });
@@ -110,9 +158,9 @@ export async function POST(req: NextRequest) {
 
           const rawSender = message.from || '';
           const senderPhone = rawSender.startsWith('+') ? rawSender : `+${rawSender}`;
-          const rawText = message.text?.body || '';
+          const rawTextBody = message.text?.body || '';
 
-          if (!senderPhone || !rawText.trim()) continue;
+          if (!senderPhone || !rawTextBody.trim()) continue;
 
           // Stage 1: Phone Authorization Lookup
           const usersRef = collection(db, 'users');
@@ -129,11 +177,11 @@ export async function POST(req: NextRequest) {
           }
 
           if (!userDoc) {
-            console.warn(`[Meta Webhook] Unauthorized publish attempt: ${senderPhone}`);
+            console.warn(`[Meta Webhook] Unauthorized publish attempt: ${maskPhoneNumber(senderPhone)}`);
             await addDoc(collection(db, 'audit_log'), {
               type: 'unauthorized_attempt',
-              actorPhone: senderPhone,
-              detail: { rawText, reason: 'Sender not found in active roster' },
+              actorPhone: maskPhoneNumber(senderPhone),
+              detail: { rawText: rawTextBody, reason: 'Sender not found in active roster' },
               timestamp: Date.now(),
             });
             continue; // Silent drop
@@ -142,7 +190,7 @@ export async function POST(req: NextRequest) {
           const userData = userDoc.data() as User;
 
           // Stage 2: Tag & Scope Parsing
-          const parsed = parseNoticeMessage(rawText);
+          const parsed = parseNoticeMessage(rawTextBody);
           let targetDeptCode = parsed.departmentCode;
 
           if (!targetDeptCode) {

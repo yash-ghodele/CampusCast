@@ -35,6 +35,7 @@ import {
   saveAuditToFirestore,
   subscribeToAdminNotices,
 } from '@/lib/firebase';
+import { verifyMasterSecurityPin } from '@/lib/security';
 
 const REGISTERED_SCREENS: Screen[] = [
   { id: 'ECE-MAIN-DISPLAY',   departmentId: 'ECE',  label: 'ECE Corridor Smart TV',        lastSeenAt: null },
@@ -121,8 +122,8 @@ export default function AuditPage() {
 
   const handleEmergencyBroadcastSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (modalPin !== '1234') {
-      alert('Invalid Security PIN! Please enter master PIN (1234).');
+    if (!verifyMasterSecurityPin(modalPin)) {
+      alert('Invalid Security PIN! Please enter your configured master PIN.');
       return;
     }
 
@@ -445,7 +446,7 @@ export default function AuditPage() {
               </div>
 
               <div>
-                <label className="block text-red-600 font-bold mb-1">Enter Master Security PIN (1234)</label>
+                <label className="block text-red-600 font-bold mb-1">Enter Master Security PIN</label>
                 <input
                   type="password"
                   required
