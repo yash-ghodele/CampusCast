@@ -25,6 +25,7 @@ const SEED_USERS = [
   {
     id: 'usr-ece-sharma',
     name: 'Dr. Ramesh Sharma',
+    email: 'ramesh.sharma@mit.asia',
     phone: '+919876543210',
     role: 'faculty',
     departments: ['ECE'],
@@ -33,6 +34,7 @@ const SEED_USERS = [
   {
     id: 'usr-cse-roy',
     name: 'Prof. Ananya Roy',
+    email: 'ananya.roy@mit.asia',
     phone: '+919876543211',
     role: 'hod',
     departments: ['CSE'],
@@ -41,6 +43,7 @@ const SEED_USERS = [
   {
     id: 'usr-aiml-malhotra',
     name: 'Dr. Vikram Malhotra',
+    email: 'vikram.malhotra@mit.asia',
     phone: '+919876543212',
     role: 'faculty',
     departments: ['AIML'],
@@ -49,6 +52,7 @@ const SEED_USERS = [
   {
     id: 'usr-multi-verma',
     name: 'Prof. Sunita Verma',
+    email: 'sunita.verma@mit.asia',
     phone: '+919876543213',
     role: 'faculty',
     departments: ['ECE', 'CSE'],
@@ -57,6 +61,7 @@ const SEED_USERS = [
   {
     id: 'usr-admin-master',
     name: 'Principal / Chief Admin',
+    email: 'principal@mit.asia',
     phone: '+919876543200',
     role: 'super_admin',
     departments: ['ECE', 'CSE', 'AIML', 'MECH', 'CIVIL', 'EEE'],

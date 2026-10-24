@@ -57,6 +57,7 @@ import {
   pingScreensInFirestore,
 } from '@/lib/firebase';
 import { verifyMasterSecurityPin } from '@/lib/security';
+import { getStoredAuthUser } from '@/lib/auth';
 
 const REGISTERED_SCREENS: Screen[] = [
   { id: 'ECE-MAIN-DISPLAY',   departmentId: 'ECE',  label: 'ECE Corridor Smart TV',        lastSeenAt: Date.now() },
@@ -72,6 +73,7 @@ export default function DashboardPage() {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [currentAuthUser, setCurrentAuthUser] = useState<User | null>(null);
   const [sidebarLogoError, setSidebarLogoError] = useState(false);
 
   // WIZARD MODAL STATE
@@ -94,6 +96,14 @@ export default function DashboardPage() {
 
   // Load persisted state & subscribe to Firestore
   useEffect(() => {
+    const authUser = getStoredAuthUser();
+    if (authUser) {
+      setCurrentAuthUser(authUser);
+      if (authUser.role !== 'super_admin' && authUser.departments?.length > 0) {
+        setWDept(authUser.departments[0]);
+      }
+    }
+
     try {
       const storedNotices = localStorage.getItem('campuscast_notices');
       if (storedNotices) setNotices(JSON.parse(storedNotices));

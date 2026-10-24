@@ -24,6 +24,7 @@ const VALID_ADMIN_ROUTES = new Set([
   '/analytics',
   '/audit',
   '/settings',
+  '/login',
   '/api/webhook/twilio',
   '/api/webhook/meta',
   '/api/scheduler',

@@ -29,11 +29,16 @@ import {
   Plus,
   AlertTriangle,
   Lock,
+  Download,
+  Trash2,
+  CheckCircle2,
+  Filter,
 } from 'lucide-react';
 import {
   saveNoticeToFirestore,
   saveAuditToFirestore,
   subscribeToAdminNotices,
+  subscribeToAuditLogs,
 } from '@/lib/firebase';
 import { verifyMasterSecurityPin } from '@/lib/security';
 
@@ -51,6 +56,7 @@ export default function AuditPage() {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [selectedFilter, setSelectedFilter] = useState<string>('ALL');
   const [sidebarLogoError, setSidebarLogoError] = useState(false);
 
   // EMERGENCY MODAL STATE
@@ -83,7 +89,21 @@ export default function AuditPage() {
       }
     });
 
-    return () => unsubscribe();
+    const unsubAudit = subscribeToAuditLogs((liveLogs) => {
+      if (liveLogs && liveLogs.length > 0) {
+        setAuditLogs(liveLogs);
+        try {
+          localStorage.setItem('campuscast_audit', JSON.stringify(liveLogs));
+        } catch {
+          // ignore
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      unsubAudit();
+    };
   }, []);
 
   // Screen Heartbeat Sync
@@ -182,41 +202,76 @@ export default function AuditPage() {
 
   const onlineScreensCount = screens.filter((s) => s.lastSeenAt && Date.now() - s.lastSeenAt < 120000).length;
 
+  const handleExportCSV = () => {
+    if (auditLogs.length === 0) return;
+    const headers = ['Event ID', 'Event Type', 'Actor', 'Details / Title', 'Department', 'Timestamp'];
+    const rows = filteredLogs.map((log) => [
+      log.id,
+      log.type,
+      `"${log.actorPhone || ''}"`,
+      `"${(log.detail?.title || log.detail?.action || JSON.stringify(log.detail)).replace(/"/g, '""')}"`,
+      `"${log.detail?.departmentId || log.detail?.dept || log.detail?.department || 'ALL'}"`,
+      `"${new Date(log.timestamp).toLocaleString()}"`,
+    ]);
+
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `campuscast-audit-trail-${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const filteredLogs = auditLogs.filter((log) => {
+    if (selectedFilter === 'ALL') return true;
+    if (selectedFilter === 'delete') return log.type === 'delete';
+    if (selectedFilter === 'publish') return log.type === 'publish';
+    if (selectedFilter === 'edit') return log.type === 'edit' || (log.type as any) === 'department_allotment' || (log.type as any) === 'hod_assignment';
+    if (selectedFilter === 'auth_login') return (log.type as any) === 'auth_login';
+    if (selectedFilter === 'emergency_broadcast') return log.type === 'emergency_broadcast';
+    return true;
+  });
+
   return (
-    <div className="min-h-screen w-full flex bg-[#F3F4F6] text-[#111111] font-sans">
+    <div className="flex h-screen bg-[#F3F4F6] text-[#111111] font-sans antialiased overflow-hidden">
       {/* SIDEBAR NAVIGATION */}
-      <aside className="w-64 bg-white border-r border-[#E5E7EB] flex flex-col justify-between p-5 shrink-0 overflow-y-auto max-h-screen sticky top-0 shadow-sm">
-        <div>
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 px-2 py-3 mb-6 border-b border-[#E5E7EB] pb-5 group">
-            <div className="w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
-              {sidebarLogoError ? (
-                <Radio className="w-7 h-7 text-[#2563EB]" />
-              ) : (
-                <img
-                  src="/logo-transparent.png"
-                  alt="CampusCast Logo"
-                  className="w-full h-full object-contain"
-                  onError={() => setSidebarLogoError(true)}
-                />
-              )}
+      <aside className="w-[280px] bg-white border-r border-[#E5E7EB] flex flex-col justify-between p-6 shrink-0 shadow-sm z-10">
+        <div className="space-y-6">
+          {/* Brand Header */}
+          <div className="flex items-center gap-3 px-2">
+            {!sidebarLogoError ? (
+              <img
+                src="/mit-logo.png"
+                alt="MIT Logo"
+                className="w-10 h-10 object-contain rounded-xl shadow-sm"
+                onError={() => setSidebarLogoError(true)}
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center font-black text-white text-lg shadow-sm">
+                CC
+              </div>
+            )}
+            <div>
+              <h1 className="text-base font-black tracking-tight text-[#111111] leading-none">
+                CampusCast
+              </h1>
+              <p className="text-[11px] font-semibold text-[#64748B] tracking-wide mt-1">
+                MIT Ujjain Portal
+              </p>
             </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-black tracking-tight text-[#111111]">CampusCast</span>
-              <span className="text-[10px] font-semibold text-[#60A5FA] uppercase tracking-wider">
-                Your Campus. Your Voice.
-              </span>
-            </div>
-          </Link>
+          </div>
 
           {/* Navigation Links */}
-          <nav className="space-y-1">
+          <nav className="space-y-1.5 text-xs font-semibold">
             <Link
               href="/"
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-[#475569] hover:text-[#111111] hover:bg-[#F1F5F9]"
             >
               <LayoutDashboard className="w-4 h-4" />
-              <span>Dashboard</span>
+              <span>Overview</span>
             </Link>
 
             <Link
@@ -225,7 +280,7 @@ export default function AuditPage() {
             >
               <div className="flex items-center gap-3">
                 <Kanban className="w-4 h-4" />
-                <span>Notices</span>
+                <span>Notice Console</span>
               </div>
               <span className="px-2 py-0.5 rounded text-xs font-bold bg-[#E2E8F0] text-[#475569]">
                 {notices.length}
@@ -238,10 +293,11 @@ export default function AuditPage() {
             >
               <div className="flex items-center gap-3">
                 <Tv className="w-4 h-4" />
-                <span>Screens</span>
+                <span>Displays & Kiosks</span>
               </div>
-              <span className="bg-[#22C55E]/15 text-[#22C55E] px-2 py-0.5 rounded text-xs font-bold border border-[#22C55E]/30">
-                {onlineScreensCount}/{screens.length}
+              <span className="flex items-center gap-1.5 text-emerald-600 font-bold text-xs">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{screens.length}</span>
               </span>
             </Link>
 
@@ -322,12 +378,20 @@ export default function AuditPage() {
         <header className="h-[75px] bg-white border-b border-[#E5E7EB] px-8 flex items-center justify-between sticky top-0 z-20 shadow-sm">
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-black tracking-tight text-[#111111]">
-              Security Audit Trail
+              Security Audit Trail & Governance Ledger
             </h2>
-            <span className="text-xs font-medium text-[#64748B]">Immutable ledger of notice publications, authorizations & overrides</span>
+            <span className="text-xs font-medium text-[#64748B]">Immutable records of publications, deletions, and faculty authorizations</span>
           </div>
 
           <div className="flex items-center gap-4">
+            <button
+              onClick={handleExportCSV}
+              className="bg-slate-100 hover:bg-slate-200 text-slate-800 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-slate-300"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export CSV</span>
+            </button>
+
             <Link
               href="/notices"
               className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-[#2563EB]/20"
@@ -338,20 +402,49 @@ export default function AuditPage() {
 
             <div className="h-6 w-[1px] bg-[#E5E7EB]" />
 
-            <div className="flex items-center gap-2 text-xs font-semibold bg-[#F8FAFC] px-3.5 py-2 rounded-xl border border-[#E5E7EB] text-[#334155]">
+            <Link
+              href="/login"
+              className="flex items-center gap-2 text-xs font-semibold bg-[#F8FAFC] hover:bg-slate-100 px-3.5 py-2 rounded-xl border border-[#E5E7EB] text-[#334155] transition-colors"
+            >
               <span className="w-2.5 h-2.5 rounded-full bg-[#22C55E] animate-pulse" />
               <span>Super Admin Mode</span>
-            </div>
+            </Link>
           </div>
         </header>
 
         {/* CONTENT */}
         <main className="flex-1 p-8 space-y-6 max-w-7xl w-full mx-auto">
-          <div>
-            <h3 className="text-xl font-bold text-[#111111]">Security & Publishing Audit Trail</h3>
-            <p className="text-xs text-[#64748B]">
-              Immutable ledger tracking all notice broadcasts, emergency overrides, and credential authorizations.
-            </p>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h3 className="text-xl font-bold text-[#111111]">Security & Publishing Audit Trail</h3>
+              <p className="text-xs text-[#64748B]">
+                Immutable ledger tracking all notice broadcasts, emergency overrides, deleted notice snapshots, and credential authorizations.
+              </p>
+            </div>
+
+            {/* Event Filter Pills */}
+            <div className="flex items-center gap-1.5 bg-slate-200/70 p-1 rounded-xl text-xs font-bold flex-wrap">
+              {[
+                { id: 'ALL', label: `All Events (${auditLogs.length})` },
+                { id: 'delete', label: '🗑️ Deleted Notices' },
+                { id: 'publish', label: '📢 Published' },
+                { id: 'edit', label: '✏️ Edits & Allotments' },
+                { id: 'auth_login', label: '🔑 Sender Logins' },
+                { id: 'emergency_broadcast', label: '🚨 Emergency Alerts' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setSelectedFilter(tab.id)}
+                  className={`px-3 py-1.5 rounded-lg transition-all ${
+                    selectedFilter === tab.id
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-slate-600 hover:text-[#111111]'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="bg-white border border-[#E5E7EB] rounded-2xl overflow-hidden shadow-sm">
@@ -359,39 +452,89 @@ export default function AuditPage() {
               <thead className="bg-[#F8FAFC] border-b border-[#E5E7EB] text-[#475569] font-bold uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-4">Event Type</th>
-                  <th className="px-6 py-4">Actor</th>
-                  <th className="px-6 py-4">Details</th>
+                  <th className="px-6 py-4">Actor / Sender</th>
+                  <th className="px-6 py-4">Event Details & Snapshots</th>
                   <th className="px-6 py-4">Timestamp</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E5E7EB]">
-                {auditLogs.length === 0 ? (
+                {filteredLogs.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-[#64748B]">
-                      No audit entries recorded yet.
+                      No audit entries matching filter &ldquo;{selectedFilter}&rdquo;.
                     </td>
                   </tr>
                 ) : (
-                  auditLogs.map((log) => (
+                  filteredLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-[#F8FAFC] transition-colors">
                       <td className="px-6 py-4">
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
-                            log.type === 'emergency_broadcast'
-                              ? 'bg-red-100 text-red-600'
-                              : log.type === 'publish'
-                              ? 'bg-emerald-100 text-[#22C55E]'
-                              : 'bg-blue-100 text-[#2563EB]'
-                          }`}
-                        >
-                          {log.type.replace('_', ' ')}
-                        </span>
+                        {log.type === 'delete' ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-700 border border-red-200 flex items-center gap-1 w-fit">
+                            <Trash2 className="w-3 h-3 text-red-600" />
+                            <span>Deleted Notice</span>
+                          </span>
+                        ) : (log.type as any) === 'auth_login' ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center gap-1 w-fit">
+                            <span>🔑 Login Verified</span>
+                          </span>
+                        ) : log.type === 'emergency_broadcast' ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-600 border border-red-200 w-fit block">
+                            Emergency Override
+                          </span>
+                        ) : log.type === 'publish' ? (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-100 text-[#22C55E] border border-emerald-200 w-fit block">
+                            Published
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-blue-100 text-[#2563EB] border border-blue-200 w-fit block">
+                            {log.type.replace('_', ' ')}
+                          </span>
+                        )}
                       </td>
-                      <td className="px-6 py-4 font-mono font-semibold text-[#111111]">{log.actorPhone}</td>
-                      <td className="px-6 py-4 font-mono text-[11px] text-[#64748B]">
-                        {JSON.stringify(log.detail)}
+
+                      <td className="px-6 py-4">
+                        <div className="font-mono font-bold text-[#111111]">{log.actorPhone}</div>
                       </td>
-                      <td className="px-6 py-4 text-[#64748B]">
+
+                      <td className="px-6 py-4">
+                        {log.type === 'delete' ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-red-700 line-through text-xs">
+                                {log.detail?.title || 'Untitled Notice'}
+                              </span>
+                              <span className="bg-red-50 text-red-600 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase border border-red-200">
+                                {log.detail?.departmentId || 'ALL'}
+                              </span>
+                              <span className="text-[10px] text-slate-500">
+                                {log.detail?.category}
+                              </span>
+                            </div>
+                            {log.detail?.content && (
+                              <p className="text-[11px] text-slate-500 line-clamp-1 italic">
+                                &ldquo;{log.detail.content}&rdquo;
+                              </p>
+                            )}
+                            <div className="text-[10px] text-slate-400">
+                              Author: {log.detail?.authorName || log.detail?.createdBy || 'Unknown'} • ID: {log.detail?.noticeId}
+                            </div>
+                          </div>
+                        ) : (log.type as any) === 'auth_login' ? (
+                          <div>
+                            <span className="font-bold text-[#111111]">{log.detail?.name || 'Faculty'}</span>
+                            <span className="text-[11px] text-[#64748B] ml-2 font-mono">({log.detail?.email || log.actorPhone})</span>
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              Role: {log.detail?.role?.toUpperCase()} • Scopes: [{log.detail?.departments?.join(', ') || 'All'}] • Method: {log.detail?.verifiedVia || 'Domain Google Auth'}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="font-mono text-[11px] text-[#64748B]">
+                            {JSON.stringify(log.detail)}
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="px-6 py-4 text-[#64748B] whitespace-nowrap">
                         {new Date(log.timestamp).toLocaleString()}
                       </td>
                     </tr>

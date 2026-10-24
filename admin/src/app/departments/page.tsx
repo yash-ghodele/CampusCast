@@ -32,11 +32,13 @@ import {
   AlertTriangle,
   Lock,
   ExternalLink,
+  Crown,
 } from 'lucide-react';
 import {
   saveNoticeToFirestore,
   saveAuditToFirestore,
   subscribeToAdminNotices,
+  subscribeToUsers,
 } from '@/lib/firebase';
 import { verifyMasterSecurityPin } from '@/lib/security';
 
@@ -86,7 +88,21 @@ export default function DepartmentsPage() {
       }
     });
 
-    return () => unsubscribe();
+    const unsubUsers = subscribeToUsers((liveUsers) => {
+      if (liveUsers && liveUsers.length > 0) {
+        setUsers(liveUsers);
+        try {
+          localStorage.setItem('campuscast_users', JSON.stringify(liveUsers));
+        } catch {
+          // ignore
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      unsubUsers();
+    };
   }, []);
 
   // Screen Heartbeat Sync
@@ -366,6 +382,7 @@ export default function DepartmentsPage() {
                 border: '#60A5FA',
               };
               const deptNotices = notices.filter((n) => n.departmentId === dept && n.status === 'active');
+              const assignedHod = users.find((u) => u.role === 'hod' && u.departments?.includes(dept));
 
               return (
                 <div
@@ -386,6 +403,31 @@ export default function DepartmentsPage() {
                     <span className="text-xs font-bold text-[#64748B]">
                       {deptNotices.length} Active Notices
                     </span>
+                  </div>
+
+                  {/* Appointed HOD Leadership Pill */}
+                  <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Crown className="w-4 h-4 text-amber-500 shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-amber-800">
+                          Appointed Head of Dept
+                        </p>
+                        <p className="text-xs font-bold text-amber-950 truncate">
+                          {assignedHod ? assignedHod.name : 'Pending HOD Assignment'}
+                        </p>
+                        <p className="text-[10px] font-mono text-amber-700 truncate">
+                          {assignedHod ? assignedHod.email || assignedHod.phone : 'Not configured'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <Link
+                      href="/users"
+                      className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] uppercase tracking-wider shrink-0 transition-colors"
+                    >
+                      {assignedHod ? 'Change' : 'Appoint'}
+                    </Link>
                   </div>
 
                   <div className="space-y-2 text-xs">

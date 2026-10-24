@@ -141,13 +141,38 @@ export const DepartmentDisplayView: React.FC<DepartmentDisplayViewProps> = ({ de
     return () => clearInterval(interval);
   }, [normalizedDept]);
 
-  // Evaluation: Preemptive emergency broadcast override
-  const urgentNotice = notices.find(
-    (n) => n.priority === 'urgent' || n.category === 'emergency'
-  );
+  const [dismissedEmergencyIds, setDismissedEmergencyIds] = useState<string[]>([]);
+
+  // Evaluation: Preemptive emergency broadcast override with department corridor scoping
+  const urgentNotice = notices.find((n) => {
+    if (n.priority !== 'urgent' && n.category !== 'emergency') return false;
+    if (dismissedEmergencyIds.includes(n.id)) return false;
+    if (normalizedDept === 'ALL') {
+      return n.departmentId === 'ALL';
+    } else {
+      return n.departmentId === normalizedDept || n.departmentId === 'ALL';
+    }
+  });
+
+  // Check if there is an active urgent notice that was dismissed by the screen operator
+  const dismissedUrgentNotice = notices.find((n) => {
+    if (n.priority !== 'urgent' && n.category !== 'emergency') return false;
+    if (!dismissedEmergencyIds.includes(n.id)) return false;
+    if (normalizedDept === 'ALL') {
+      return n.departmentId === 'ALL';
+    } else {
+      return n.departmentId === normalizedDept || n.departmentId === 'ALL';
+    }
+  });
 
   if (urgentNotice) {
-    return <EmergencyOverrideView notice={urgentNotice} />;
+    return (
+      <EmergencyOverrideView
+        notice={urgentNotice}
+        deptCode={normalizedDept}
+        onDismiss={() => setDismissedEmergencyIds((prev) => [...prev, urgentNotice.id])}
+      />
+    );
   }
 
   const currentHeroNotice = notices[heroIndex] || notices[0];
@@ -163,6 +188,28 @@ export const DepartmentDisplayView: React.FC<DepartmentDisplayViewProps> = ({ de
         activeMode={displayMode}
         onSelectMode={setDisplayMode}
       />
+
+      {/* Dismissed Emergency Alert Banner */}
+      {dismissedUrgentNotice && (
+        <div className="bg-red-600 text-white px-6 py-2.5 flex items-center justify-between text-xs font-bold shadow-md z-40">
+          <div className="flex items-center gap-3">
+            <span className="bg-white text-red-600 px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">
+              🚨 Active Urgent Alert
+            </span>
+            <span className="font-semibold truncate max-w-xl">{dismissedUrgentNotice.title}</span>
+          </div>
+          <button
+            onClick={() =>
+              setDismissedEmergencyIds((prev) =>
+                prev.filter((id) => id !== dismissedUrgentNotice.id)
+              )
+            }
+            className="bg-white text-red-600 hover:bg-red-100 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider transition-all shadow-sm"
+          >
+            Reopen Emergency Screen
+          </button>
+        </div>
+      )}
 
       {/* Main Display Area */}
       <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-[1600px] mx-auto w-full flex flex-col justify-center">

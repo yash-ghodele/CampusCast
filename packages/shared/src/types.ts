@@ -32,7 +32,7 @@ export type UserRole = 'super_admin' | 'hod' | 'faculty';
  * - 'active': Sender is permitted to publish notices.
  * - 'suspended': Sender publishing rights revoked; inbound messages are silently dropped.
  */
-export type UserStatus = 'active' | 'suspended';
+export type UserStatus = 'active' | 'suspended' | 'pending';
 
 /**
  * User account document stored in Firestore collection `users/{userId}`.
@@ -41,10 +41,13 @@ export type UserStatus = 'active' | 'suspended';
 export interface User {
   id: string;
   name: string;
+  email?: string; // Institutional Google/Gmail address ending in @mit.asia (e.g. "ramesh.sharma@mit.asia")
   phone: string; // E.164 phone format e.g. "+919876543210" used as authentication credential
   role: UserRole;
-  departments: string[]; // Department codes or IDs this user is authorized to publish to
+  departments: string[]; // Department codes or IDs this user is authorized to publish to (allotted by Super Admin)
   status: UserStatus;
+  requestedDepartment?: string; // Department requested by faculty during self-registration
+  registeredAt?: number; // UNIX timestamp in ms when faculty created profile
 }
 
 /**
@@ -56,6 +59,8 @@ export interface Department {
   name: string; // e.g. "Electronics & Communication Engineering"
   code: string; // Short code e.g. "ECE", "CSE", "MECH"
   screens: string[]; // Registered screen IDs assigned to this department
+  hodUserId?: string; // Appointed HOD user identifier
+  hodName?: string; // Appointed HOD faculty name
 }
 
 /**

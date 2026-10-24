@@ -16,7 +16,7 @@ import {
   onSnapshot,
   query,
 } from 'firebase/firestore';
-import { Notice, AuditLog, User } from '@campuscast/shared';
+import { Notice, AuditLog, User, Department } from '@campuscast/shared';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'AIzaSyDUreGuw2jiFaHAlhjllUJ1h1IMVIonGKo',
@@ -106,6 +106,35 @@ export async function saveAuditToFirestore(log: AuditLog): Promise<void> {
 }
 
 /**
+ * Subscribes to the immutable audit event trail from Cloud Firestore `audit_log` collection.
+ *
+ * @param onUpdate - Callback invoked with the sorted array of audit events (newest first)
+ * @returns Unsubscribe function to release the real-time listener
+ */
+export function subscribeToAuditLogs(onUpdate: (logs: AuditLog[]) => void) {
+  try {
+    const q = query(collection(db, 'audit_log'));
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const logs: AuditLog[] = [];
+        snapshot.forEach((docSnap) => {
+          logs.push({ id: docSnap.id, ...(docSnap.data() as any) } as AuditLog);
+        });
+        logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        onUpdate(logs);
+      },
+      (err) => {
+        console.warn('Firestore audit logs subscription error:', err);
+      }
+    );
+  } catch (err) {
+    console.warn('Failed to initialize Firestore audit logs listener:', err);
+    return () => {};
+  }
+}
+
+/**
  * Subscribes to real-time telemetry updates for all corridor screens in Cloud Firestore.
  *
  * @param onUpdate - Callback invoked with current screen telemetry status records
@@ -170,6 +199,21 @@ export async function saveUserToFirestore(user: User): Promise<void> {
 }
 
 /**
+ * Permanently removes a faculty member from the Firestore `users` collection.
+ *
+ * @param userId - Unique Firestore document identifier of the faculty member
+ * @returns Promise that resolves when document is deleted
+ */
+export async function deleteUserFromFirestore(userId: string): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await deleteDoc(userRef);
+  } catch (err) {
+    console.warn('Firestore user delete error:', err);
+  }
+}
+
+/**
  * Subscribes to real-time changes in the authorized faculty user roster in Cloud Firestore.
  *
  * @param onUpdate - Callback receiving the latest array of authorized faculty users
@@ -194,5 +238,48 @@ export function subscribeToUsers(onUpdate: (users: User[]) => void) {
   } catch (err) {
     console.warn('Failed to initialize Firestore users listener:', err);
     return () => {};
+  }
+}
+
+/**
+ * Subscribes to real-time changes in the departments collection in Cloud Firestore.
+ *
+ * @param onUpdate - Callback receiving the latest array of departments
+ * @returns Unsubscribe function to terminate the listener
+ */
+export function subscribeToDepartments(onUpdate: (departments: Department[]) => void) {
+  try {
+    const q = query(collection(db, 'departments'));
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const list: Department[] = [];
+        snapshot.forEach((docSnap) => {
+          list.push({ id: docSnap.id, ...(docSnap.data() as any) } as Department);
+        });
+        onUpdate(list);
+      },
+      (err) => {
+        console.warn('Firestore departments subscription error:', err);
+      }
+    );
+  } catch (err) {
+    console.warn('Failed to initialize Firestore departments listener:', err);
+    return () => {};
+  }
+}
+
+/**
+ * Persists or updates a department configuration in Cloud Firestore.
+ *
+ * @param department - Department profile object including HOD assignment
+ * @returns Promise that resolves when write is complete
+ */
+export async function saveDepartmentToFirestore(department: Department): Promise<void> {
+  try {
+    const deptRef = doc(db, 'departments', department.id || department.code);
+    await setDoc(deptRef, department, { merge: true });
+  } catch (err) {
+    console.warn('Firestore department write error:', err);
   }
 }

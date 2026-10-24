@@ -66,6 +66,7 @@ import {
   pingScreensInFirestore,
 } from '@/lib/firebase';
 import { verifyMasterSecurityPin } from '@/lib/security';
+import { getStoredAuthUser } from '@/lib/auth';
 
 const REGISTERED_SCREENS: Screen[] = [
   { id: 'ECE-MAIN-DISPLAY',   departmentId: 'ECE',  label: 'ECE Corridor Smart TV',        lastSeenAt: Date.now() },
@@ -81,6 +82,7 @@ export default function NoticesPage() {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [currentAuthUser, setCurrentAuthUser] = useState<User | null>(null);
   const [noticeViewMode, setNoticeViewMode] = useState<'kanban' | 'list'>('kanban');
   const [sidebarLogoError, setSidebarLogoError] = useState(false);
 
@@ -124,6 +126,14 @@ export default function NoticesPage() {
 
   // Load persisted state & subscribe to Firestore
   useEffect(() => {
+    const authUser = getStoredAuthUser();
+    if (authUser) {
+      setCurrentAuthUser(authUser);
+      if (authUser.role !== 'super_admin' && authUser.departments?.length > 0) {
+        setWDept(authUser.departments[0]);
+      }
+    }
+
     try {
       const storedNotices = localStorage.getItem('campuscast_notices');
       if (storedNotices) setNotices(JSON.parse(storedNotices));
@@ -201,6 +211,9 @@ export default function NoticesPage() {
     if (!wTitle || !wContent) return;
 
     const detectedType = detectMediaType(wMediaUrl);
+    const authorSender = currentAuthUser?.email || currentAuthUser?.phone || 'Admin Command Center';
+    const authorDisplayName = currentAuthUser?.name || 'Super Admin';
+
     const newNotice: Notice = {
       id: `ntc-${Date.now()}`,
       departmentId: wDept,
@@ -213,7 +226,8 @@ export default function NoticesPage() {
       mediaType: detectedType,
       priority: 'normal',
       status: wScheduleType === 'now' ? 'active' : 'scheduled',
-      createdBy: 'Admin Command Center',
+      createdBy: authorSender,
+      authorName: authorDisplayName,
       createdAt: Date.now(),
       scheduledAt: wScheduleType === 'later' ? Date.now() + 3600000 : null,
       expiresAt: Date.now() + 86400000,
@@ -226,8 +240,13 @@ export default function NoticesPage() {
     const newLog: AuditLog = {
       id: `aud-${Date.now()}`,
       type: 'publish',
-      actorPhone: 'Admin Command Center',
-      detail: { dept: wDept, title: wTitle },
+      actorPhone: authorSender,
+      detail: {
+        dept: wDept,
+        title: wTitle,
+        authorName: authorDisplayName,
+        verifiedVia: currentAuthUser ? 'Google @mit.asia Domain Auth' : 'Admin Command Center',
+      },
       timestamp: Date.now(),
     };
     const updatedAudit = [newLog, ...auditLogs];
@@ -333,9 +352,38 @@ export default function NoticesPage() {
   };
 
   const deleteNotice = async (id: string) => {
+    const targetNotice = notices.find((n) => n.id === id);
     const updated = notices.filter((n) => n.id !== id);
     updateNoticesAndSync(updated);
     await deleteNoticeFromFirestore(id);
+
+    // Save immutable delete audit trail capturing full notice details
+    const deleteLog: AuditLog = {
+      id: `aud-del-${Date.now()}`,
+      type: 'delete',
+      actorPhone: currentAuthUser?.email || currentAuthUser?.phone || 'Admin Command Center',
+      detail: {
+        noticeId: id,
+        title: targetNotice?.title || 'Untitled Notice',
+        content: targetNotice?.content || '',
+        departmentId: targetNotice?.departmentId || 'ALL',
+        category: targetNotice?.category || 'announcement',
+        authorName: targetNotice?.authorName || targetNotice?.createdBy || 'Unknown',
+        createdBy: targetNotice?.createdBy || 'Unknown',
+        priority: targetNotice?.priority || 'normal',
+        deletedAt: Date.now(),
+      },
+      timestamp: Date.now(),
+    };
+
+    const updatedAudit = [deleteLog, ...auditLogs];
+    setAuditLogs(updatedAudit);
+    try {
+      localStorage.setItem('campuscast_audit', JSON.stringify(updatedAudit));
+    } catch {
+      // ignore
+    }
+    await saveAuditToFirestore(deleteLog);
   };
 
   const handleEmergencyBroadcastSubmit = async (e: React.FormEvent) => {
@@ -600,10 +648,18 @@ export default function NoticesPage() {
 
             <div className="h-6 w-[1px] bg-[#E5E7EB]" />
 
-            <div className="flex items-center gap-2 text-xs font-semibold bg-[#F8FAFC] px-3.5 py-2 rounded-xl border border-[#E5E7EB] text-[#334155]">
+            <Link
+              href="/login"
+              className="flex items-center gap-2 text-xs font-semibold bg-[#F8FAFC] hover:bg-slate-100 px-3.5 py-2 rounded-xl border border-[#E5E7EB] text-[#334155] transition-colors"
+              title="Click to switch notice sender"
+            >
               <span className="w-2.5 h-2.5 rounded-full bg-[#22C55E] animate-pulse" />
-              <span>Super Admin Mode</span>
-            </div>
+              <span>
+                {currentAuthUser
+                  ? `${currentAuthUser.name} (${currentAuthUser.email || currentAuthUser.phone})`
+                  : 'Super Admin Mode'}
+              </span>
+            </Link>
           </div>
         </header>
 
@@ -1086,20 +1142,64 @@ export default function NoticesPage() {
             {/* STEP 1: CATEGORY & SCOPE */}
             {wizardStep === 1 && (
               <div className="space-y-4 text-xs">
+                {/* Verified Sender Identity Banner */}
+                {currentAuthUser ? (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-2xl flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-bold text-blue-900 block">
+                        Verified Notice Author: {currentAuthUser.name}
+                      </span>
+                      <span className="text-blue-700 font-mono text-[11px] block mt-0.5">
+                        {currentAuthUser.email || currentAuthUser.phone} • {currentAuthUser.role.toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="bg-blue-600 text-white font-bold px-2 py-0.5 rounded text-[10px] shrink-0">
+                      {currentAuthUser.role === 'super_admin'
+                        ? 'Universal Scope'
+                        : `Allotted: ${currentAuthUser.departments?.join(', ') || 'None'}`}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs text-slate-700">
+                    <span>Broadcasting as Super Admin (Command Center)</span>
+                    <Link href="/login" className="text-blue-600 font-bold hover:underline">
+                      Switch Sender →
+                    </Link>
+                  </div>
+                )}
+
                 <div>
-                  <label className="block text-[#111111] font-bold mb-1">Target Department Scope</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[#111111] font-bold">Target Department Scope</label>
+                    {currentAuthUser && currentAuthUser.role !== 'super_admin' && (
+                      <span className="text-[10px] text-amber-600 font-bold">
+                        Restricted to Super Admin Allotted Scopes
+                      </span>
+                    )}
+                  </div>
+
                   <select
                     value={wDept}
                     onChange={(e) => setWDept(e.target.value)}
                     className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[#111111] font-bold"
                   >
-                    <option value="ALL">ALL - All Campus Screens (Campus-Wide Broadcast)</option>
-                    <option value="ECE">ECE - Electronics & Communication</option>
-                    <option value="CSE">CSE - Computer Science & Engineering</option>
-                    <option value="AIML">AIML - Artificial Intelligence & ML</option>
-                    <option value="MECH">MECH - Mechanical Engineering</option>
-                    <option value="CIVIL">CIVIL - Civil Engineering</option>
-                    <option value="EEE">EEE - Electrical & Electronics</option>
+                    {(!currentAuthUser || currentAuthUser.role === 'super_admin') ? (
+                      <>
+                        <option value="ALL">ALL - All Campus Screens (Campus-Wide Broadcast)</option>
+                        <option value="ECE">ECE - Electronics & Communication</option>
+                        <option value="CSE">CSE - Computer Science & Engineering</option>
+                        <option value="AIML">AIML - Artificial Intelligence & ML</option>
+                        <option value="MECH">MECH - Mechanical Engineering</option>
+                        <option value="CIVIL">CIVIL - Civil Engineering</option>
+                        <option value="EEE">EEE - Electrical & Electronics</option>
+                      </>
+                    ) : (
+                      currentAuthUser.departments?.map((dept) => (
+                        <option key={dept} value={dept}>
+                          {dept} Department Screen (Allotted Access)
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
 
