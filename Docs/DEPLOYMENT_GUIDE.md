@@ -237,6 +237,6 @@ No Raspberry Pi, Mini-PC, or external HDMI sticks are required.
 |---|---|---|---|
 | **1** | **Admin Navigation** | Visit `https://campus-cast-admin.vercel.app/` and click tabs | Refreshing on `/notices` or `/displays` retains active route. |
 | **2** | **Live Notice Creation** | Create a notice on `https://campus-cast-admin.vercel.app/notices` | Notice appears within **<1 second** on `https://campus-cast-display.vercel.app/display/ece`. |
-| **3** | **Emergency Alert** | Trigger Emergency Override with PIN `1234` | All connected screens immediately transition to full-screen red emergency mode. |
+| **3** | **Emergency Alert** | Trigger Emergency Override with master PIN `9482` | All connected screens immediately transition to full-screen red emergency mode. |
 | **4** | **Heartbeat Telemetry** | Open display kiosk URL | Admin Screen Wall registers display as `Online` and begins counting active `HH:MM:SS` uptime. |
 | **5** | **Offline Wi-Fi Resilience** | Disconnect Wi-Fi on TV for 60 seconds | Screen continues rotating cached notices without blanking or showing error modals. |

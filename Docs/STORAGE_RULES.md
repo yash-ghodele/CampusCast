@@ -43,4 +43,4 @@ service cloud.firestore {
 3. **Silent Drop Policy for Unauthorized Senders**:
    - Unregistered phone numbers attempting to post notices are logged to `audit_log` and dropped silently. No automated WhatsApp error reply is sent, preventing phone probing by unauthorized actors.
 4. **Emergency PIN Authorization**:
-   - Emergency broadcasts in the Admin Portal require entering a master security PIN (`1234`) before emitting high-priority alerts to physical display screens.
+   - Emergency broadcasts in the Admin Portal require entering a master security PIN (`9482`, configurable in Settings) before emitting high-priority alerts to physical display screens.

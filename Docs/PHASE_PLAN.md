@@ -49,7 +49,7 @@ Phased development roadmap, completed features, and verification status for Camp
 - [x] Brand Kit implementation: **`Poppins`** typography & master color palette (`#111111`, `#2563EB`, `#60A5FA`, `#22C55E`, `#F3F4F6`, `#EF4444`).
 - [x] Department scope branding themes (`ECE`: Orange, `CSE`: Blue, `AIML`: Purple, `MECH`: Red, `CIVIL`: Green, `EEE`: Amber).
 - [x] 5 Display Modes: Mode 1 Hero View (80% screen + QR Code), Mode 2 News Ticker, Mode 3 Emergency Override (`#DC2626`), Mode 4 Event Carousel, Mode 5 Split Screen.
-- [x] Admin Command Center: Sidebar Navigation, Dashboard metric cards, Live Screen Map, Kanban Notice Lifecycle (`Scheduled`, `Active`, `Expired`), 5-step Notice Wizard, Screen Wall grid, Analytics Module, and PIN Emergency Authorization (`1234`).
+- [x] Admin Command Center: Sidebar Navigation, Dashboard metric cards, Live Screen Map, Kanban Notice Lifecycle (`Scheduled`, `Active`, `Expired`), 5-step Notice Wizard, Screen Wall grid, Analytics Module, and PIN Emergency Authorization (`9482`).
 - [x] Vertical layout scrolling (`overflow-y: auto`, `min-height: 100vh;`) across all pages.
 
 ---
@@ -61,6 +61,16 @@ Phased development roadmap, completed features, and verification status for Camp
 - [x] Notice Lifecycle action controls (instant Activate, Expire, Delete, and Approve).
 - [x] Production build validation (`npm run build`) and Firestore seed script (`npm run seed:notices`).
 - [x] Comprehensive 27-slide PPT presentation draft ([`Docs/PRESENTATION_DRAFT.md`](file:///d:/Projects/CampusCast/Docs/PRESENTATION_DRAFT.md)).
+
+---
+
+## Phase 7 — Enterprise Security Hardening & WhatsApp Editing [COMPLETED]
+- [x] Cryptographic Webhook Signatures: HMAC-SHA1 (`X-Twilio-Signature`) and HMAC-SHA256 (`X-Hub-Signature-256`) with constant-time buffer comparison.
+- [x] Cloud Firestore Security Rules: Immutable append-only `audit_log` (`allow update, delete: if false;`) and strict schema write validation.
+- [x] XSS Neutralization: URI sanitization with `getSafeUrl()` protecting Smart TV displays from `javascript:` attacks.
+- [x] PII Privacy Protection: Phone masking (`maskPhoneNumber()`) across logs and admin interfaces.
+- [x] In-Place WhatsApp Notice Editing: Edit headline, faculty author attribution (`authorName`), media attachments, category, and scope for WhatsApp hotline submissions.
+- [x] Persistent System Settings: Browser `localStorage` persistence (`campuscast_settings`), cross-tab `BroadcastChannel` synchronization, and "Reset to Defaults" restoration.
 
 ---
 

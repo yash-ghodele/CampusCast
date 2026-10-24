@@ -11,7 +11,7 @@ CampusCast turns WhatsApp into the primary publishing interface for institutiona
 
 - **Faculty Publishers**: Send WhatsApp text messages, poster images (JPEG/PNG), or PDFs to publish announcements with zero dashboard learning curve.
 - **Campus Students**: View hallway display screens featuring Poppins typography, Hero Notice cards, news ticker marquees, category badges (`EXAM`, `PLACEMENT`, `EVENT`, `URGENT`, `ACHIEVEMENT`), date/time chips, and interactive WhatsApp QR codes.
-- **Department HODs & Admins**: Operate the Command Center to onboard faculty numbers, trigger PIN-authenticated emergency alerts (`1234`), manage notice Kanban boards, inspect screen walls, review analytics, and audit security logs.
+- **Department HODs & Admins**: Operate the Command Center to onboard faculty numbers, trigger PIN-authenticated emergency alerts (`9482`), manage notice Kanban boards, inspect screen walls, review analytics, and audit security logs.
 
 ---
 
@@ -35,7 +35,7 @@ CampusCast turns WhatsApp into the primary publishing interface for institutiona
 ### Admin Command Center
 - **FR12: Notice Kanban Board**: Manage notice lifecycle across `Scheduled`, `Active`, and `Expired` columns with list toggle.
 - **FR13: Notice Creation Wizard**: 5-step modal wizard (Type -> Content -> Audience -> Schedule -> TV Preview & Publish).
-- **FR14: Display Control Center & Screen Wall**: Monitor screen telemetry heartbeats (`lastSeenAt`), resolution (`1080p`), and launch PIN-protected Force Broadcasts (`1234`).
+- **FR14: Display Control Center & Screen Wall**: Monitor screen telemetry heartbeats (`lastSeenAt`), resolution (`1080p`), and launch PIN-protected Force Broadcasts (`9482`).
 - **FR15: Analytics Module**: Display notice distribution by department/category and top faculty contributor rankings.
 - **FR16: Roster Management**: Onboard faculty numbers, assign department scopes, and toggle active/suspended status for instant emergency revocation.
 

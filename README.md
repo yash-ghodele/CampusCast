@@ -58,18 +58,31 @@ No Raspberry Pi, Mini-PC, HDMI dongles, or external media player boxes are requi
 
 The Admin Portal is architected using **8 dedicated standalone Next.js App Router pages** (zero in-memory tab state resets on browser refresh):
 - **Dashboard ([`/`](file:///d:/Projects/CampusCast/admin/src/app/page.tsx))**: Metric Overview Cards, Live Screen Map Grid (`Online 6/6` with `HH:MM:SS` active uptime via Firestore heartbeats), Recent Activity Stream.
-- **Notice Management ([`/notices`](file:///d:/Projects/CampusCast/admin/src/app/notices/page.tsx))**: Visual notice lifecycle Kanban columns (`Scheduled`, `Active`, `Expired`), **In-Place Notice Editing Modal**, **Multi-Criteria Filter Toolbar** (Department scopes, category pills, media type filters, and realtime search), and Notice Creation Wizard.
-- **Display Control & Screen Wall ([`/displays`](file:///d:/Projects/CampusCast/admin/src/app/displays/page.tsx))**: Real-time Smart TV telemetry monitoring (`1080p`, `lastSeenAt`), live screen status, and PIN-protected Force Emergency Broadcasts (`1234`).
+- **Notice Management ([`/notices`](file:///d:/Projects/CampusCast/admin/src/app/notices/page.tsx))**: Visual notice lifecycle Kanban columns (`Scheduled`, `Active`, `Expired`), **In-Place Notice Editing Modal** (with full support for editing WhatsApp hotline notices, author attribution, and attachments), **Multi-Criteria Filter Toolbar** (Department scopes, category pills, media filters, `📱 WhatsApp Submissions` filter, and realtime search), and Notice Creation Wizard.
+- **Display Control & Screen Wall ([`/displays`](file:///d:/Projects/CampusCast/admin/src/app/displays/page.tsx))**: Real-time Smart TV telemetry monitoring (`1080p`, `lastSeenAt`), live screen status, and PIN-protected Force Emergency Broadcasts (Master PIN: `9482`, configurable in Settings).
 - **Department Scope Registry ([`/departments`](file:///d:/Projects/CampusCast/admin/src/app/departments/page.tsx))**: Visual theme registry, active notice counters, and direct TV kiosk launcher links.
 - **Faculty Roster ([`/users`](file:///d:/Projects/CampusCast/admin/src/app/users/page.tsx))**: Faculty onboarding, WhatsApp phone authorization, role badges (`Super Admin` -> `HOD` -> `Faculty`), and status toggles.
 - **Analytics & Engagement ([`/analytics`](file:///d:/Projects/CampusCast/admin/src/app/analytics/page.tsx))**: Category breakdowns, department notice distribution, and top faculty contributor rankings.
 - **Security Audit Center ([`/audit`](file:///d:/Projects/CampusCast/admin/src/app/audit/page.tsx))**: Searchable compliance ledger of publishes, edits, deletions, unauthorized attempts, and emergency overrides.
-- **System Settings ([`/settings`](file:///d:/Projects/CampusCast/admin/src/app/settings/page.tsx))**: Auto-rotation durations, screen offline timeout thresholds, and master security PIN management.
+- **System Settings ([`/settings`](file:///d:/Projects/CampusCast/admin/src/app/settings/page.tsx))**: Persistent configuration (`localStorage` + `BroadcastChannel`), Master Emergency PIN management (`9482`), screen offline timeout thresholds, rotation delays, and **Reset to Defaults** restoration.
+
+---
+
+## 🛡️ Enterprise-Grade Security Hardening (20-Point Remediated)
+
+CampusCast is engineered to university and enterprise security compliance standards:
+- **HMAC Webhook Cryptographic Verification**: Inbound WhatsApp webhooks are validated using HMAC-SHA1 (`X-Twilio-Signature`) and HMAC-SHA256 (`X-Hub-Signature-256`) with constant-time buffer comparison to prevent timing attacks.
+- **Append-Only Immutable Audit Log**: Cloud Firestore security rules strictly prohibit client updates or deletions (`allow update, delete: if false;`) on the `audit_log` collection.
+- **Strict URI XSS Sanitization**: All media URLs are processed via `getSafeUrl()` to neutralize `javascript:`, `data:`, and `vbscript:` injection vectors.
+- **PII Masking & Silent Drop**: Phone numbers in compliance logs and UI views are masked (`+91 ••••• ••210`). Unregistered senders are silently dropped to prevent telephone probing.
+- **Protected Cron Scheduler**: Endpoint `/api/scheduler` is guarded against unauthorized invocation via `CRON_SECRET` and `x-vercel-cron` header verification.
+- **Dynamic Security PIN**: Replaced legacy static PINs with a hardened master emergency PIN (`9482`), centrally managed and verifiable with fail-safe fallback.
 
 ---
 
 ## 📘 Documentation Index
 
+- [**`Docs/AUDIT_REPORT.md`**](file:///d:/Projects/CampusCast/Docs/AUDIT_REPORT.md): Complete System Testing, E2E Verification & 20-Point Security Remediation Report (36/36 Routes OK, 98 Links OK, 77 Buttons OK).
 - [**`Docs/DEPLOYMENT_GUIDE.md`**](file:///d:/Projects/CampusCast/Docs/DEPLOYMENT_GUIDE.md): Complete Production Deployment Guide for Vercel, Cloudflare Pages, Firebase, and Smart TV setup.
 - [**`Docs/USER_GUIDE.md`**](file:///d:/Projects/CampusCast/Docs/USER_GUIDE.md): Quick Start User Guide for non-technical faculty & commercial leadership handbook.
 - [**`Docs/DESIGN_v2.md`**](file:///d:/Projects/CampusCast/Docs/DESIGN_v2.md): Official Brand Kit v2, logo system, palette tokens, and signage UI specifications.

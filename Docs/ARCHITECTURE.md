@@ -111,6 +111,7 @@ interface Notice {
   id: string;
   departmentId: string;  // Target department code e.g. "ECE" or "ALL"
   title?: string;        // Headline title
+  authorName?: string;   // Optional faculty author attribution (e.g. "Dr. Arvind Kulkarni")
   category?: NoticeCategory; // Notice category
   content: string;       // Body text content
   eventDate?: string;    // Formatted event date string e.g. "05 Oct 2026"
@@ -142,8 +143,20 @@ interface AuditLog {
 
 ## 4. Security Rules & Data Mutability Invariants
 
-- **Write Operations**: Controlled via [`firestore.rules`](file:///d:/Projects/CampusCast/firestore.rules). In production, notice creation, deletion, and screen telemetry heartbeats write directly to Cloud Firestore (`notices`, `screens`, `audit_log`) and via Cloud Functions (`functions/src/webhook.ts`, `functions/src/heartbeat.ts`).
-- **Read Operations**:
+- **Cryptographic Inbound Validation**:
+  - Inbound Twilio webhooks are validated with HMAC-SHA1 signature verification (`X-Twilio-Signature`) using `TWILIO_AUTH_TOKEN`.
+  - Inbound Meta Cloud API webhooks are verified via HMAC-SHA256 (`X-Hub-Signature-256`) using `META_APP_SECRET` with constant-time buffer comparison (`crypto.timingSafeEqual`) to neutralize timing attacks.
+  - Lifecycle Cron (`/api/scheduler`) is guarded by `CRON_SECRET` and `x-vercel-cron` authorization headers.
+- **Write Operations & Immutable Ledger**:
+  - Controlled via [`firestore.rules`](file:///d:/Projects/CampusCast/firestore.rules).
+  - The `audit_log` collection is strictly append-only and immutable (`allow update, delete: if false;`), ensuring non-repudiation for regulatory audits.
+  - Notice creation, user modifications, and screen heartbeats enforce schema invariants and data type constraints.
+- **PII Masking & Privacy Governance**:
+  - Phone numbers are masked across system logs and UI feeds (`maskPhoneNumber()`) e.g. `+91 ••••• ••210`.
+  - Unregistered WhatsApp senders trigger silent drops (zero reply) to prevent phone number probing and enumeration.
+- **URI XSS Sanitization**:
+  - All external poster, document, and QR URLs are validated with `getSafeUrl()` before rendering on Smart TV screens, filtering out `javascript:` and dangerous URI schemes.
+- **Read Operations & Sync Architecture**:
   - `notices`: Streamed in real-time via `onSnapshot` queries filtered by department scope (`where('departmentId', 'in', [deptCode, 'ALL'])`).
   - `screens`: Hardware display telemetry updated every 30s and monitored live on the Admin Screen Wall.
   - `departments`: Publicly readable for scope registries and theme tokens.
@@ -173,20 +186,22 @@ The CampusCast Admin Command Center ([`apps/admin`](file:///d:/Projects/CampusCa
 
 ### 6.1 In-Place Notice Editing & Lifecycle Management
 - **Full In-Place Editing Modal**: Allows administrators to modify any Active, Scheduled, or Archived notice without creating duplicate entries.
-- **Editable Metadata**: Headline Title, Full Body Content, Target Department Scope (`ALL`, `ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`), Category (`announcement`, `exam`, `placement`, `event`, `achievement`, `emergency`), Media Attachment URLs (with auto-detection), Priority (`normal`, `urgent`), Broadcast Status (`active`, `scheduled`, `expired`), and Event Date/Time.
+- **WhatsApp Notice In-Place Editing**: Enriched support for notices ingested via WhatsApp hotlines, displaying an attribution banner, sanitized sender phone number, and dedicated author attribution field.
+- **Editable Metadata**: Headline Title, Faculty Author Attribution (`authorName`), Full Body Content, Target Department Scope (`ALL`, `ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`), Category (`announcement`, `exam`, `placement`, `event`, `achievement`, `emergency`), Media Attachment URLs (with auto-detection and safe URL filtering), Priority (`normal`, `urgent`), Broadcast Status (`active`, `scheduled`, `expired`), and Event Date/Time.
 - **Audit Logging**: Every edit automatically writes an immutable audit record to Firestore `audit_log` (`type: 'edit'`) capturing the actor, timestamp, and modification payload.
 
 ### 6.2 Multi-Criteria Notice Filtering System
 - **Department Scope Selector**: Instant scope filtering across all 6 departments and institution-wide broadcasts.
 - **Category Filter Pills**: Filter by notice type (`Announcement`, `Exam`, `Placement`, `Event`, `Achievement`, `Emergency`).
 - **Media Attachment Selector**: Filter notices by media capability (`All Media`, `With Image`, `With PDF`, `Text Only`).
+- **WhatsApp Submissions Filter**: Dedicated `📱 WhatsApp Submissions` filter toggle to instantly isolate hotline notices.
 - **Real-time Query Search**: Sub-string search across titles, descriptions, sender identities, and department scopes with a one-click **Reset** control.
 - **Dual-View Support**: Full filtering parity across both visual **Kanban Columns** and structured **Table List Views**.
 
 ### 6.3 Hardware Telemetry & Screen Wall
 - **Live Stream Listeners**: Real-time Firestore `screens` collection subscriptions rendering live connection statuses and uptime clocks.
 - **Continuous Heartbeat Engine**: 20-second telemetry polling maintains active `Online` status indicators across all registered hallway displays.
-- **Emergency Broadcast Override**: PIN-protected modal (`PIN: 1234`) triggers an immediate high-visibility red banner across all corridor screens with zero latency.
+- **Emergency Broadcast Override**: PIN-protected modal (Dynamic Master PIN: `9482`, configurable in `/settings`) triggers an immediate high-visibility red banner across all corridor screens with zero latency.
 
 
 

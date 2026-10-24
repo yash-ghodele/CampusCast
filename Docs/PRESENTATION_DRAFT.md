@@ -406,7 +406,7 @@ For announcements originating from the administrative office rather than WhatsAp
 
 #### Execution Flow
 1. **Trigger:** Administrator clicks `Emergency Broadcast` from sidebar or Display Control wall.
-2. **Security Challenge:** System requires entry of master security PIN (`1234`).
+2. **Security Challenge:** System requires entry of master security PIN (`9482`, configurable in Settings).
 3. **Payload Configuration:** Administrator specifies emergency headline, emergency instructions, and scope (single department or all campus screens).
 4. **Instant Push:** Database writes emergency notice with priority `urgent` and category `emergency`.
 5. **Screen Takeover:** All connected Smart TV displays immediately detect the emergency notice via real-time WebSocket listeners and transition to Mode 3.

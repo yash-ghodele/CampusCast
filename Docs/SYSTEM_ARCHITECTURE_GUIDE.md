@@ -70,7 +70,7 @@ sequenceDiagram
     participant Display as Smart TV Display App (display/)
 
     AdminUser->>CommandApp: Click 'Launch Emergency Broadcast'
-    CommandApp->>AdminUser: Prompt for Security PIN Confirmation (master PIN: 1234)
+    CommandApp->>AdminUser: Prompt for Security PIN Confirmation (master PIN: 9482)
     AdminUser->>CommandApp: Submit Security PIN and Target Scope (e.g., 'ALL CAMPUS')
     CommandApp->>DB: Create Emergency Notice (priority: urgent, category: emergency, status: active)
     CommandApp->>DB: Write audit_log entry (type: emergency_broadcast)
@@ -174,7 +174,7 @@ flowchart TD
     NavRoutes --> P8["8. /settings : Auto-Rotation Durations, Heartbeat Timeouts & Master PIN"]
     
     P2 --> WriteFS["Write to Firestore: Instant TV Display Broadcast across all ports in sub-second latency"]
-    P3 --> EmergencyPIN["PIN Authorization 1234: Override All TVs"]
+    P3 --> EmergencyPIN["PIN Authorization 9482: Override All TVs"]
 ```
 
 #### Exhaustive Module Specs:
@@ -192,8 +192,9 @@ flowchart TD
      - *Media Attachment Filter*: (`All Media`, `With Image`, `With PDF`, `Text Only`).
      - *Instant Search*: Real-time substring filtering across headline titles, descriptions, authors, and scopes with an active filter counter and one-click `Reset` button.
    - **In-Place Notice Editing Modal**:
-     - Edit any notice directly from Kanban cards or table rows.
-     - Modify Headline, Body text, Department Scope, Category, Media URL, Priority (`Normal`, `Urgent`), Broadcast Status (`Active`, `Scheduled`, `Expired`), and Event Date/Time.
+     - Edit any notice directly from Kanban cards or table rows (including inbound WhatsApp hotline submissions).
+     - Displays emerald WhatsApp source banner and provides faculty author name (`authorName`) editing.
+     - Modify Headline, Body text, Department Scope, Category, Media URL (sanitized via `getSafeUrl()`), Priority (`Normal`, `Urgent`), Broadcast Status (`Active`, `Scheduled`, `Expired`), and Event Date/Time.
      - Syncs directly with Firestore and logs an audit trail record (`type: 'edit'`).
 
 3. **Notice Creation Wizard Modal**:
@@ -201,7 +202,7 @@ flowchart TD
 
 4. **Display Control Center & Screen Wall (`/displays`)**:
    - Screen Wall Grid showing screen label, ID, resolution (`1080p`), live heartbeat timestamp, and direct display launcher link.
-   - PIN-Protected Force Broadcast Modal (`1234` master PIN) to launch campus-wide emergency overrides.
+   - PIN-Protected Force Broadcast Modal (`9482` master PIN, configurable in Settings) to launch campus-wide emergency overrides.
 
 5. **Analytics Module (`/analytics`)**:
    - Notice Analytics: Total published notices, category distribution, department breakdown, peak posting hours.

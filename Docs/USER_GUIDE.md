@@ -235,14 +235,22 @@ The core notice command center offering visual Kanban boards, tabular data views
 - **Multi-Criteria Filter Toolbar:**
   - **Search Query Input:** Real-time search across headline titles, descriptions, authors, and scopes.
   - **Media Type Filter:** Filter notices by attachment capabilities (`All Media`, `With Image`, `With PDF`, `Text Only`).
+  - **WhatsApp Hotline Filter:** Dedicated `📱 WhatsApp Submissions` filter button to immediately isolate notices received through the WhatsApp Cloud / Twilio hotline.
   - **Department Scope Pills:** One-click filter across `All Scopes`, `Campus-wide (ALL)`, `ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`.
   - **Category / Type Pills:** Filter by notice classification (`All Types`, `Announcement`, `Exam`, `Placement`, `Event`, `Achievement`, `Emergency`).
   - **Active Filter Counter & Reset:** Displays `Showing X of Y` notices with an instant red `Reset` action button.
 - **View Mode Switcher:** Toggle between visual **Kanban Board** cards and structured **Table List View**.
+- **WhatsApp Ingestion Badges:** Notices ingested via WhatsApp display a distinctive emerald green `📱 WhatsApp` badge on Kanban cards and Table list rows, displaying the sanitized sender phone and faculty author identity.
 - **In-Place Notice Editing Modal:**
-  - Click **Edit** (with `<Pencil />` icon) on any Active, Scheduled, or Expired notice.
-  - Modify Headline, Category, Department Scope, Full Body Content, Media Attachment URL, Priority (`Normal`, `Urgent`), Broadcast Status, and Event Dates/Times.
-  - Instant Firestore save with automatic entry in the audit compliance log.
+  - Click **Edit** (with `<Pencil />` icon) on any Active, Scheduled, or Expired notice (including WhatsApp submissions).
+  - **WhatsApp Source Attribution Banner:** For notices originating from WhatsApp, an emerald-tinted attribution banner displays the verified sender phone and channel metadata.
+  - **Faculty Author Attribution Field:** Edit or confirm the faculty author name (e.g. `Dr. Arvind Kulkarni`) displayed on physical Smart TV cards.
+  - **Headline & Body Text:** Refine and reformat raw WhatsApp text into polished campus announcements.
+  - **Department Scope Reassignment:** Change or expand target broadcast corridors (`ALL`, `ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`).
+  - **Category & Priority:** Upgrade notice to `Urgent` emergency status or reclassify between `Announcement`, `Exam`, `Placement`, `Event`, `Achievement`.
+  - **Safe Media Attachment:** Attach or update external poster image or PDF circular URLs (automatically sanitized with `getSafeUrl()` to protect displays from URI XSS).
+  - **Broadcast Status & Schedule:** Promote to `Active`, queue for `Scheduled`, or move to `Expired`.
+  - **Instant Save & Immutable Audit Log:** Updates sync to Cloud Firestore in `<200ms` and record an `edit` action in the immutable audit ledger.
 - **Notice Card Controls:**
   - **Push Active Now / Approve:** Immediately promotes a scheduled or archived notice to live TV screens.
   - **Edit:** Launches the in-place editing modal.
@@ -330,13 +338,27 @@ Regulatory compliance and security tracking center:
 
 ---
 
-### 2.9 Tab 7: System Settings & Webhook Config
+### 2.9 Tab 7: System Settings & Security Configuration
 
-System administration parameters:
+The System Settings module (`/settings`) provides centralized control over display timings, security credentials, webhook endpoints, and telemetry thresholds with **automatic browser persistence**:
 
-- **Default Expiry Settings:** Set global TTL for normal notices (default 24h) and urgent notices (default 6h).
-- **Screen Telemetry Settings:** Configure heartbeat timeout threshold (default 120 seconds).
-- **Meta WhatsApp Webhook Configuration:** View webhook URL (`/api/whatsapp`) and verify token status.
+- **Cross-Session Persistence & Multi-Tab Synchronization:**
+  - All configuration changes are saved to browser `localStorage` (`campuscast_settings`) and broadcast live across all open admin tabs using the HTML5 `BroadcastChannel` API (`campuscast_settings_sync`).
+  - Settings survive browser reloads, system restarts, and session logouts.
+- **Master Emergency Security PIN Management:**
+  - **Default Master PIN:** `9482` (upgraded from legacy test PIN `1234`).
+  - Configurable in the **Security & Authorization** card. Allows administrators to update the 4-digit code required to trigger emergency hallway overrides or force refreshes.
+  - Verification is handled by a centralized security utility with fail-safe fallbacks.
+- **Default Display & Expiration Lifecycles:**
+  - *Standard Notice TTL:* Default 24 hours.
+  - *Urgent Alert TTL:* Default 6 hours.
+  - *Screen Carousel Rotation Delay:* Default 10 seconds per slide.
+- **Screen Telemetry & Heartbeat Thresholds:**
+  - *Offline Timeout:* Threshold (default 120 seconds) before a silent display kiosk is marked `Offline` on the Screen Wall.
+- **Webhook Endpoint Registry:**
+  - Live verification references for both **Twilio Sandbox / Gateway** (`/api/webhook/twilio`) and **Meta Cloud API** (`/api/webhook/meta`).
+- **Reset to Defaults Control:**
+  - Includes a red **Reset to Defaults** button in the header toolbar to immediately restore all system settings, rotation intervals, and the Master Security PIN (`9482`) to certified factory configurations.
 
 ---
 
@@ -350,7 +372,7 @@ System administration parameters:
 5. **Step 5 (Live Smart TV Preview):** Interactive preview showing exactly how the card will look on a 1080p display before publishing.
 
 #### Modal 2: Emergency Broadcast Override
-1. **Security Master PIN Field:** Requires 4-digit PIN (`1234`).
+1. **Security Master PIN Field:** Requires 4-digit master PIN (Default: `9482`, configurable in `/settings`).
 2. **Target Scope Dropdown:** Select `ALL` campus screens or a specific department.
 3. **Emergency Text Area:** Enter headline alert (e.g. `CAMPUS CLOSED DUE TO HEAVY RAINFALL`).
 4. **Launch Override Button:** Instantly forces all active displays into high-contrast emergency mode.
@@ -454,20 +476,36 @@ Fixed bottom bar containing:
 
 ---
 
-### 4.2 Security, Whitelisting & RBAC
+### 4.2 Security, Whitelisting & Cryptographic Governance
 
-- **Mobile Whitelisting:** Unauthorized WhatsApp senders are blocked automatically.
-- **Role Permissions:**
-  - *Faculty:* Submit notices to assigned departments.
-  - *HOD:* Approve, edit, or reject department notices.
-  - *Super Admin:* Full system control and emergency overrides.
+CampusCast enforces an enterprise-grade defense-in-depth architecture:
+- **Cryptographic Webhook Signature Verification**:
+  - Inbound Twilio webhooks are verified via HMAC-SHA1 signature validation against `TWILIO_AUTH_TOKEN` (`X-Twilio-Signature`).
+  - Inbound Meta Cloud API webhooks are verified via HMAC-SHA256 signature validation against `META_APP_SECRET` (`X-Hub-Signature-256`) using constant-time buffer comparison (`crypto.timingSafeEqual`) to eliminate timing attacks.
+  - Webhook requests failing cryptographic signature verification are immediately rejected with HTTP 401 Unauthorized.
+- **Strict Mobile Whitelisting & Silent Drops**:
+  - Senders must have an active phone number registered in the Firestore `users` collection.
+  - Unregistered or suspended numbers texting the hotline trigger a silent drop (zero WhatsApp response) with an `unauthorized_attempt` logged in Firestore, neutralizing phone enumeration attacks.
+- **PII Log Masking**:
+  - Phone numbers are masked in compliance log feeds and client views (`+91 ••••• ••210`) using `maskPhoneNumber()`, maintaining user privacy while preserving audit traceability.
+- **Strict URI XSS Sanitization**:
+  - Display cards and media previews process all external URLs with `getSafeUrl()` to strip `javascript:`, `vbscript:`, and insecure schemes before rendering.
+- **Protected Scheduler**:
+  - The lifecycle cron route (`/api/scheduler`) is guarded by `CRON_SECRET` and `x-vercel-cron` headers to prevent unauthorized execution.
+- **Role Permissions (RBAC)**:
+  - *Faculty:* Submit notices to assigned department scopes.
+  - *HOD:* Approve, edit, reclassify, or expire department notices.
+  - *Super Admin:* Full system control, global emergency overrides, and settings administration.
 
 ---
 
 ### 4.3 Audit & Regulatory Compliance
 
-- Every message is tied to a verified phone number and stored in an immutable Firestore audit collection.
-- Satisfies university accreditation inspection requirements (NAAC / NBA audit readiness).
+- **Immutable Append-Only Audit Trail**:
+  - Cloud Firestore security rules strictly prohibit modification or deletion of existing audit records (`allow update, delete: if false;`).
+  - Every publication, in-place edit, deletion, emergency override, and unauthorized attempt generates an append-only audit entry.
+- **Accreditation Readiness**:
+  - Satisfies institutional regulatory compliance standards (NAAC / NBA / ABET criteria) with 100% verifiable electronic communication records and CSV export support.
 
 ---
 
@@ -490,5 +528,5 @@ Fixed bottom bar containing:
 * **Display App (Production):** `https://campus-cast-display.vercel.app/display/ece`
 * **Admin Portal (Production):** `https://campus-cast-admin.vercel.app`
 * **Local Dev URLs:** Admin: `http://localhost:3001` | Display: `http://localhost:3000`
-* **Master Emergency PIN:** `1234`
+* **Master Emergency PIN:** `9482` (Factory default; customizable in `/settings`)
 * **Brand Colors:** Ink Black (`#111111`), Brand Blue (`#2563EB`), Sky Blue (`#60A5FA`), Success Green (`#22C55E`), Alert Red (`#DC2626`).
