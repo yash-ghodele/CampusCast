@@ -71,7 +71,7 @@ Publishing a notice to corridor Smart TVs requires **zero logins, zero mobile ap
    * **Production Hotline (Meta Cloud API):** Save the college WhatsApp number directly into your contacts and open the chat.
 2. **Text Your Notice:** Format your text using simple hashtags (e.g. `#urgent #ece ECE: Lab cancelled today`).
 3. **Receive Instant Confirmation:**
-   > `🚨 EMERGENCY ALERT BROADCAST to ECE corridor Smart TVs!`
+   > `EMERGENCY ALERT BROADCAST to ECE corridor Smart TVs!`
    * The notice renders on physical hallway displays in **under 1 second**.
 
 ---
@@ -108,7 +108,7 @@ CampusCast utilizes a **deterministic, zero-prompt-injection parsing engine** to
 * **Multi-Department Faculty & HODs (e.g. assigned to `ECE, CSE`):**
   * You **MUST** specify `#ece`, `#cse`, or `#all`.
   * If omitted, CampusCast returns a friendly clarification WhatsApp reply:
-    > `❌ Department ambiguous. Please prefix your notice with your target department code (e.g. #ece or ECE:). Your assigned departments: ECE, CSE`
+    > `Department ambiguous. Please prefix your notice with your target department code (e.g. #ece or ECE:). Your assigned departments: ECE, CSE`
 * **Super Admins & Principals (assigned to all departments):**
   * Can broadcast to individual departments (`#ece`, `#mech`) or broadcast campus-wide (`#all`).
 
@@ -235,12 +235,12 @@ The core notice command center offering visual Kanban boards, tabular data views
 - **Multi-Criteria Filter Toolbar:**
   - **Search Query Input:** Real-time search across headline titles, descriptions, authors, and scopes.
   - **Media Type Filter:** Filter notices by attachment capabilities (`All Media`, `With Image`, `With PDF`, `Text Only`).
-  - **WhatsApp Hotline Filter:** Dedicated `📱 WhatsApp Submissions` filter button to immediately isolate notices received through the WhatsApp Cloud / Twilio hotline.
+  - **WhatsApp Hotline Filter:** Dedicated `WhatsApp Submissions` filter button to immediately isolate notices received through the WhatsApp Cloud / Twilio hotline.
   - **Department Scope Pills:** One-click filter across `All Scopes`, `Campus-wide (ALL)`, `ECE`, `CSE`, `AIML`, `MECH`, `CIVIL`, `EEE`.
   - **Category / Type Pills:** Filter by notice classification (`All Types`, `Announcement`, `Exam`, `Placement`, `Event`, `Achievement`, `Emergency`).
   - **Active Filter Counter & Reset:** Displays `Showing X of Y` notices with an instant red `Reset` action button.
 - **View Mode Switcher:** Toggle between visual **Kanban Board** cards and structured **Table List View**.
-- **WhatsApp Ingestion Badges:** Notices ingested via WhatsApp display a distinctive emerald green `📱 WhatsApp` badge on Kanban cards and Table list rows, displaying the sanitized sender phone and faculty author identity.
+- **WhatsApp Ingestion Badges:** Notices ingested via WhatsApp display a distinctive emerald green `WhatsApp` badge on Kanban cards and Table list rows, displaying the sanitized sender phone and faculty author identity.
 - **In-Place Notice Editing Modal:**
   - Click **Edit** (with `<Pencil />` icon) on any Active, Scheduled, or Expired notice (including WhatsApp submissions).
   - **WhatsApp Source Attribution Banner:** For notices originating from WhatsApp, an emerald-tinted attribution banner displays the verified sender phone and channel metadata.

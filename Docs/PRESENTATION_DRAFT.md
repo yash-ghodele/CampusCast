@@ -428,8 +428,8 @@ For announcements originating from the administrative office rather than WhatsAp
   - Every active display kiosk pings the screen telemetry endpoint every 20 seconds.
   - Heartbeat updates `lastSeenAt` UNIX timestamp on the screen's database record.
 - **Live Health Indicators:**
-  - `🟢 Online`: Display has reported heartbeat within the last 30 seconds.
-  - `🔴 Offline`: Display heartbeat has lapsed, alerting IT staff to power or Wi-Fi disconnection.
+  - `Online`: Display has reported heartbeat within the last 30 seconds.
+  - `Offline`: Display heartbeat has lapsed, alerting IT staff to power or Wi-Fi disconnection.
 - **Screen Wall Grid Details:**
   - Physical screen location label (for example: *ECE 2nd Floor Corridor*).
   - Screen resolution configuration (`1080p`).

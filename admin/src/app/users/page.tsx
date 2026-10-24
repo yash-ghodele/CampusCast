@@ -41,6 +41,7 @@ import {
   Sparkles,
   ShieldCheck,
   UserCheck,
+  Check,
 } from 'lucide-react';
 import {
   saveNoticeToFirestore,
@@ -640,7 +641,7 @@ export default function UsersPage() {
               <span className="w-2.5 h-2.5 rounded-full bg-[#22C55E] animate-pulse" />
               <div className="text-left">
                 <span className="block font-bold text-[#111111]">
-                  👑 Super Admin Control
+                  Super Admin Control
                 </span>
                 <span className="block text-[10px] text-slate-500 font-mono">
                   {currentAuthUser?.email || 'principal@mit.asia'} • Switch
@@ -838,7 +839,7 @@ export default function UsersPage() {
                           </div>
                         ) : (
                           <span className="text-amber-600 font-bold text-[11px]">
-                            ⚠️ Unallotted (Pending Super Admin)
+                            Unallotted (Pending Super Admin)
                           </span>
                         )}
                       </td>
@@ -1020,10 +1021,10 @@ export default function UsersPage() {
                             </span>
                           </div>
                           <div
-                            className={`w-4 h-4 rounded flex items-center justify-center text-white text-[10px] ${isSelected ? 'bg-blue-600' : 'border border-slate-300'
+                            className={`w-4 h-4 rounded flex items-center justify-center text-white ${isSelected ? 'bg-blue-600' : 'border border-slate-300'
                               }`}
                           >
-                            {isSelected && '✓'}
+                            {isSelected && <Check className="w-3 h-3 text-white stroke-[3]" />}
                           </div>
                         </button>
                       );
@@ -1032,7 +1033,7 @@ export default function UsersPage() {
                 </div>
               ) : (
                 <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl text-purple-800 text-xs font-semibold">
-                  👑 Super Admin accounts are automatically granted universal publishing and override authority across all 6 campus departments.
+                  Super Admin accounts are automatically granted universal publishing and override authority across all 6 campus departments.
                 </div>
               )}
 

@@ -43,7 +43,7 @@ sequenceDiagram
         Vercel->>DB: Write notice document to notices (status: active)
         Vercel->>DB: Write audit record to audit_log (type: publish)
         Vercel-->>Twilio: Return TwiML XML Response
-        Twilio-->>Faculty: Deliver WhatsApp confirmation ('✅ Posted to ECE corridor displays!')
+        Twilio-->>Faculty: Deliver WhatsApp confirmation ('Posted to ECE corridor displays!')
     end
 
     loop Firestore Realtime Stream (onSnapshot)
@@ -80,7 +80,7 @@ sequenceDiagram
      ```xml
      <?xml version="1.0" encoding="UTF-8"?>
      <Response>
-       <Message>✅ Notice posted to ECE! Displaying live on corridor Smart TVs.</Message>
+       <Message>Notice posted to ECE! Displaying live on corridor Smart TVs.</Message>
      </Response>
      ```
 
@@ -149,7 +149,7 @@ Type and send:
 #ece #exam Midterm examination timetable for 3rd Year B.Tech released. Collect hall tickets tomorrow at 10 AM.
 ```
 - **Instant Result:**
-  - Phone receives confirmation: `✅ Notice posted to ECE! Displaying live on corridor Smart TVs.`
+  - Phone receives confirmation: `Notice posted to ECE! Displaying live on corridor Smart TVs.`
   - TV screen at `https://campus-cast-display.vercel.app/display/ece` updates in **< 1.5 seconds**.
 
 #### C. Publish an Emergency Red Alert

@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
       if (!isValid) {
         console.warn(`[CampusCast Webhook] Blocked request with invalid X-Twilio-Signature.`);
         return new Response(
-          '<?xml version="1.0" encoding="UTF-8"?><Response><Message>⚠️ Signature verification failed.</Message></Response>',
+          '<?xml version="1.0" encoding="UTF-8"?><Response><Message>[Warning] Signature verification failed.</Message></Response>',
           { status: 403, headers: { 'Content-Type': 'text/xml; charset=utf-8' } }
         );
       }
@@ -204,7 +204,7 @@ export async function POST(req: NextRequest) {
       const rateSnap = await getDocs(rateQ);
       if (rateSnap.size >= 10) {
         return new Response(
-          `<?xml version="1.0" encoding="UTF-8"?><Response><Message>⚠️ Rate limit reached (max 10 notices per min). Please try again shortly.</Message></Response>`,
+          `<?xml version="1.0" encoding="UTF-8"?><Response><Message>[Rate Limit] Rate limit reached (max 10 notices per min). Please try again shortly.</Message></Response>`,
           { status: 200, headers: { 'Content-Type': 'text/xml; charset=utf-8' } }
         );
       }
@@ -224,7 +224,7 @@ export async function POST(req: NextRequest) {
       } else if (userData.departments && userData.departments.length > 1) {
         const deptsList = userData.departments.join(', ');
         return new Response(
-          `<?xml version="1.0" encoding="UTF-8"?><Response><Message>❌ Department ambiguous. Please prefix your notice with your target department code (e.g. ECE:). Your assigned departments: ${deptsList}</Message></Response>`,
+          `<?xml version="1.0" encoding="UTF-8"?><Response><Message>[Error] Department ambiguous. Please prefix your notice with your target department code (e.g. ECE:). Your assigned departments: ${deptsList}</Message></Response>`,
           { status: 200, headers: { 'Content-Type': 'text/xml; charset=utf-8' } }
         );
       } else {
@@ -295,11 +295,11 @@ export async function POST(req: NextRequest) {
     }
 
     // Stage 8: Instant TwiML XML Confirmation Response
-    let feedback = `✅ Notice posted to ${deptId}! Displaying live on corridor Smart TVs.`;
+    let feedback = `Notice posted to ${deptId}! Displaying live on corridor Smart TVs.`;
     if (isScheduled && parsed.scheduledAt) {
-      feedback = `⏳ Notice scheduled for ${new Date(parsed.scheduledAt).toLocaleString()} (${deptId})!`;
+      feedback = `Notice scheduled for ${new Date(parsed.scheduledAt).toLocaleString()} (${deptId})!`;
     } else if (parsed.priority === 'urgent') {
-      feedback = `🚨 EMERGENCY ALERT BROADCAST to ${deptId} corridor Smart TVs!`;
+      feedback = `[EMERGENCY ALERT] Broadcast to ${deptId} corridor Smart TVs!`;
     }
 
     const xmlResponse = `<?xml version="1.0" encoding="UTF-8"?>
@@ -317,7 +317,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('[CampusCast Twilio Webhook Error]:', error);
     return new Response(
-      `<?xml version="1.0" encoding="UTF-8"?><Response><Message>⚠️ Internal error processing notice. Please contact campus admin.</Message></Response>`,
+      `<?xml version="1.0" encoding="UTF-8"?><Response><Message>[Error] Internal error processing notice. Please contact campus admin.</Message></Response>`,
       { status: 500, headers: { 'Content-Type': 'text/xml; charset=utf-8' } }
     );
   }

@@ -194,7 +194,7 @@ export const DepartmentDisplayView: React.FC<DepartmentDisplayViewProps> = ({ de
         <div className="bg-red-600 text-white px-6 py-2.5 flex items-center justify-between text-xs font-bold shadow-md z-40">
           <div className="flex items-center gap-3">
             <span className="bg-white text-red-600 px-2.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">
-              🚨 Active Urgent Alert
+              Active Urgent Alert
             </span>
             <span className="font-semibold truncate max-w-xl">{dismissedUrgentNotice.title}</span>
           </div>

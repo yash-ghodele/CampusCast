@@ -217,7 +217,7 @@ export async function POST(req: NextRequest) {
               await sendMetaGraphReply(
                 phoneNumberId,
                 senderPhone,
-                `❌ Department ambiguous. Please prefix with your target department (e.g. ECE:). Your assigned: ${userData.departments.join(', ')}`
+                `[Error] Department ambiguous. Please prefix with your target department (e.g. ECE:). Your assigned: ${userData.departments.join(', ')}`
               );
               continue;
             } else {
@@ -267,8 +267,8 @@ export async function POST(req: NextRequest) {
 
           // Stage 5: Dispatch Confirmation Reply
           const feedback = isScheduled
-            ? `⏳ Notice scheduled for ${new Date(parsed.scheduledAt!).toLocaleString()} (${deptId})!`
-            : `✅ Notice posted to ${deptId}! Displaying live on corridor Smart TVs.`;
+            ? `Notice scheduled for ${new Date(parsed.scheduledAt!).toLocaleString()} (${deptId})!`
+            : `Notice posted to ${deptId}! Displaying live on corridor Smart TVs.`;
           await sendMetaGraphReply(phoneNumberId, senderPhone, feedback);
         }
       }

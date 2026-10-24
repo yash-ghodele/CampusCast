@@ -661,7 +661,7 @@ export default function DashboardPage() {
                 onClick={() => setShowWizard(false)}
                 className="text-[#64748B] hover:text-[#111111] text-xs font-bold"
               >
-                ✕ Close
+                Close
               </button>
             </div>
 

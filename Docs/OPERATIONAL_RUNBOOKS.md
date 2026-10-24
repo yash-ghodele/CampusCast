@@ -29,8 +29,8 @@ CampusCast is designed to run directly on **any Smart TV or Smart Screen** with 
 ## 2. Display Screen Dark / Offline Troubleshooting Runbook
 
 ### Symptoms
-- Corridor Smart TV shows `🟡 Reconnecting...` indicator in the header/footer or displays a network disconnected message.
-- Admin Command Center Display Control tab highlights screen with `🔴 Offline (Heartbeat missed >2 minutes)`.
+- Corridor Smart TV shows `Reconnecting...` indicator in the header/footer or displays a network disconnected message.
+- Admin Command Center Display Control tab highlights screen with `Offline (Heartbeat missed >2 minutes)`.
 
 ### Resolution Steps
 1. **Check Smart TV Network Connection**: Open TV settings and verify campus Wi-Fi or Ethernet connectivity.
@@ -57,7 +57,7 @@ A faculty member's phone is lost, stolen, or compromised, or unauthorized notice
 ## 4. Meta WhatsApp Webhook Outage & HMAC Signature Diagnosis
 
 ### Symptoms
-- Faculty send WhatsApp messages, but receive no automated confirmation reply (`"✅ Posted to ECE"`) and notices do not update on screens.
+- Faculty send WhatsApp messages, but receive no automated confirmation reply (`"Posted to ECE"`) and notices do not update on screens.
 
 ### Diagnosis Steps
 1. **Inspect Webhook Logs**: Review Cloud Functions logs for `whatsappWebhook`:

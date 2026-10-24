@@ -344,7 +344,7 @@ function LoginContent() {
                 <div className="mb-6 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center gap-3 animate-pulse">
                   <Sparkles className="w-5 h-5 text-blue-400 shrink-0" />
                   <p className="text-xs font-bold text-blue-200">
-                    ✓ Verified as {successUser.name} ({successUser.email})! Opening Management Portal...
+                    Verified as {successUser.name} ({successUser.email})! Opening Management Portal...
                   </p>
                 </div>
               )}
@@ -598,7 +598,7 @@ function LoginContent() {
                       </div>
                       <div className="text-[10px] text-slate-400 mt-0.5">
                         {faculty.status === 'pending' ? (
-                          <span className="text-amber-400 font-bold">⚠️ Pending Super Admin Allotment</span>
+                          <span className="text-amber-400 font-bold">Pending Super Admin Allotment</span>
                         ) : (
                           <span>Scopes: {faculty.departments.join(', ') || 'Unallotted'}</span>
                         )}

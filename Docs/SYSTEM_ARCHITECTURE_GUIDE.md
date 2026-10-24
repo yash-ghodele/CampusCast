@@ -42,7 +42,7 @@ sequenceDiagram
     else Sender is Authorized & Active
         Webhook->>DB: Create Notice doc in notices (status: active/scheduled)
         Webhook->>DB: Add document to audit_log (type: publish)
-        Webhook-->>Meta: Outbound POST to Graph API ('✅ Posted to ECE')
+        Webhook-->>Meta: Outbound POST to Graph API ('Posted to ECE')
         Meta-->>Faculty: Deliver WhatsApp Confirmation Reply
     end
 
@@ -133,7 +133,7 @@ flowchart TD
 1. **Adaptive Smart Multi-Media View (Default View)**:
    - Dynamic viewport partitioning: visual poster attachments (PNG/JPEG) are allocated prominent 7-column spotlight showcase blocks, while PDF circulars generate clean official document cards with instant QR code mobile download links.
    - Text announcements render in high-impact typographic cards formatted with Poppins typography and department theme accents.
-   - Full un-truncated titles, complete descriptive content, event dates (`📅 15 Oct 2026`), and event times (`⏰ 10:00 AM`).
+   - Full un-truncated titles, complete descriptive content, event dates (`15 Oct 2026`), and event times (`10:00 AM`).
 
 2. **Mode 1: Hero Notice View**:
    - Occupies **80%** of viewport space.
@@ -181,7 +181,7 @@ flowchart TD
 
 1. **Dashboard Command Center**:
    - System Metric Cards: `Total Screens (6)`, `Online Screens (6/6)`, `Active Notices (28)`, `Registered Faculty (5)`.
-   - Live Screen Map Grid: Displays real-time online status pills (`ECE Screen 🟢 Online`, `CSE Screen 🟢 Online`, `AIML Screen 🟢 Online` with continuous 20s telemetry).
+   - Live Screen Map Grid: Displays real-time online status pills (`ECE Screen Online`, `CSE Screen Online`, `AIML Screen Online` with continuous 20s telemetry).
 
 2. **Notice Management & Real-time Filtering (`/notices`)**:
    - **Visual Kanban Board**: Drag-and-drop functional columns (`Scheduled`, `Active on Kiosks`, `Expired / Archived`).

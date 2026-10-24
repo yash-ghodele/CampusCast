@@ -35,7 +35,7 @@ This document preserves key architectural decisions, design rationales, and hist
 | **2026-09-27** | Completed Comprehensive Production Readiness Audit | Verified 0 build errors across all 4 monorepo packages, updated `firestore.rules`, and prepared pre-flight hardware runbooks. |
 | **2026-10-04** | Implemented In-Place Notice Editing Modal | Built comprehensive in-place edit modal for Kanban and Table views with Firestore sync and audit logging. |
 | **2026-10-04** | Added Multi-Criteria Notice Filtering Toolbar | Added 4-dimensional filter engine (scope, category, media type, live search, reset) with view persistence. |
-| **2026-10-04** | Upgraded Screen Heartbeat Telemetry Engine | Upgraded to 20s continuous telemetry maintaining active `🟢 Online` status across all hallway displays. |
+| **2026-10-04** | Upgraded Screen Heartbeat Telemetry Engine | Upgraded to 20s continuous telemetry maintaining active `Online` status across all hallway displays. |
 | **2026-10-04** | Generated Presentation Draft & Synced All Documentation | Created 27-slide standalone presentation draft ([`Docs/PRESENTATION_DRAFT.md`](file:///d:/Projects/CampusCast/Docs/PRESENTATION_DRAFT.md)) and synchronized architecture, user guide, and phase plan docs. |
 | **2026-10-05** | Configured Shared Package Direct TypeScript Source Exports | Updated `packages/shared/package.json` entry points to `./src/index.ts` to allow Next.js SWC `transpilePackages` to transpile shared models in memory on Vercel edge builds without pre-compiled `dist/`. |
 | **2026-10-05** | Deployed Firestore Security Rules to Production | Released `firestore.rules` (deny-all client write policy) to live Firebase project `campuscast-mitece`. |

@@ -15,7 +15,7 @@ Phased development roadmap, completed features, and verification status for Camp
 - [x] Ingestion Cloud Function `whatsappWebhook` with `X-Hub-Signature-256` HMAC SHA-256 validation.
 - [x] Phone authorization lookup + silent drop policy for unauthorized senders.
 - [x] Next.js 14 hallway display app ([`display/`](file:///d:/Projects/CampusCast/display)) configured for hardware kiosk deployment.
-- [x] Live Firestore `onSnapshot` streaming listener and offline reconnecting indicator (`🟡 Reconnecting...`).
+- [x] Live Firestore `onSnapshot` streaming listener and offline reconnecting indicator (`Reconnecting...`).
 - [x] Automated browser subagent verification tests on `http://localhost:3000`.
 
 ---

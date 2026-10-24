@@ -33,6 +33,7 @@ import {
   Trash2,
   CheckCircle2,
   Filter,
+  KeyRound,
 } from 'lucide-react';
 import {
   saveNoticeToFirestore,
@@ -426,11 +427,11 @@ export default function AuditPage() {
             <div className="flex items-center gap-1.5 bg-slate-200/70 p-1 rounded-xl text-xs font-bold flex-wrap">
               {[
                 { id: 'ALL', label: `All Events (${auditLogs.length})` },
-                { id: 'delete', label: '🗑️ Deleted Notices' },
-                { id: 'publish', label: '📢 Published' },
-                { id: 'edit', label: '✏️ Edits & Allotments' },
-                { id: 'auth_login', label: '🔑 Sender Logins' },
-                { id: 'emergency_broadcast', label: '🚨 Emergency Alerts' },
+                { id: 'delete', label: 'Deleted Notices' },
+                { id: 'publish', label: 'Published' },
+                { id: 'edit', label: 'Edits & Allotments' },
+                { id: 'auth_login', label: 'Sender Logins' },
+                { id: 'emergency_broadcast', label: 'Emergency Alerts' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -474,8 +475,9 @@ export default function AuditPage() {
                             <span>Deleted Notice</span>
                           </span>
                         ) : (log.type as any) === 'auth_login' ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center gap-1 w-fit">
-                            <span>🔑 Login Verified</span>
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center gap-1.5 w-fit">
+                            <KeyRound className="w-3 h-3 text-indigo-600" />
+                            <span>Login Verified</span>
                           </span>
                         ) : log.type === 'emergency_broadcast' ? (
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-red-100 text-red-600 border border-red-200 w-fit block">

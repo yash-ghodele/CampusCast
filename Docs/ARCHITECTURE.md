@@ -32,7 +32,7 @@ sequenceDiagram
     else Sender is Authorized
         Webhook->>DB: Add document to notices (status: active/scheduled)
         Webhook->>DB: Add document to audit_log (type: publish)
-        Webhook-->>Gateway: Immediate TwiML or Graph confirmation ('✅ Posted to ECE')
+        Webhook-->>Gateway: Immediate TwiML or Graph confirmation ('Posted to ECE')
         Gateway-->>Faculty: Deliver WhatsApp Confirmation Reply
     end
 
@@ -194,7 +194,7 @@ The CampusCast Admin Command Center ([`apps/admin`](file:///d:/Projects/CampusCa
 - **Department Scope Selector**: Instant scope filtering across all 6 departments and institution-wide broadcasts.
 - **Category Filter Pills**: Filter by notice type (`Announcement`, `Exam`, `Placement`, `Event`, `Achievement`, `Emergency`).
 - **Media Attachment Selector**: Filter notices by media capability (`All Media`, `With Image`, `With PDF`, `Text Only`).
-- **WhatsApp Submissions Filter**: Dedicated `📱 WhatsApp Submissions` filter toggle to instantly isolate hotline notices.
+- **WhatsApp Submissions Filter**: Dedicated `WhatsApp Submissions` filter toggle to instantly isolate hotline notices.
 - **Real-time Query Search**: Sub-string search across titles, descriptions, sender identities, and department scopes with a one-click **Reset** control.
 - **Dual-View Support**: Full filtering parity across both visual **Kanban Columns** and structured **Table List Views**.
 

@@ -733,7 +733,7 @@ export default function NoticesPage() {
                     onClick={() => setSearchQuery('')}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-[#111111] text-xs font-bold"
                   >
-                    ✕
+                    Clear
                   </button>
                 )}
               </div>
@@ -749,7 +749,7 @@ export default function NoticesPage() {
                     className="bg-transparent text-xs font-bold text-[#111111] focus:outline-none cursor-pointer"
                   >
                     <option value="ALL_MEDIA">All Media & Sources</option>
-                    <option value="whatsapp">📱 WhatsApp Submissions</option>
+                    <option value="whatsapp">WhatsApp Submissions</option>
                     <option value="image">With Image Poster</option>
                     <option value="pdf">With PDF Circular</option>
                     <option value="text">Text Bulletin Only</option>
@@ -1135,7 +1135,7 @@ export default function NoticesPage() {
                 onClick={() => setShowWizard(false)}
                 className="text-[#64748B] hover:text-[#111111] text-xs font-bold"
               >
-                ✕ Close
+                Close
               </button>
             </div>
 
@@ -1511,7 +1511,7 @@ export default function NoticesPage() {
                   }}
                   className="text-[#64748B] hover:text-[#111111] text-xs font-bold"
                 >
-                  ✕ Close
+                  Close
                 </button>
               </div>
 

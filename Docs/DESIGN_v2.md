@@ -86,7 +86,7 @@ This should go back to whoever owns the brand kit as a formal addition, not just
 
 ### 5.2 WhatsApp confirmation UI
 - CampusCast avatar = icon-only logo mark.
-- Confirmation replies keep their existing copy (`✅ Posted to ECE — visible now.`) — the green checkmark now doubles as a nod to `--success-green`.
+- Confirmation replies keep their existing copy (`Posted to ECE — visible now.`) — the green checkmark now doubles as a nod to `--success-green`.
 
 ### 5.3 Digital Signage (the screen itself) — **this is where v1 and the brand kit disagree**
 The brand kit's own "Digital Signage Preview" mockup shows a **light** background (soft gray/white with a blue headline and illustration) — not the dark navy theme v1 specified. That's a real conflict, not a cosmetic detail:
