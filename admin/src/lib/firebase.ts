@@ -16,6 +16,16 @@ import {
   onSnapshot,
   query,
 } from 'firebase/firestore';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  User as FirebaseUser,
+} from 'firebase/auth';
 import { Notice, AuditLog, User, Department } from '@campuscast/shared';
 
 const firebaseConfig = {
@@ -29,6 +39,15 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const db = getFirestore(app);
+export const auth = getAuth(app);
+
+export {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+};
+export type { FirebaseUser };
 
 /**
  * Persists or updates a notice document in Cloud Firestore.

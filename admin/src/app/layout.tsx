@@ -5,6 +5,7 @@
 
 import './globals.css';
 import type { Metadata } from 'next';
+import { AdminProviders } from '@/components/AdminProviders';
 
 export const metadata: Metadata = {
   title: 'CampusCast — Management Portal',
@@ -19,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-[#F3F4F6] text-[#111111] min-h-screen antialiased">
-        {children}
+        <AdminProviders>{children}</AdminProviders>
       </body>
     </html>
   );
