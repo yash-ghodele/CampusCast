@@ -14,7 +14,7 @@ CampusCast bridges the gap between everyday messaging tools and physical campus 
 
 ---
 
-## 🚀 Live Production Deployments
+## Live Production Deployments
 
 | Component | Production URL | Description |
 |---|---|---|
@@ -27,13 +27,13 @@ CampusCast bridges the gap between everyday messaging tools and physical campus 
 
 ---
 
-## 📺 Zero-Hardware Smart TV Model & Display Modes
+## Zero-Hardware Smart TV Model & Display Modes
 
 No Raspberry Pi, Mini-PC, HDMI dongles, or external media player boxes are required! Any Smart TV (Android TV, LG webOS, Samsung Tizen OS, Amazon Fire TV) opens the display URL (`https://campus-cast-display.vercel.app/display/ece` or local `http://<server-ip>:3000/display/ece`) directly in its native web browser.
 
 ### 6 Display Experience Modes:
 1. **Adaptive Smart Multi-Media View (Default View)**: Automatically arranges notices into high-impact visual spotlight posters (7-column visual media), official circular cards (with instant QR code links for PDFs), and typographic bulletin feeds.
-2. **Mode 1: Hero Notice View**: 80% screen footprint hero card with title, description, category badges (`EXAM`, `PLACEMENT`, `EVENT`, `URGENT`, `ACHIEVEMENT`), date/time chips (`📅 05 Oct 2026`, `⏰ 10:00 AM`), and interactive WhatsApp QR code snippet (`Scan QR for details`). Auto-rotates every 10 seconds.
+2. **Mode 1: Hero Notice View**: 80% screen footprint hero card with title, description, category badges (`EXAM`, `PLACEMENT`, `EVENT`, `URGENT`, `ACHIEVEMENT`), date/time chips (`05 Oct 2026`, `10:00 AM`), and interactive WhatsApp QR code snippet (`Scan QR for details`). Auto-rotates every 10 seconds.
 3. **Mode 2: News Ticker Marquee**: Always-visible 48px bottom scrolling ticker bar for secondary announcements and live notice counters.
 4. **Mode 3: Emergency Override View**: High-contrast full-screen red background (`#DC2626`) for `priority == 'urgent'`, displaying bold emergency headlines and issuer signatures.
 5. **Mode 4: Event Carousel View**: Auto-sliding poster images and PDF previews (`mediaUrl` / `mediaType`).
@@ -41,7 +41,7 @@ No Raspberry Pi, Mini-PC, HDMI dongles, or external media player boxes are requi
 
 ---
 
-## 🎨 Department Branding Themes
+## Department Branding Themes
 
 | Department | Theme Color | Primary Hex | Badge Preview |
 |---|---|---|---|
@@ -54,11 +54,11 @@ No Raspberry Pi, Mini-PC, HDMI dongles, or external media player boxes are requi
 
 ---
 
-## 💻 Admin Communication Command Center ([`admin/`](file:///d:/Projects/CampusCast/admin))
+## Admin Communication Command Center ([`admin/`](file:///d:/Projects/CampusCast/admin))
 
 The Admin Portal is architected using **8 dedicated standalone Next.js App Router pages** (zero in-memory tab state resets on browser refresh):
 - **Dashboard ([`/`](file:///d:/Projects/CampusCast/admin/src/app/page.tsx))**: Metric Overview Cards, Live Screen Map Grid (`Online 6/6` with `HH:MM:SS` active uptime via Firestore heartbeats), Recent Activity Stream.
-- **Notice Management ([`/notices`](file:///d:/Projects/CampusCast/admin/src/app/notices/page.tsx))**: Visual notice lifecycle Kanban columns (`Scheduled`, `Active`, `Expired`), **In-Place Notice Editing Modal** (with full support for editing WhatsApp hotline notices, author attribution, and attachments), **Multi-Criteria Filter Toolbar** (Department scopes, category pills, media filters, `📱 WhatsApp Submissions` filter, and realtime search), and Notice Creation Wizard.
+- **Notice Management ([`/notices`](file:///d:/Projects/CampusCast/admin/src/app/notices/page.tsx))**: Visual notice lifecycle Kanban columns (`Scheduled`, `Active`, `Expired`), **In-Place Notice Editing Modal** (with full support for editing WhatsApp hotline notices, author attribution, and attachments), **Multi-Criteria Filter Toolbar** (Department scopes, category pills, media filters, `WhatsApp Submissions` filter, and realtime search), and Notice Creation Wizard.
 - **Display Control & Screen Wall ([`/displays`](file:///d:/Projects/CampusCast/admin/src/app/displays/page.tsx))**: Real-time Smart TV telemetry monitoring (`1080p`, `lastSeenAt`), live screen status, and PIN-protected Force Emergency Broadcasts (Master PIN: `9482`, configurable in Settings).
 - **Department Scope Registry ([`/departments`](file:///d:/Projects/CampusCast/admin/src/app/departments/page.tsx))**: Visual theme registry, active notice counters, and direct TV kiosk launcher links.
 - **Faculty Roster ([`/users`](file:///d:/Projects/CampusCast/admin/src/app/users/page.tsx))**: Faculty onboarding, WhatsApp phone authorization, role badges (`Super Admin` -> `HOD` -> `Faculty`), and status toggles.
@@ -68,7 +68,7 @@ The Admin Portal is architected using **8 dedicated standalone Next.js App Route
 
 ---
 
-## 🛡️ Enterprise-Grade Security Hardening (20-Point Remediated)
+## Enterprise-Grade Security Hardening (20-Point Remediated)
 
 CampusCast is engineered to university and enterprise security compliance standards:
 - **HMAC Webhook Cryptographic Verification**: Inbound WhatsApp webhooks are validated using HMAC-SHA1 (`X-Twilio-Signature`) and HMAC-SHA256 (`X-Hub-Signature-256`) with constant-time buffer comparison to prevent timing attacks.
@@ -80,7 +80,7 @@ CampusCast is engineered to university and enterprise security compliance standa
 
 ---
 
-## 📘 Documentation Index
+## Documentation Index
 
 - [**`Docs/AUDIT_REPORT.md`**](file:///d:/Projects/CampusCast/Docs/AUDIT_REPORT.md): Complete System Testing, E2E Verification & 20-Point Security Remediation Report (36/36 Routes OK, 98 Links OK, 77 Buttons OK).
 - [**`Docs/DEPLOYMENT_GUIDE.md`**](file:///d:/Projects/CampusCast/Docs/DEPLOYMENT_GUIDE.md): Complete Production Deployment Guide for Vercel, Cloudflare Pages, Firebase, and Smart TV setup.
@@ -100,7 +100,7 @@ CampusCast is engineered to university and enterprise security compliance standa
 
 ---
 
-## 👤 Author & Repository Info
+## Author & Repository Info
 
 - **Project Lead**: Yash Ghodele
 - **Role**: Executive Head (BotBuddies) · Event Head (ECESA)
