@@ -41,8 +41,9 @@ export type UserStatus = 'active' | 'suspended' | 'pending';
 export interface User {
   id: string;
   name: string;
-  email?: string; // Institutional Google/Gmail address ending in @mit.asia (e.g. "ramesh.sharma@mit.asia")
-  phone: string; // E.164 phone format e.g. "+919876543210" used as authentication credential
+  email?: string; // Institutional address ending in @mit.asia (e.g. "ramesh.sharma@mit.asia")
+  password?: string; // Stored credential password visible only to Super Admin
+  phone: string; // E.164 phone format e.g. "+919876543210"
   role: UserRole;
   departments: string[]; // Department codes or IDs this user is authorized to publish to (allotted by Super Admin)
   status: UserStatus;
