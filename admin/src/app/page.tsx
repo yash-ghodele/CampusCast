@@ -344,7 +344,7 @@ export default function DashboardPage() {
             >
               <div className="flex items-center gap-3">
                 <Tv className="w-4 h-4" />
-                <span>Screens</span>
+                <span>Displays & Kiosks</span>
               </div>
               <span className="bg-[#22C55E]/15 text-[#22C55E] px-2 py-0.5 rounded text-xs font-bold border border-[#22C55E]/30">
                 {onlineScreensCount}/{screens.length}
@@ -365,7 +365,7 @@ export default function DashboardPage() {
             >
               <div className="flex items-center gap-3">
                 <UsersIcon className="w-4 h-4" />
-                <span>Faculty Roster</span>
+                <span>Faculty & Access</span>
               </div>
               <span className="px-2 py-0.5 rounded text-xs font-bold bg-[#E2E8F0] text-[#475569]">
                 {users.length}

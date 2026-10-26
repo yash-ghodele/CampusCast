@@ -245,9 +245,9 @@ export default function AuditPage() {
           <div className="flex items-center gap-3 px-2">
             {!sidebarLogoError ? (
               <img
-                src="/mit-logo.png"
-                alt="MIT Logo"
-                className="w-10 h-10 object-contain rounded-xl shadow-sm"
+                src="/logo-icon-transparent.png"
+                alt="CampusCast Logo"
+                className="w-10 h-10 object-contain rounded-xl drop-shadow-xs"
                 onError={() => setSidebarLogoError(true)}
               />
             ) : (

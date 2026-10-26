@@ -548,7 +548,7 @@ export default function NoticesPage() {
             >
               <div className="flex items-center gap-3">
                 <Tv className="w-4 h-4" />
-                <span>Screens</span>
+                <span>Displays & Kiosks</span>
               </div>
               <span className="bg-[#22C55E]/15 text-[#22C55E] px-2 py-0.5 rounded text-xs font-bold border border-[#22C55E]/30">
                 {onlineScreensCount}/{screens.length}
@@ -569,7 +569,7 @@ export default function NoticesPage() {
             >
               <div className="flex items-center gap-3">
                 <UsersIcon className="w-4 h-4" />
-                <span>Faculty Roster</span>
+                <span>Faculty & Access</span>
               </div>
               <span className="px-2 py-0.5 rounded text-xs font-bold bg-[#E2E8F0] text-[#475569]">
                 {users.length}
@@ -851,7 +851,11 @@ export default function NoticesPage() {
 
                 <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
                   {scheduledNotices.length === 0 ? (
-                    <div className="text-center py-10 text-xs text-[#64748B]">No scheduled notices</div>
+                    <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center space-y-2">
+                      <Clock className="w-6 h-6 text-slate-300 mx-auto" />
+                      <p className="text-xs font-bold text-slate-500">No Scheduled Notices</p>
+                      <p className="text-[11px] text-slate-400">Future scheduled broadcasts will appear here</p>
+                    </div>
                   ) : (
                     scheduledNotices.map((n) => (
                       <div
@@ -938,7 +942,7 @@ export default function NoticesPage() {
                             <span>WhatsApp: {n.authorName || maskPhoneNumber(n.createdBy)}</span>
                           </div>
                         )}
-                        <h4 className="text-sm font-bold text-[#111111]">{n.title || n.content}</h4>
+                        <h4 className="text-sm font-bold text-[#111111] line-clamp-2 leading-snug">{n.title || n.content}</h4>
                         <p className="text-xs text-[#475569] line-clamp-2">{n.content}</p>
                         <div className="pt-2 border-t border-[#E5E7EB] flex items-center justify-between">
                           <button
@@ -983,7 +987,11 @@ export default function NoticesPage() {
 
                 <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
                   {expiredNotices.length === 0 ? (
-                    <div className="text-center py-10 text-xs text-[#64748B]">No archived notices</div>
+                    <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center space-y-2">
+                      <XCircle className="w-6 h-6 text-slate-300 mx-auto" />
+                      <p className="text-xs font-bold text-slate-500">No Archived Notices</p>
+                      <p className="text-[11px] text-slate-400">Expired and archived circulars will be stored here</p>
+                    </div>
                   ) : (
                     expiredNotices.map((n) => (
                       <div
