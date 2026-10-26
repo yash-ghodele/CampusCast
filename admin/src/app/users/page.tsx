@@ -40,8 +40,10 @@ import {
   ExternalLink,
   Sparkles,
   ShieldCheck,
-  UserCheck,
   Check,
+  Eye,
+  EyeOff,
+  KeyRound,
 } from 'lucide-react';
 import {
   saveNoticeToFirestore,
@@ -54,7 +56,7 @@ import {
   saveDepartmentToFirestore,
 } from '@/lib/firebase';
 import { verifyMasterSecurityPin } from '@/lib/security';
-import { getStoredAuthUser, SEED_FACULTY_ROSTER } from '@/lib/auth';
+import { getStoredAuthUser, SEED_FACULTY_ROSTER, isSuperAdminUser } from '@/lib/auth';
 
 const REGISTERED_SCREENS: Screen[] = [
   { id: 'ECE-MAIN-DISPLAY', departmentId: 'ECE', label: 'ECE Corridor Smart TV', lastSeenAt: null },
@@ -102,6 +104,22 @@ export default function UsersPage() {
   const [fPhone, setFPhone] = useState('');
   const [fRole, setFRole] = useState<'faculty' | 'hod' | 'super_admin'>('faculty');
   const [fDepts, setFDepts] = useState<string[]>(['ECE']);
+  const [newFacultyPassword, setNewFacultyPassword] = useState('MitAsia@123');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+
+  // CREDENTIAL REVEAL STATE (SUPER ADMIN ONLY)
+  const [revealedPasswords, setRevealedPasswords] = useState<Record<string, boolean>>({});
+  const [allotPassword, setAllotPassword] = useState('');
+  const [showModalPassword, setShowModalPassword] = useState(false);
+
+  const isSuperAdmin = !currentAuthUser || isSuperAdminUser(currentAuthUser);
+
+  const toggleRevealPassword = (userId: string) => {
+    setRevealedPasswords((prev) => ({
+      ...prev,
+      [userId]: !prev[userId],
+    }));
+  };
 
   // EMERGENCY MODAL STATE
   const [showEmergencyModal, setShowEmergencyModal] = useState(false);
@@ -200,6 +218,8 @@ export default function UsersPage() {
     setAllotSelectedRole(user.role || 'faculty');
     setAllotSelectedStatus(user.status || 'active');
     setAllotHodDept(user.departments?.[0] || user.requestedDepartment || 'ECE');
+    setAllotPassword(user.password || 'MitAsia@123');
+    setShowModalPassword(false);
   };
 
   const toggleDeptInAllot = (deptCode: string) => {
@@ -238,6 +258,7 @@ export default function UsersPage() {
       departments: finalDepartments,
       role: allotSelectedRole,
       status: allotSelectedStatus,
+      password: allotPassword.trim() || allotModalUser.password || 'MitAsia@123',
     };
 
     const updatedUsersList = users.map((u) => (u.id === allotModalUser.id ? updatedUser : u));
@@ -362,6 +383,7 @@ export default function UsersPage() {
       name: fName,
       email: finalEmail,
       phone: formattedPhone,
+      password: newFacultyPassword.trim() || 'MitAsia@123',
       role: fRole,
       departments: fRole === 'super_admin' ? DEPARTMENTS_LIST.map((d) => d.code) : fDepts,
       status: 'active',
@@ -381,6 +403,8 @@ export default function UsersPage() {
     setFName('');
     setFEmail('');
     setFPhone('');
+    setNewFacultyPassword('MitAsia@123');
+    setShowNewPassword(false);
     setFDepts(['ECE']);
     setShowAddFacultyModal(false);
   };
@@ -483,9 +507,9 @@ export default function UsersPage() {
           <div className="flex items-center gap-3 px-2">
             {!sidebarLogoError ? (
               <img
-                src="/mit-logo.png"
-                alt="MIT Logo"
-                className="w-10 h-10 object-contain rounded-xl shadow-sm"
+                src="/logo-icon-transparent.png"
+                alt="CampusCast Logo"
+                className="w-10 h-10 object-contain rounded-xl drop-shadow-xs"
                 onError={() => setSidebarLogoError(true)}
               />
             ) : (
@@ -510,7 +534,7 @@ export default function UsersPage() {
               className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all text-[#475569] hover:text-[#111111] hover:bg-[#F1F5F9]"
             >
               <LayoutDashboard className="w-4 h-4" />
-              <span>Overview</span>
+              <span>Dashboard</span>
             </Link>
 
             <Link
@@ -519,7 +543,7 @@ export default function UsersPage() {
             >
               <div className="flex items-center gap-3">
                 <Kanban className="w-4 h-4" />
-                <span>Notice Console</span>
+                <span>Notices</span>
               </div>
               <span className="px-2 py-0.5 rounded text-xs font-bold bg-[#E2E8F0] text-[#475569]">
                 {notices.length}
@@ -644,7 +668,7 @@ export default function UsersPage() {
                   Super Admin Control
                 </span>
                 <span className="block text-[10px] text-slate-500 font-mono">
-                  {currentAuthUser?.email || 'principal@mit.asia'} • Switch
+                  {currentAuthUser?.email || 'yash.ghodele@mit.asia'} • Switch
                 </span>
               </div>
             </Link>
@@ -737,6 +761,12 @@ export default function UsersPage() {
                       <p className="text-[10px] text-amber-600 font-semibold mt-0.5">
                         Requested: {pUser.requestedDepartment || 'General Faculty'}
                       </p>
+                      {isSuperAdmin && pUser.password && (
+                        <p className="text-[10px] text-slate-500 font-mono mt-0.5 flex items-center gap-1">
+                          <KeyRound className="w-2.5 h-2.5 text-slate-400" />
+                          <span>Password: {pUser.password}</span>
+                        </p>
+                      )}
                     </div>
                     <button
                       onClick={() => handleOpenAllotModal(pUser)}
@@ -773,7 +803,15 @@ export default function UsersPage() {
               <thead className="bg-[#F8FAFC] border-b border-[#E5E7EB] text-[#475569] font-bold uppercase tracking-wider">
                 <tr>
                   <th className="px-6 py-4">Faculty Member</th>
-                  <th className="px-6 py-4">Institutional Gmail (@mit.asia)</th>
+                  <th className="px-6 py-4">Institutional Email (@mit.asia)</th>
+                  {isSuperAdmin && (
+                    <th className="px-6 py-4">
+                      <div className="flex items-center gap-1.5 text-blue-700">
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Credentials / Password</span>
+                      </div>
+                    </th>
+                  )}
                   <th className="px-6 py-4">Role Hierarchy</th>
                   <th className="px-6 py-4">Allotted Department Scope</th>
                   <th className="px-6 py-4">Status</th>
@@ -783,7 +821,7 @@ export default function UsersPage() {
               <tbody className="divide-y divide-[#E5E7EB]">
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-[#64748B]">
+                    <td colSpan={isSuperAdmin ? 7 : 6} className="px-6 py-12 text-center text-[#64748B]">
                       No faculty registered yet. Click &quot;Add Faculty Member&quot; to authorize a sender!
                     </td>
                   </tr>
@@ -801,6 +839,25 @@ export default function UsersPage() {
                           <span>{u.email || 'Not Configured'}</span>
                         </div>
                       </td>
+
+                      {isSuperAdmin && (
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 font-mono text-[11px] text-[#111111] flex items-center gap-1.5 w-fit">
+                              <KeyRound className="w-3 h-3 text-[#64748B]" />
+                              <span>{revealedPasswords[u.id] ? (u.password || 'MitAsia@123') : '••••••••'}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => toggleRevealPassword(u.id)}
+                              className="p-1 rounded-md text-[#64748B] hover:text-[#111111] hover:bg-slate-200 transition-colors"
+                              title={revealedPasswords[u.id] ? 'Hide Password' : 'Show Password'}
+                            >
+                              {revealedPasswords[u.id] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        </td>
+                      )}
 
                       <td className="px-6 py-4">
                         {u.role === 'super_admin' ? (
@@ -1063,6 +1120,34 @@ export default function UsersPage() {
                 </div>
               </div>
 
+              {/* Super Admin Password Field */}
+              {isSuperAdmin && (
+                <div>
+                  <label className="block text-[#111111] font-bold mb-1.5 uppercase tracking-wider">
+                    Account Password (Super Admin Only)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showModalPassword ? 'text' : 'password'}
+                      value={allotPassword}
+                      onChange={(e) => setAllotPassword(e.target.value)}
+                      placeholder="Account password"
+                      className="w-full bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl pl-3.5 pr-10 py-2.5 text-xs font-semibold font-mono text-[#111111] focus:border-[#2563EB]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowModalPassword(!showModalPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#94A3B8] hover:text-[#111111]"
+                    >
+                      {showModalPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-[#64748B] mt-1">
+                    Super Admin can inspect or reset the password used by this faculty member to sign in.
+                  </p>
+                </div>
+              )}
+
               <div className="flex gap-3 pt-3 border-t">
                 <button
                   type="button"
@@ -1182,6 +1267,28 @@ export default function UsersPage() {
                   onChange={(e) => setFPhone(e.target.value)}
                   className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl px-3 py-2 text-[#111111] font-mono"
                 />
+              </div>
+
+              <div>
+                <label className="block text-[#111111] font-bold mb-1">Account Login Password</label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    required
+                    placeholder="e.g. MitAsia@123"
+                    value={newFacultyPassword}
+                    onChange={(e) => setNewFacultyPassword(e.target.value)}
+                    className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-xl pl-3 pr-10 py-2 text-[#111111] font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#94A3B8] hover:text-[#111111]"
+                  >
+                    {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-[#64748B] mt-0.5">Faculty member will use this password to sign in.</p>
               </div>
 
               <div>
