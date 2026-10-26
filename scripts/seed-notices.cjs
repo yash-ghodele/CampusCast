@@ -520,7 +520,7 @@ async function seed() {
   for (const notice of TEST_NOTICES) {
     const noticeRef = doc(db, 'notices', notice.id);
     await setDoc(noticeRef, notice, { merge: true });
-    console.log(`✓ Seeded: [${notice.departmentId}] ${notice.title} (${notice.mediaType || 'text'})`);
+    console.log(`[OK] Seeded: [${notice.departmentId}] ${notice.title} (${notice.mediaType || 'text'})`);
   }
   console.log('\nAll 28 multi-media notices successfully seeded to Cloud Firestore!');
   process.exit(0);
